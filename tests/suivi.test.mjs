@@ -164,3 +164,25 @@ test('l’appareil est décrit en « système · navigateur »', () => {
   const a = loadApp({ race: raceConfig({ format: 'half', weeks: 12 }) });
   assert.match(a.IM.devInfo().dev, / · /);
 });
+
+test('analyse du suivi : entonnoir, rétention et répartitions calculés sans le compte propriétaire', () => {
+  const a = loadApp({ race: raceConfig({ format: 'half', weeks: 12 }) });
+  const now = Date.UTC(2027, 1, 10, 12), D = 864e5;
+  const u = (o) => ({ created: now - 40 * D, seen: now - 1 * D, done: 0, total: 100, race: 'X', raceDate: '2027-06-27', format: 'half', weeks: 20, ...o });
+  const data = { users: [
+    u({ id: 'a', done: 10, visits: 5, device: 'iPhone · app installée', installed: 1, garmin: 1, sent: 3 }),
+    u({ id: 'b', created: now - 2 * D, seen: now - 2 * D, done: 0, visits: 1, device: 'Android · Chrome', installed: 0 }),
+    u({ id: 'c', created: now - 10 * D, seen: now - 9.5 * D, format: 'full', weeks: 30, raceDate: '2027-09-12' }),
+    u({ id: 'moi', owner: true, done: 99, device: 'Windows · Chrome' }),
+  ] };
+  const ev = { totals: { gate_view: 100, guest_start: 40, setup_view: 30, plan_created: 10, open: 50, install: 8 }, daily: {}, top: { search_miss: [['trifouillis', 3]], plan_created: [['half|7s|l1', 6]] } };
+  const h = a.IM.admAnalytics(data, ev, 30, now);
+  assert.match(h, /Page d’accueil vue<\/b><span>100</);
+  assert.match(h, /« Créer mon plan » touché<\/b><span>40 · 40 %/);
+  assert.match(h, /Compte créé<\/b><span>2 · 20 %/);                    // b et c inscrits dans les 30 jours, sur 10 plans remplis
+  assert.match(h, /<b>50 %<\/b><span>Encore là après 7 jours<\/span><small>1 sur 2/);   // a revenu, c parti avant 7 jours, b trop récent pour compter
+  assert.match(h, /Demi-distance \(70\.3\)<\/b><span>2 · 67 %/);
+  assert.doesNotMatch(h, /Windows/, 'le compte propriétaire est exclu');
+  assert.match(h, /trifouillis/);
+  assert.match(h, /Demi-distance \(70\.3\) · 7 séances · Intermédiaire/);
+});

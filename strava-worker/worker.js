@@ -59,6 +59,7 @@ async function route(req, env) {
       if (url.pathname.startsWith('/pub/account')) return accountRoutes(req, url, env);
       if (url.pathname === '/pub/admin/overview' && req.method === 'GET') return adminOverview(req, env);
       if (url.pathname === '/pub/admin/user' && req.method === 'GET') return adminUser(req, url, env);
+      if (url.pathname === '/pub/admin/stats' && req.method === 'GET') { const a = await adminMe(req, env); return a.res || adminStats(url, env); }   // compteurs anonymes, pour le compte Google du propriétaire
       return new Response('Triient worker : OK', { status: 200 });
     } catch (e) {
       return json({ error: String((e && e.message) || e) }, 500);

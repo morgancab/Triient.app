@@ -258,6 +258,7 @@ svg[data-ch]{touch-action:pan-y;cursor:crosshair}
 .adm-c{background:var(--card2);border-radius:14px;padding:12px 14px}
 .adm-c b{display:block;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
 .adm-c span{font-size:12.5px;color:var(--t2)}
+.adm-c small{display:block;margin-top:2px;font-size:11.5px;color:var(--t3)}
 .adm-u{display:block;width:100%;border:0;border-bottom:.5px solid var(--sep);background:none;color:inherit;font:inherit;text-align:left;padding:14px 0;cursor:pointer}
 .adm-u:last-child{border-bottom:0}
 .adm-n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px;font-size:15px}
@@ -3449,6 +3450,7 @@ function adminLoad(){
   if(adminBusy)return;
   adminBusy=true;adminErr='';
   if(tab==='admin')render(true);
+  acctCall('GET','/pub/admin/stats?days='+admDays).then(function(j){adminEv=j&&j.ok?j:null;if(tab==='admin')safeRender();}).catch(function(){});
   acctCall('GET','/pub/admin/overview').then(function(j){
     if(j&&j.ok){adminD=j;adminT=Date.now();}
     else adminErr=(j&&j.status===403)?'Accès réservé au propriétaire.':((j&&j.error)||'Chargement impossible.');
@@ -3520,6 +3522,76 @@ function admDetail(j){
   h+='<p class="small muted" style="margin:12px 4px 0">Installation, Garmin et envois vers la montre réunissent tous ses appareils : oui si c’est vrai sur au moins un, et le plus grand nombre d’envois. Ces informations ne sont connues que si l’utilisateur a gardé les statistiques d’usage activées, et seulement depuis cette version de l’app.</p>';
   return '<div id="adm-det">'+h+'</div>';
 }
+/* ---------- Suivi de l'app : analyse (propriétaire) ----------
+   Deux sources : les compteurs anonymes par jour (route /pub/admin/stats : écran d'accueil, formulaire, plans remplis, ouvertures, recherches…)
+   et les comptes (vue d'ensemble : inscription, visites, progression, appareil, Garmin). Le compte du propriétaire est exclu des calculs.
+   admAnalytics est pure (données en entrée, HTML en sortie) pour pouvoir être testée. */
+var adminEv=null,admDays=30;
+function admPct(a,b){return b?Math.round(a/b*100):0;}
+function admCount(list,key){var o={};list.forEach(function(x){var k=key(x);if(k)o[k]=(o[k]||0)+1;});return Object.keys(o).map(function(k){return [k,o[k]];}).sort(function(a,b){return b[1]-a[1];});}
+function admRows(list,total,col){var mx=Math.max.apply(null,list.map(function(x){return x[1];}).concat([1]));return list.map(function(x){return prRow(esc(x[0]),x[1]+(total?' · '+admPct(x[1],total)+' %':''),Math.round(x[1]/mx*100),col);}).join('');}
+function admHist(vals,lbl){var mx=Math.max.apply(null,vals.concat([1]));return '<div class="adm-hist" aria-hidden="true">'+vals.map(function(c){return '<i'+(c?'':' class="z"')+' style="height:'+(c?Math.max(8,Math.round(c/mx*100)):4)+'%"></i>';}).join('')+'</div><div class="adm-hl"><span>'+esc(lbl[0])+'</span><span>'+esc(lbl[1])+'</span></div>';}
+function admPlanLbl(p){var x=String(p).split('|'),f=FORMATS[x[0]];return (f?f.n:x[0])+(x[1]?' · '+x[1].replace('s',' séances'):'')+(x[2]?' · '+(['Débutant','Intermédiaire','Confirmé'][+x[2].slice(1)]||x[2]):'');}
+function admAnalytics(D,E,days,now){
+  now=now||Date.now();
+  var DAY=864e5,U=(D.users||[]).filter(function(u){return !u.owner;}),n=U.length,T=(E&&E.totals)||{},t=function(k){return T[k]||0;},since=now-days*DAY;
+  var tile=function(v,l,sub){return '<div class="adm-c"><b>'+v+'</b><span>'+l+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</div>';},h='';
+  var card=function(title,sub,body){return '<h2 class="plan-h">'+title+(sub?'<span>'+sub+'</span>':'')+'</h2><section class="card">'+body+'</section>';};
+  var newN=U.filter(function(u){return u.created>=since;}).length;
+  // 1. Entonnoir d'inscription
+  if(E){
+    var steps=[['Page d’accueil vue',t('gate_view')],['« Créer mon plan » touché',t('guest_start')],['Formulaire « Ta course » ouvert',t('setup_view')],['Plan rempli',t('plan_created')],['Compte créé',newN]],top=Math.max(steps[0][1],1);
+    var fun=steps.map(function(st,i){var prev=i?steps[i-1][1]:0;return prRow(st[0],st[1]+(i&&prev?' · '+admPct(st[1],prev)+' %':''),Math.round(st[1]/top*100));}).join('');
+    fun+='<div class="adm-g" style="margin-top:6px">'+tile(admPct(newN,steps[0][1])+' %','Visiteur → compte')+tile(admPct(newN,t('plan_created'))+' %','Plan rempli → compte')+'</div>'+
+      '<p class="small muted" style="margin:10px 0 0">Le pourcentage de chaque ligne est calculé par rapport à l’étape précédente. Les étapes viennent des compteurs anonymes (un visiteur qui recharge la page compte plusieurs fois), la dernière vient des comptes.</p>';
+    h+=card('Entonnoir d’inscription',days+' jours',fun);
+  }
+  // 2. Activité jour par jour
+  if(E){
+    var dd=[],opens=[],plans=[],accs=[],i;
+    for(i=days-1;i>=0;i--){var dt=new Date(now-i*DAY);dd.push(isoDate(dt));}
+    dd.forEach(function(d){var x=(E.daily||{})[d]||{};opens.push(x.open||0);plans.push(x.plan_created||0);accs.push(U.filter(function(u){return isoDate(new Date(u.created))===d;}).length);});
+    var sum=function(a){return a.reduce(function(p,c){return p+c;},0);},lbl=[fmtDay(parseISO(dd[0])),'Aujourd’hui'];
+    h+=card('Activité',days+' jours','<div class="adm-g" style="margin-top:0">'+tile(String(Math.round(sum(opens)/days*10)/10).replace('.',','),'Appareils actifs par jour','en moyenne')+tile(Math.max.apply(null,opens),'Record sur un jour')+tile(t('install'),'Nouveaux appareils')+tile(sum(plans),'Plans remplis')+'</div>'+
+      '<div class="eyebrow" style="margin:16px 0 0">Appareils qui ouvrent l’app</div>'+admHist(opens,lbl)+'<div class="eyebrow" style="margin:6px 0 0">Nouveaux comptes</div>'+admHist(accs,lbl));
+  }
+  // 3. Engagement des comptes
+  if(n){
+    var withPlan=U.filter(function(u){return u.race;}).length,active=U.filter(function(u){return u.done>0;}).length,back=U.filter(function(u){return (u.visits||0)>=2;}).length;
+    var el7=U.filter(function(u){return u.created<=now-7*DAY;}),r7=el7.filter(function(u){return u.seen>=u.created+7*DAY;}).length,el30=U.filter(function(u){return u.created<=now-30*DAY;}),r30=el30.filter(function(u){return u.seen>=u.created+30*DAY;}).length;
+    var prog=U.filter(function(u){return u.total>0;}),avgP=prog.length?Math.round(prog.reduce(function(p,u){return p+u.done/u.total;},0)/prog.length*100):0;
+    var rec=[['Aujourd’hui',0,1],['2 à 7 jours',1,7],['8 à 30 jours',7,30],['Plus de 30 jours',30,1e9]].map(function(b){return [b[0],U.filter(function(u){var a=(now-u.seen)/DAY;return a>=b[1]&&a<b[2];}).length];});
+    h+=card('Engagement','sur '+n+' compte'+(n>1?'s':''),
+      '<div class="adm-g" style="margin-top:0">'+tile(admPct(withPlan,n)+' %','Avec un plan')+tile(admPct(active,n)+' %','Au moins 1 séance cochée')+tile(admPct(back,n)+' %','Revenus (2 visites ou plus)')+tile(avgP+' %','Plan réalisé en moyenne')+
+      tile(el7.length?admPct(r7,el7.length)+' %':'–','Encore là après 7 jours',el7.length?r7+' sur '+el7.length:'pas encore de recul')+tile(el30.length?admPct(r30,el30.length)+' %':'–','Encore là après 30 jours',el30.length?r30+' sur '+el30.length:'pas encore de recul')+'</div>'+
+      '<div class="eyebrow" style="margin:16px 0 8px">Dernière visite</div>'+admRows(rec,n)+
+      '<p class="small muted" style="margin:10px 0 0">« Encore là » : comptes revenus au moins 7 (ou 30) jours après leur inscription, parmi ceux inscrits depuis assez longtemps.</p>');
+    // 4. Qui sont-ils
+    var dev=admCount(U,function(u){return u.device?u.device.split(' · ')[0]:'';}),how=[['App installée',U.filter(function(u){return u.installed===1;}).length],['Navigateur seulement',U.filter(function(u){return u.installed===0;}).length]];
+    var fm=admCount(U.filter(function(u){return u.format;}),function(u){return admFmt(u.format);}),wk=admCount(U.filter(function(u){return u.weeks;}),function(u){return u.weeks<=12?'12 semaines ou moins':u.weeks<=20?'13 à 20 semaines':u.weeks<=30?'21 à 30 semaines':'Plus de 30 semaines';});
+    var mo=admCount(U.filter(function(u){var d=parseISO(u.raceDate);return d&&d.getTime()>=now-DAY;}),function(u){var d=parseISO(u.raceDate);return MONTHS_L[d.getMonth()]+' '+d.getFullYear();});
+    mo.sort(function(a,b){var p=function(x){var q=x[0].split(' ');return +q[1]*12+MONTHS_L.indexOf(q[0]);};return p(a)-p(b);});
+    h+=card('Qui sont-ils','',
+      (fm.length?'<div class="eyebrow" style="margin:0 0 8px">Format de course</div>'+admRows(fm,withPlan):'')+
+      (wk.length?'<div class="eyebrow" style="margin:16px 0 8px">Durée du plan</div>'+admRows(wk,withPlan):'')+
+      (mo.length?'<div class="eyebrow" style="margin:16px 0 8px">Mois de course à venir</div>'+admRows(mo.slice(0,8),0):'')+
+      (dev.length?'<div class="eyebrow" style="margin:16px 0 8px">Appareil</div>'+admRows(dev,0):'')+
+      (how[0][1]+how[1][1]?'<div class="eyebrow" style="margin:16px 0 8px">Façon d’utiliser l’app</div>'+admRows(how,how[0][1]+how[1][1]):'')+
+      '<div class="eyebrow" style="margin:16px 0 8px">Garmin</div>'+admRows([['Garmin connecté',U.filter(function(u){return u.garmin===1;}).length],['Ont envoyé au moins une séance sur la montre',U.filter(function(u){return u.sent>0;}).length]],n));
+  }
+  // 5. Ce qu'ils cherchent et choisissent
+  if(E){
+    var tp=(E.top||{}),lst=function(k,f){return (tp[k]||[]).slice(0,8).map(function(x){return [f?f(x[0]):x[0],x[1]];});};
+    var pc=lst('plan_created',admPlanLbl),rp=lst('race_pick'),sm=lst('search_miss');
+    var gw='<div class="adm-g" style="margin-top:0">'+tile(t('wiz_start'),'Assistant Garmin ouvert')+tile(t('garmin_connected'),'Garmin connecté')+tile(t('wiz_error'),'Erreurs de clé')+tile(t('wiz_start')?admPct(t('garmin_connected'),t('wiz_start'))+' %':'–','Assistant réussi')+'</div>';
+    h+=card('Choix et recherches',days+' jours',
+      (pc.length?'<div class="eyebrow" style="margin:0 0 8px">Plans remplis (format · séances · niveau)</div>'+admRows(pc,0):'')+
+      (rp.length?'<div class="eyebrow" style="margin:16px 0 8px">Courses choisies dans la liste</div>'+admRows(rp,0):'')+
+      (sm.length?'<div class="eyebrow" style="margin:16px 0 8px">Recherches sans résultat</div>'+admRows(sm,0)+'<p class="small muted" style="margin:6px 0 0">À ajouter au catalogue.</p>':'')+
+      '<div class="eyebrow" style="margin:16px 0 8px">Connexion Garmin</div>'+gw);
+  }
+  return h;
+}
 function vAdmin(){
   var h=topbar('Propriétaire','Suivi de l’app',false,'more');
   if(!acct())return h+emptyState('info','Connexion requise','Connecte-toi avec le compte propriétaire pour voir le suivi.','','');
@@ -3531,6 +3603,8 @@ function vAdmin(){
     '<div class="adm-g">'+c(t.users,'Comptes')+c(t.withPlan,'Avec un plan')+c(t.active7,'Actifs 7 jours')+c(t.active30,'Actifs 30 jours')+c(t.new7,'Nouveaux 7 jours')+c(t.new30,'Nouveaux 30 jours')+
     (t.installed!=null?c(t.installed,'App installée')+c(t.garmin,'Garmin connecté')+c(t.sent,'Séances envoyées vers la montre'):'')+'</div>'+
     '<p class="small muted" style="margin:12px 0 0">Ton compte est listé mais exclu de ces chiffres.'+(adminErr?' Dernière mise à jour impossible : '+esc(adminErr):'')+'</p></section>';
+  h+='<div class="rng" role="group" aria-label="Période" style="margin:4px 0 0">'+[7,30,90].map(function(x){return '<button data-act="admdays" data-v="'+x+'" aria-pressed="'+(admDays===x)+'">'+x+' jours</button>';}).join('')+'</div>';
+  h+=admAnalytics(adminD,adminEv,admDays);
   h+='<h2 class="plan-h">Utilisateurs<span>'+adminD.users.length+'</span></h2><section class="card" style="padding:0 16px">'+adminD.users.map(admUser).join('')+'</section>';
   return h;
 }
@@ -3675,6 +3749,7 @@ document.addEventListener('click',function(e){
   else if(a==='missall')missAll();
   else if(a==='plancur'){var pc=document.querySelector('.wkt.cur');if(pc)pc.closest('.pblk').scrollIntoView({block:'start',behavior:'smooth'});}
   else if(a==='admreload')adminLoad();
+  else if(a==='admdays'){admDays=+d.v;adminEv=null;render(true);adminLoad();}
   else if(a==='admuser')openAdmUser(d.id);
   else if(a==='steps'){stepDraft=null;openSteps();}
   else if(a==='stepnew'){stepDraft=stepNew();renderStep();}
@@ -4898,7 +4973,7 @@ if(DEV){
   window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 }
 
-window.IM={fm:fm,fh:fh,hms:hms,PHASES:PHASES,BLOCKS:BLOCKS,KINDS:KINDS,T_TAPER:T_TAPER,stepOps:stepOps,VIEWS:VIEWS,missedList:missedList,missAdvice:missAdvice,missDo:missDo,missUndo:missUndo,missAll:missAll,isMissed:isMissed,openWiz:openWiz,cloudPayload:cloudPayload,cloudApply:cloudApply,devInfo:devInfo,admDetail:admDetail,gatePreview:function(c){pubCfg=c;renderGate();},gateNeeded:gateNeeded,acctLogin:acctLogin,catSearch:catSearch,wtResults:wtResults,wtFormat:wtFormat,pickRace:pickRace,NSESS:NSESS,planSpan:planSpan,newRaceDraft:newRaceDraft,raceFormHtml:raceFormHtml,saveRace:saveRace,applyAway:applyAway,adaptFields:adaptFields,estKm:estKm,detailBody:detailBody,wkBlocks:wkBlocks,pushSession:pushSession,pushPreview:pushPreview,clearPreview:clearPreview,wkText:wkText,evOf:evOf,ALLS:ALLS,tx:tx,autoProf:autoProf,estRace:estRace,estAll:estAll,raceParams:raceParams,PLAN:PLAN,stats:stats,status:status,computeLinks:computeLinks,links:function(){return LK;},state:state,actSport:actSport};
+window.IM={fm:fm,fh:fh,hms:hms,PHASES:PHASES,BLOCKS:BLOCKS,KINDS:KINDS,T_TAPER:T_TAPER,stepOps:stepOps,VIEWS:VIEWS,missedList:missedList,missAdvice:missAdvice,missDo:missDo,missUndo:missUndo,missAll:missAll,isMissed:isMissed,openWiz:openWiz,cloudPayload:cloudPayload,cloudApply:cloudApply,devInfo:devInfo,admAnalytics:admAnalytics,admDetail:admDetail,gatePreview:function(c){pubCfg=c;renderGate();},gateNeeded:gateNeeded,acctLogin:acctLogin,catSearch:catSearch,wtResults:wtResults,wtFormat:wtFormat,pickRace:pickRace,NSESS:NSESS,planSpan:planSpan,newRaceDraft:newRaceDraft,raceFormHtml:raceFormHtml,saveRace:saveRace,applyAway:applyAway,adaptFields:adaptFields,estKm:estKm,detailBody:detailBody,wkBlocks:wkBlocks,pushSession:pushSession,pushPreview:pushPreview,clearPreview:clearPreview,wkText:wkText,evOf:evOf,ALLS:ALLS,tx:tx,autoProf:autoProf,estRace:estRace,estAll:estAll,raceParams:raceParams,PLAN:PLAN,stats:stats,status:status,computeLinks:computeLinks,links:function(){return LK;},state:state,actSport:actSport};
 applyAway();
 try{
   if(RCFG.migrate&&!state.ui.seen){state.ui.seen=1;save();}
