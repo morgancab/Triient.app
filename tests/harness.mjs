@@ -32,9 +32,10 @@ export function raceConfig({ format = 'full', weeks = 25, date = '2027-06-27', s
 }
 
 // state : contenu de localStorage (done, ui, links, sv, race) ; today : AAAA-MM-JJ ; hash : page à ouvrir
-export function loadApp({ race, today = '2027-01-15', hash = '#dash', state = {} } = {}) {
+// storeKey : clé de stockage où placer ces données (l'ancienne clé sert à tester la reprise des données)
+export function loadApp({ race, today = '2027-01-15', hash = '#dash', state = {}, storeKey = 'triient:v1' } = {}) {
   const store = new Map(), els = new Map();
-  store.set('ironman-sables-2027:v1', JSON.stringify({ done: {}, links: {}, sv: {}, ...state, ui: { welcomed: true, seen: 1, noStats: true, ...(state.ui || {}) }, race }));
+  store.set(storeKey, JSON.stringify({ done: {}, links: {}, sv: {}, ...state, ui: { welcomed: true, seen: 1, noStats: true, ...(state.ui || {}) }, race }));
   const doc = element();
   Object.assign(doc, { hidden: false, title: '', body: element(), createElement: () => element(), getElementById: (id) => { if (!els.has(id)) els.set(id, element()); return els.get(id); }, activeElement: null });
   const location = { hash, search: '?today=' + today, protocol: 'file:', hostname: '', href: 'file:///index.html?today=' + today + hash, reload() {}, replace() {} };

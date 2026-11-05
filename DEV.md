@@ -182,7 +182,7 @@ Chaque nom ouvre un **espace isolé et vide** : l'app démarre sur « Ta course 
 
 | Ce que fait le profil de test | Détail |
 |---|---|
-| Stockage séparé | Une clé `localStorage` par nom (`ironman-sables-2027:v1:dev-sprint`). Autant de profils que tu veux. |
+| Stockage séparé | Une clé `localStorage` par nom (`triient:v1:dev-sprint`). Autant de profils que tu veux. |
 | Pas de connexion Google | L'écran de connexion obligatoire est ignoré. |
 | Pas de synchronisation | Ni sauvegarde automatique dans un compte, ni sauvegarde par code. Tes données serveur ne peuvent pas être écrasées. |
 | Pas de statistiques | Aucun événement n'est envoyé (tes tests ne faussent pas les stats d'usage). |

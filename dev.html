@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="dark">
-<title>Mode test · Plan triathlon</title>
+<title>Mode test · Triient</title>
 <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
 <style>
 :root{--card:#1c1c1e;--card2:#2c2c2e;--sep:rgba(84,84,88,.5);--t1:#f5f4ef;--t2:#a9a8a0;--warn:#ff9f0a;color-scheme:dark}
@@ -115,7 +115,7 @@ iframe{position:absolute;left:0;top:0;border:0;background:#000;transform-origin:
   if(!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)&&location.protocol!=='file:'){
     document.body.innerHTML='<p style="padding:24px">Le mode test ne fonctionne qu’en local.</p>';return;
   }
-  var A=window.DEV_APPAREILS,KEY='plan-tri:mode-test',S={dev:'iphone-safari',page:'installer',profil:'test',today:''};
+  var A=window.DEV_APPAREILS,KEY='triient:mode-test',S={dev:'iphone-safari',page:'installer',profil:'test',today:''};
   try{var o=JSON.parse(localStorage.getItem(KEY));if(o)for(var k in S)if(o[k]!=null)S[k]=o[k];}catch(x){}
   var qd=/[?&]appareil=([\w-]+)/.exec(location.search);if(qd)S.dev=qd[1];
   if(!A[S.dev])S.dev='iphone-safari';

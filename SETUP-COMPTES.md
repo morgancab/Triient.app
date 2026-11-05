@@ -3,11 +3,11 @@
 Le code est déjà déployé. Il reste 4 choses à faire de ton côté (10 à 15 minutes). Tant que ce n'est pas fait, le bouton Google est simplement masqué dans l'app.
 
 ## 1. Créer l'identifiant client Google (gratuit)
-1. Va sur https://console.cloud.google.com et crée un projet (par exemple « Plan triathlon »).
-2. **API et services → Écran de consentement OAuth** : type **Externe**, nom de l'app « Plan triathlon », ton e-mail comme contact. Ajoute seulement les autorisations de base (e-mail, profil). Puis **Publier l'application** (passer de « Test » à « En production »), sinon seuls les testeurs déclarés pourront se connecter. Les autorisations de base n'exigent pas de vérification Google.
+1. Va sur https://console.cloud.google.com et crée un projet (par exemple « Triient »).
+2. **API et services → Écran de consentement OAuth** : type **Externe**, nom de l'app « Triient », ton e-mail comme contact. Ajoute seulement les autorisations de base (e-mail, profil). Puis **Publier l'application** (passer de « Test » à « En production »), sinon seuls les testeurs déclarés pourront se connecter. Les autorisations de base n'exigent pas de vérification Google.
 3. **API et services → Identifiants → Créer des identifiants → ID client OAuth** :
    - type d'application : **Application Web**
-   - **Origines JavaScript autorisées** : `https://ironmanproject.vercel.app` (ou ta nouvelle adresse) et `http://localhost:8080` pour tes tests
+   - **Origines JavaScript autorisées** : `https://triient.vercel.app` et `http://localhost:8080` pour tes tests
    - pas d'URI de redirection nécessaire
 4. Copie l'**ID client** (il se termine par `.apps.googleusercontent.com`). Il est public, ce n'est pas un secret.
 
@@ -35,7 +35,7 @@ npx wrangler deploy
 Puis republie sur Vercel : `index.html`, `sw.js`, `manifest.webmanifest` et les fichiers `icon-*.png`, `apple-touch-icon.png`, `favicon-48.png`.
 
 ## Vérifier
-- `https://ironman-strava.morgancabironman.workers.dev/pub/config` doit afficher ton ID client.
+- `https://triient.morgancabironman.workers.dev/pub/config` doit afficher ton ID client.
 - Dans l'app : Réglages (bouton en haut à droite de l'Accueil) → groupe **Compte** → « Continuer avec Google ».
 
 ## Ce qui est enregistré pour chaque utilisateur

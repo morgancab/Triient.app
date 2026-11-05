@@ -15,7 +15,7 @@ Quand tout marche, il faudra écrire à support@intervals.icu pour que l'applica
 ## Réponses à donner (en anglais, la langue du service)
 
 **Application name**
-Plan triathlon
+Triient
 
 **Short description**
 A free triathlon training plan app. Users pick their race (sprint to full distance), get a day-by-day plan, and connect their Garmin through intervals.icu so their completed sessions are ticked automatically and planned workouts can be sent to their watch.
@@ -26,13 +26,13 @@ A free triathlon training plan app. Users pick their race (sprint to full distan
 - Read sport settings: heart-rate zones used to personalise targets.
 
 **Website**
-https://ironmanproject.vercel.app (update if the project is renamed)
+https://triient.vercel.app
 
 **Logo**
-https://ironmanproject.vercel.app/icon-512.png (public once the site is republished)
+https://triient.vercel.app/icon-512.png (public once the site is republished)
 
 **Redirect URI**
-https://ironman-strava.morgancabironman.workers.dev/pub/oauth/intervals/callback
+https://triient.morgancabironman.workers.dev/pub/oauth/intervals/callback
 
 Rappel : les adresses de retour n'acceptent pas de joker (*), chaque adresse doit être enregistrée en entier. `http://localhost/` est toujours autorisé pour les tests.
 

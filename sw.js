@@ -1,7 +1,7 @@
-// Service worker de l'app Plan triathlon.
+// Service worker de l'app Triient.
 // Stratégie « stale-while-revalidate » : l'app s'ouvre instantanément depuis le cache
 // (donc aussi sans réseau) et se met à jour en arrière-plan quand une connexion est disponible.
-var CACHE = 'plan-triathlon-v4';   // à changer à chaque version importante : les anciens caches sont supprimés à l'activation
+var CACHE = 'triient-v5';   // à changer à chaque version importante : les anciens caches sont supprimés à l'activation
 var CORE = ['./', './index.html', './races.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {

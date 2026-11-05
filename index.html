@@ -6,12 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Plan tri">
+<meta name="apple-mobile-web-app-title" content="Triient">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
 <meta name="format-detection" content="telephone=no">
 <meta name="description" content="Plan d’entraînement triathlon sur mesure : choisis ta course, suis tes séances, synchronise Garmin.">
-<title>Plan triathlon</title>
+<title>Triient</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
@@ -758,7 +758,10 @@ var DEV=(function(){
   var m=/[?&]profil=([\w-]{1,24})(?:&|$)/.exec(location.search||'');
   return m?m[1]:'';
 })();
-var KEY='ironman-sables-2027:v1'+(DEV?':dev-'+DEV:'');
+var KEY='triient:v1'+(DEV?':dev-'+DEV:'');
+// Ancien nom de l'app : les données enregistrées sous l'ancienne clé sont reprises une fois, puis l'ancienne clé est effacée.
+try{(function(o){var v=localStorage.getItem(o);if(v===null)return;if(localStorage.getItem(KEY)===null)localStorage.setItem(KEY,v);localStorage.removeItem(o);})('ironman-sables-2027:v1'+(DEV?':dev-'+DEV:''));}catch(e){}
+var PUB_API='https://triient.morgancabironman.workers.dev';
 if(DEV){
   try{
     if(/[?&]reset=1(?:&|$)/.test(location.search)){                          // ?profil=nom&reset=1 : repart de zéro puis retire le paramètre
@@ -1401,6 +1404,8 @@ function loadState(){
   return {done:{},ui:{},links:{},sv:{}};
 }
 var state=loadState();
+// Ancienne adresse du serveur (avant le changement de nom) : remplacée par la nouvelle.
+(function(o){if(state.sv&&o.test(state.sv.url||''))state.sv.url=state.sv.url.replace(o,PUB_API);if(state.ui&&o.test(state.ui.pubApi||''))state.ui.pubApi=state.ui.pubApi.replace(o,PUB_API);})(/^https:\/\/ironman-strava\.morgancabironman\.workers\.dev/);
 // Efface les notes (fatigue, douleurs) enregistrées par les anciennes versions
 try{var s0=JSON.parse(localStorage.getItem(KEY));if(s0&&s0.notes)localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
 if(RCFG.migrate&&!state.race){state.race=SABLES;try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}   // utilisateur existant : on fige sa course (Ironman des Sables d'Olonne)
@@ -2143,7 +2148,7 @@ function cloudKeys(code){
 function cloudBase(){return (state.ui&&state.ui.pubApi)||PUB_API;}
 function cloudPayload(){
   var u=state.ui||{};
-  return {app:'plan-triathlon',v:1,done:state.done,links:state.links,race:state.race||(SETUP?null:CFG),prof:u.prof||{},lv:u.lvl||{},st:u.steps||[],ms:u.missed||{},away:u.away||[],rc:u.race||{}};
+  return {app:'triient',v:1,done:state.done,links:state.links,race:state.race||(SETUP?null:CFG),prof:u.prof||{},lv:u.lvl||{},st:u.steps||[],ms:u.missed||{},away:u.away||[],rc:u.race||{}};
 }
 function cloudEncrypt(keys,obj){
   var iv=crypto.getRandomValues(new Uint8Array(12));
@@ -2346,7 +2351,7 @@ function renderGate(){
   body=!cfg?'<div class="g-gbox w"><span class="g-wait">Connexion au serveur…</span></div>':cfg.err?'<p class="muted" style="margin:0 0 12px">Impossible de joindre le serveur. Vérifie ta connexion.</p><button class="btn pri" data-act="gateretry">Réessayer</button>':'<div class="g-gbox"><div id="g-btn" style="display:flex;justify-content:center;width:100%"></div></div>';
   var grow=function(sp,icn,t,s){return '<div class="g-row sp-'+sp+'"><span class="gi">'+ic(icn,19)+'</span><span><b>'+t+'</b><small>'+s+'</small></span></div>';};
   vw.innerHTML='<div class="gate"><div class="g-hero"><img src="'+HERO_IMG+'" alt=""></div><div class="g-body">'+
-    '<img class="g-logo" src="icon-192.png" alt="Plan triathlon" width="84" height="84">'+
+    '<img class="g-logo" src="icon-192.png" alt="Triient" width="84" height="84">'+
     '<h1 class="g-t">Prépare ta course,<br>franchis la ligne.</h1>'+
     '<p class="g-s">Ton premier triathlon ou la chasse à un chrono : ton plan s’adapte à ta course, à ton niveau et à ton emploi du temps.</p>'+
     '<div class="g-sports"><span class="sp-swim">'+ic('swim',17)+'Natation</span><span class="sp-bike">'+ic('bike',17)+'Vélo</span><span class="sp-run">'+ic('run',17)+'Course</span></div>'+
@@ -2453,7 +2458,7 @@ function acctExport(){
   acctCall('GET','/pub/account/export').then(function(j){
     if(!j.ok)throw new Error(j.error||'Erreur');
     var txt=JSON.stringify(j.export,null,2);
-    try{var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download='mes-donnees-plan-triathlon.json';document.body.appendChild(a);a.click();setTimeout(function(){a.remove();},500);toast('Export téléchargé');}
+    try{var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download='mes-donnees-triient.json';document.body.appendChild(a);a.click();setTimeout(function(){a.remove();},500);toast('Export téléchargé');}
     catch(e){try{navigator.clipboard.writeText(txt);toast('Export copié dans le presse-papiers');}catch(x){toast('Export impossible');}}
   }).catch(function(e){toast('Export impossible : '+((e&&e.message)||e));});
 }
@@ -2545,7 +2550,7 @@ function isStandalone(){return (window.navigator.standalone===true)||(window.mat
 function doInstall(){if(!deferredInstall)return;deferredInstall.prompt();deferredInstall.userChoice.then(function(){deferredInstall=null;render(true);});}
 function shareApp(){
   var url=location.href.split('#')[0].split('?')[0];
-  if(navigator.share){navigator.share({title:'Plan triathlon',text:'Un plan d’entraînement triathlon sur mesure, gratuit.',url:url}).catch(function(){});return;}
+  if(navigator.share){navigator.share({title:'Triient',text:'Un plan d’entraînement triathlon sur mesure, gratuit.',url:url}).catch(function(){});return;}
   try{navigator.clipboard.writeText(url).then(function(){toast('Lien copié');},function(){toast(url);});}catch(e){toast(url);}
 }
 var SETUP=RCFG.fresh&&!(state&&state.race),raceDraft=null;
@@ -2649,7 +2654,6 @@ function saveRace(){
    viennent en plus de l'API World Triathlon, via le Worker (route /pub/races). Course absente : saisie libre. */
 var RACE_CAT=window.RACE_CAT||[];   // fichier races.js, mis à jour automatiquement (voir CATALOGUE.md)
 var CC_NAMES={RO:'Roumanie',IL:'Israël',AE:'Émirats arabes unis',TW:'Taïwan',KR:'Corée du Sud',PL:'Pologne',SK:'Slovaquie',UZ:'Ouzbékistan',OM:'Oman',CZ:'Tchéquie',RS:'Serbie',HR:'Croatie',GR:'Grèce',NO:'Norvège',FR:'France',DE:'Allemagne',AT:'Autriche',CH:'Suisse',ES:'Espagne',IT:'Italie',GB:'Royaume-Uni',NL:'Pays-Bas',DK:'Danemark',SE:'Suède',EE:'Estonie',US:'États-Unis',CA:'Canada',AU:'Australie',NZ:'Nouvelle-Zélande',ZA:'Afrique du Sud',BR:'Brésil',MX:'Mexique',BE:'Belgique',PT:'Portugal',LU:'Luxembourg',JP:'Japon',CN:'Chine'};
-var PUB_API='https://ironman-strava.morgancabironman.workers.dev';
 function normS(s){return String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();}
 function catSearch(q){
   var n=normS(q),tk=n.split(' ').filter(Boolean),out=[];
@@ -3551,7 +3555,7 @@ function closeSheet(){
   if(sheetDepth>0){var n=sheetDepth;sheetDepth=0;try{history.go(-n);}catch(e){}}
   else syncUrl(false);
 }
-function payload(){return JSON.stringify({app:'ironman-sables-2027',v:1,exported:new Date().toISOString(),done:state.done,links:state.links,prof:state.ui.prof||{},lvl:state.ui.lvl||{},steps:state.ui.steps||[],missed:state.ui.missed||{},away:state.ui.away||[],race:state.race||CFG});}
+function payload(){return JSON.stringify({app:'triient',v:1,exported:new Date().toISOString(),done:state.done,links:state.links,prof:state.ui.prof||{},lvl:state.ui.lvl||{},steps:state.ui.steps||[],missed:state.ui.missed||{},away:state.ui.away||[],race:state.race||CFG});}
 function doExport(){
   var txt=payload(),ta=document.getElementById('io');ta.value=txt;
   if(navigator.share){navigator.share({title:'Sauvegarde '+RNAME,text:txt}).catch(function(){});return;}
@@ -3560,7 +3564,7 @@ function doExport(){
 }
 function doImport(){
   var ta=document.getElementById('io'),o;
-  try{o=JSON.parse(ta.value);if(!o||o.app!=='ironman-sables-2027'||typeof o.done!=='object')throw 0;}
+  try{o=JSON.parse(ta.value);if(!o||(o.app!=='triient'&&o.app!=='ironman-sables-2027')||typeof o.done!=='object')throw 0;   /* ironman-sables-2027 : sauvegardes faites avant le changement de nom */}
   catch(e){toast('Sauvegarde invalide');return;}
   if(!confirm('Remplacer les données actuelles par cette sauvegarde ?'))return;
   state.done=o.done||{};state.links=o.links||{};if(o.prof)state.ui.prof=o.prof;if(o.lvl)state.ui.lvl=o.lvl;if(o.steps)state.ui.steps=o.steps;if(o.missed)state.ui.missed=o.missed;if(o.away){state.ui.away=o.away;applyAway();}if(o.race&&o.race.date&&o.race.start){state.race=o.race;save();location.reload();return;}save();closeSheet();render(false);toast('Sauvegarde restaurée');
@@ -4506,8 +4510,8 @@ function syncActs(force,loud){
 function svSettings(){
   var sv=state.sv;
   return '<h4>Garmin (synchronisation automatique)</h4><p>Garmin Connect envoie tes activités à <b>intervals.icu</b> (gratuit) ; l’app les lit et coche tes séances toute seule. Crée un compte sur intervals.icu, connecte-y Garmin, puis copie ta <b>clé API</b> (Réglages → Developer Settings → API Key) dans le champ ci-dessous. Ta clé reste sur ton téléphone ; le serveur ne la conserve pas.</p>'+
-    '<label class="inp wide"><span>Adresse du serveur<small>laisse vide : serveur par défaut</small></span><input id="sv-url" name="ironman-server-url" autocomplete="off" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://ironman-strava.….workers.dev" value="'+esc(sv.url||'')+'"></label>'+
-    '<label class="inp wide"><span>Clé d’accès</span><input id="sv-key" type="text" name="ironman-app-key" autocomplete="off" data-lpignore="true" style="-webkit-text-security:disc;text-security:disc" autocapitalize="off" autocorrect="off" spellcheck="false" value="'+esc(sv.key||'')+'"></label>'+
+    '<label class="inp wide"><span>Adresse du serveur<small>laisse vide : serveur par défaut</small></span><input id="sv-url" name="triient-server-url" autocomplete="off" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://triient.….workers.dev" value="'+esc(sv.url||'')+'"></label>'+
+    '<label class="inp wide"><span>Clé d’accès</span><input id="sv-key" type="text" name="triient-app-key" autocomplete="off" data-lpignore="true" style="-webkit-text-security:disc;text-security:disc" autocapitalize="off" autocorrect="off" spellcheck="false" value="'+esc(sv.key||'')+'"></label>'+
     '<button class="btn pri" data-act="svresync">Tester et resynchroniser</button>'+
     '<p class="small muted">'+(sv.t?'Dernière synchro : '+ago(sv.t)+'. ':'')+esc(sv.err||'')+' '+esc(sv.werr||'')+'</p>';
 }
@@ -4560,7 +4564,7 @@ try{
   loadPubCfg();
   if(SETUP&&!gateNeeded())track('setup_view');else if(!SETUP){loadAdminStats();if(acct())acctBoot();else cloudBoot();}
 }catch(e){}
-try{document.title='Plan triathlon · '+RNAME;}catch(e){}
+try{document.title='Triient · '+RNAME;}catch(e){}
 var r0=parseRoute();   // à lire avant le premier rendu, qui réécrit l'adresse
 render(false);
 if(!SETUP){

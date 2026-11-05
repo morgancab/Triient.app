@@ -6,7 +6,7 @@
    Code de sortie : 0 = tout va bien, 1 = au moins une source n'a rien renvoyé (sa mise en page a sans doute changé). */
 import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 
-const UA = 'Mozilla/5.0 (compatible; PlanTriathlonCatalog/1.0; +https://github.com/morgancab/ironman_project)';
+const UA = 'Mozilla/5.0 (compatible; TriientCatalog/1.0; +https://github.com/morgancab/triient)';
 const FILE = new URL('../races.js', import.meta.url);
 const HEAD = '// Catalogue de triathlons : [nom, ville, pays, format, mois habituel (1-12, 0 = inconnu), options]. Mis à jour par scripts/update-races.mjs, voir CATALOGUE.md.\nwindow.RACE_CAT=[\n';
 // Au-delà, le lancement est jugé anormal (site modifié, mauvaise lecture) : il passe par une proposition au lieu d'être publié

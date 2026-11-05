@@ -110,7 +110,7 @@ test('la décision survit au rechargement', () => {
   const a = open();
   const s = a.IM.missedList().find((x) => a.IM.missAdvice(x).move !== null), id = s.id, g = a.IM.missAdvice(s).move;
   a.IM.missDo(id, 'move');
-  const saved = JSON.parse(a.store.get('ironman-sables-2027:v1'));
+  const saved = JSON.parse(a.store.get('triient:v1'));
   const b = loadApp({ race, today: TODAY, state: { done: saved.done, ui: saved.ui } });
   assert.equal(gOf(sessions(b.IM).find((x) => x.id === id)), g);
 });

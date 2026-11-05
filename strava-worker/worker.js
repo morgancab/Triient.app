@@ -1,4 +1,4 @@
-// Worker Cloudflare : relais « Garmin → intervals.icu → app » pour l'app Ironman Sables 2027.
+// Worker Cloudflare : relais « Garmin → intervals.icu → app » pour l'app Triient.
 //
 //  Garmin Connect ──(synchro native)──▶ intervals.icu ◀──(clé API)── ce Worker ──▶ l'app (iPhone)
 //
@@ -58,7 +58,7 @@ async function route(req, env) {
       if (url.pathname === '/pub/auth/google' && req.method === 'POST') return authGoogle(req, env);
       if (url.pathname.startsWith('/pub/account')) return accountRoutes(req, url, env);
       if (url.pathname === '/pub/admin/overview' && req.method === 'GET') return adminOverview(req, env);
-      return new Response('Ironman Garmin worker : OK', { status: 200 });
+      return new Response('Triient worker : OK', { status: 200 });
     } catch (e) {
       return json({ error: String((e && e.message) || e) }, 500);
     }
@@ -387,7 +387,7 @@ async function intervalsReq(env, method, path, body) {
   if (!env.INTERVALS_API_KEY) throw new Error('INTERVALS_API_KEY manquante');
   const r = await fetch(BASE + path, {
     method,
-    headers: { Authorization: 'Basic ' + btoa('API_KEY:' + env.INTERVALS_API_KEY), Accept: 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'ironman-2027-app/1.0' },
+    headers: { Authorization: 'Basic ' + btoa('API_KEY:' + env.INTERVALS_API_KEY), Accept: 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'triient-app/1.0' },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await r.text();
@@ -423,7 +423,7 @@ async function intervalsGet(env, path) {
     headers: {
       Authorization: 'Basic ' + btoa('API_KEY:' + env.INTERVALS_API_KEY),
       Accept: 'application/json',
-      'User-Agent': 'ironman-2027-app/1.0',
+      'User-Agent': 'triient-app/1.0',
     },
   });
   if (r.status === 401 || r.status === 403) throw new Error('intervals.icu refuse la clé (' + r.status + ')');
@@ -657,7 +657,7 @@ async function apiEventFile(url, env) {
   if (!id) return json({ error: 'id manquant' }, 400);
   if (!env.INTERVALS_API_KEY) return json({ error: 'INTERVALS_API_KEY manquante' }, 500);
   const a = encodeURIComponent(env.INTERVALS_ATHLETE_ID || '0');
-  const r = await fetch(`${BASE}/athlete/${a}/events/${id}/download.${ext}`, { headers: { Authorization: 'Basic ' + btoa('API_KEY:' + env.INTERVALS_API_KEY), 'User-Agent': 'ironman-2027-app/1.0' } });
+  const r = await fetch(`${BASE}/athlete/${a}/events/${id}/download.${ext}`, { headers: { Authorization: 'Basic ' + btoa('API_KEY:' + env.INTERVALS_API_KEY), 'User-Agent': 'triient-app/1.0' } });
   const buf = new Uint8Array(await r.arrayBuffer());
   let bin = '';
   for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);

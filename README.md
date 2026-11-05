@@ -1,4 +1,4 @@
-# Plan triathlon
+# Triient
 
 Application web (PWA) de plan d'entraînement triathlon sur mesure. On choisit sa course (sprint, olympique, 70.3, Ironman, ou distances libres), la date et son niveau : l'app construit un plan jour par jour, de 4 à 52 semaines. Elle suit les séances, se synchronise avec Garmin et se retrouve sur tous les appareils via un compte Google.
 
@@ -63,8 +63,8 @@ L'adresse reflète la page affichée, ce qui permet de recharger, d'envoyer un l
 Fenêtres (`s=`) : `settings`, `legal`, `away`, `acts`, `act:ID`, `assoc:ID`, `link:ID`. En plus : `?today=AAAA-MM-JJ` simule une autre date (utile pour les tests).
 
 ## Déploiement
-- **App** : fichiers statiques sur Vercel (https://ironmanproject.vercel.app). Publier `index.html`, `races.js`, `sw.js`, `manifest.webmanifest` et les icônes.
-- **Page d'installation** : https://ironmanproject.vercel.app/installer (`installer.html`, adresse courte dans `vercel.json`). C'est le lien à partager. `installer-qr.svg` contient cette adresse en dur : à régénérer si le domaine change.
+- **App** : fichiers statiques sur Vercel (https://triient.vercel.app). Publier `index.html`, `races.js`, `sw.js`, `manifest.webmanifest` et les icônes.
+- **Page d'installation** : https://triient.vercel.app/installer (`installer.html`, adresse courte dans `vercel.json`). C'est le lien à partager. `installer-qr.svg` contient cette adresse en dur : à régénérer si le domaine change.
 - **Serveur** : `cd strava-worker && npx wrangler deploy`.
 
 ## Documentation

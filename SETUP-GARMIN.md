@@ -21,20 +21,20 @@ les lit ; l'app coche tes séances. Strava n'est plus utilisé (son API est deve
 ## 2. Héberger l'app (HTTPS)
 
 Dépose `index.html` et `sw.js` sur un hébergement gratuit (Netlify Drop, GitHub Pages, Cloudflare Pages…).
-Note son adresse, par exemple `https://ironman-2027.netlify.app`.
+Note son adresse, par exemple `https://triient.vercel.app`.
 
 ## 3. Déployer le Worker
 
 Dans un terminal, dans le dossier `strava-worker` (ce dossier garde son nom d'origine, il ne gère plus Strava) :
 
-1. Ouvre `wrangler.toml` : mets dans `ALLOWED_ORIGIN` l'adresse de l'app **sans chemin** (`https://ironman-2027.netlify.app`).
+1. Ouvre `wrangler.toml` : mets dans `ALLOWED_ORIGIN` l'adresse de l'app **sans chemin** (`https://triient.vercel.app`).
    Ne laisse pas `file:///…` : ça ne fonctionne pas depuis un iPhone. (`"*"` est accepté pour un premier test.)
 2. Déploie :
    ```
    npx wrangler login
    npx wrangler deploy
    ```
-   Note l'adresse affichée : `https://ironman-strava.TON-SOUS-DOMAINE.workers.dev`.
+   Note l'adresse affichée : `https://triient.TON-SOUS-DOMAINE.workers.dev`.
 3. Enregistre les deux secrets (la commande te demande la valeur) :
    ```
    npx wrangler secret put INTERVALS_API_KEY
@@ -45,7 +45,7 @@ Dans un terminal, dans le dossier `strava-worker` (ce dossier garde son nom d'or
 
 ## 4. Dans l'app
 
-Sur l'iPhone, ouvre l'app installée → bouton réglages en haut à droite de l'**Accueil** (ou onglet **Plus → Réglages**) → **Connexion Garmin** : colle `https://ironman-strava….workers.dev|TA_APP_KEY`
+Sur l'iPhone, ouvre l'app installée → bouton réglages en haut à droite de l'**Accueil** (ou onglet **Plus → Réglages**) → **Connexion Garmin** : colle `https://triient….workers.dev|TA_APP_KEY`
 dans « Adresse du serveur » (les deux champs se remplissent), puis touche **Tester et resynchroniser**.
 
 Le bloc **Dernières activités** de l'Accueil indique l'état de la synchro et liste tes dernières sorties (liste complète dans l'onglet **Données**).

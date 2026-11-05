@@ -40,7 +40,7 @@ test('un profil de test sans appareil laisse la page normale', () => {
 
 test('sur le site en ligne, le fichier ne change rien', () => {
   for (const dansCadre of [true, false]) {
-    const { navigator, written } = run('ironmanproject.vercel.app', '?profil=x&appareil=iphone-safari', 'https:', dansCadre);
+    const { navigator, written } = run('triient.vercel.app', '?profil=x&appareil=iphone-safari', 'https:', dansCadre);
     assert.equal(navigator.userAgent, 'vrai navigateur');
     assert.equal(written.length, 0);
   }
