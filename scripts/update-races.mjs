@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /* Mise à jour du catalogue de triathlons (races.js), sans dépendance ni IA. Voir CATALOGUE.md.
    Usage : node scripts/update-races.mjs [--dry] [--report fichier.md]
    Lit des calendriers publics, compare au catalogue, ajoute les nouvelles courses et les dates manquantes.
