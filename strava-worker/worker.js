@@ -119,7 +119,20 @@ async function pubRaces(url, env) {
    Le navigateur obtient un jeton d'identité (JWT RS256) auprès de Google ; ici on vérifie sa signature avec les clés publiques de Google,
    l'émetteur, l'audience (GOOGLE_CLIENT_ID) et l'expiration, puis on crée / met à jour l'utilisateur et on délivre un jeton de session signé
    (HMAC-SHA256 avec le secret SESSION_SECRET, valable 90 jours). Données conservées : identifiant Google (sub), e-mail, nom, dates de connexion,
-   et le plan de l'utilisateur (JSON). Routes (en-tête X-Session) : GET /pub/account · GET|PUT /pub/account/data · GET /pub/account/export · DELETE /pub/account */
+   et le plan de l'utilisateur (JSON). Routes (en-tête X-Session) : GET /pub/account · GET|PUT /pub/account/data · GET /pub/account/export · DELETE /pub/account
+   Clé Garmin : l'app envoie sa clé intervals.icu (gk) avec le plan ; elle est stockée chiffrée (gks, AES-GCM, clé dérivée de SESSION_SECRET)
+   et rendue en clair au seul propriétaire du compte. Un plan envoyé sans clé garde la clé déjà stockée, sauf « gkx » (Garmin déconnecté). */
+async function gkCrypto(env) {
+  return crypto.subtle.importKey('raw', await crypto.subtle.digest('SHA-256', enc.encode('garmin-key:' + env.SESSION_SECRET)), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+async function gkSeal(env, plain) {
+  const iv = crypto.getRandomValues(new Uint8Array(12)), ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await gkCrypto(env), enc.encode(plain)));
+  const all = new Uint8Array(12 + ct.length); all.set(iv); all.set(ct, 12);
+  return b64u(all);
+}
+async function gkOpen(env, sealed) {
+  try { const a = unb64u(sealed); return dec.decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: a.slice(0, 12) }, await gkCrypto(env), a.slice(12))); } catch (e) { return ''; }
+}
 const enc = new TextEncoder(), dec = new TextDecoder();
 const b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64u = (t) => Uint8Array.from(atob(t.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (t.length % 4)) % 4)), (c) => c.charCodeAt(0));
@@ -197,6 +210,7 @@ async function accountRoutes(req, url, env) {
     if (!u) return json({ ok: false, error: 'compte introuvable' }, 404);
     let data = null;
     try { data = u.data ? JSON.parse(u.data) : null; } catch (e) { data = null; }
+    if (data && data.gks) { delete data.gks; data.garmin_key = 'enregistrée, chiffrée'; }
     return json({ ok: true, export: { email: u.email, name: u.name, created: new Date(u.created).toISOString(), last_login: new Date(u.last_login).toISOString(), last_seen: u.last_seen ? new Date(u.last_seen).toISOString() : null, sessions_done: u.prog_done, sessions_total: u.prog_total, plan_data: data } });
   }
   // Visite : dernière visite + progression (séances faites / prévues, calculées sur l'appareil car les coches Garmin n'existent que là).
@@ -215,11 +229,21 @@ async function accountRoutes(req, url, env) {
       if (url.searchParams.get('meta') === '1') return json({ ok: true, v: u.v, updated: u.data_updated || 0 });
       let data = null;
       try { data = u.data ? JSON.parse(u.data) : null; } catch (e) { data = null; }
+      if (data && data.gks) { data.gk = await gkOpen(env, data.gks); delete data.gks; }
       return json({ ok: true, v: u.v, updated: u.data_updated || 0, data });
     }
     if (req.method === 'PUT') {
       let b = null;
       try { b = await req.json(); } catch (e) { return json({ ok: false, error: 'corps invalide' }, 400); }
+      if (b && b.data && typeof b.data === 'object') {
+        const d = b.data, gk = typeof d.gk === 'string' ? d.gk.trim().slice(0, 200) : '';
+        let prev = null;
+        try { prev = u.data ? JSON.parse(u.data) : null; } catch (e) { prev = null; }
+        delete d.gks;
+        if (gk) d.gks = await gkSeal(env, gk);
+        else if (!d.gkx && prev && prev.gks) d.gks = prev.gks;
+        delete d.gk; delete d.gkx;
+      }
       const text = JSON.stringify((b && b.data) || null);
       if (!b || !b.data || typeof b.data !== 'object' || text.length > SYNC_MAX) return json({ ok: false, error: 'données invalides ou trop grosses' }, 413);
       if (Number(b.base) !== u.v) return json({ ok: false, error: 'conflit', v: u.v, updated: u.data_updated || 0 }, 409);
@@ -358,7 +382,8 @@ function safeEq(a, b) {
 /* ---------- Deux façons de s'authentifier ----------
    1) Mode propriétaire : « Authorization: Bearer APP_KEY » → on utilise la clé intervals.icu enregistrée dans les secrets du Worker
       et le cache KV (fonctionnement historique, inchangé).
-   2) Mode public : « X-Icu-Key: <clé API intervals.icu de l'utilisateur> » → relais SANS ÉTAT : la clé n'est jamais enregistrée,
+   2) Mode public : « X-Icu-Key: <clé API intervals.icu de l'utilisateur> » → relais SANS ÉTAT : la clé n'est pas enregistrée ici
+      (seulement, chiffrée, dans le compte de l'utilisateur : voir « Comptes »),
       aucune activité n'est stockée sur le serveur (ni KV ni base) ; tout est relu chez intervals.icu à chaque appel.
    Dans les deux cas on renvoie un « env » dérivé : le reste du code ne change pas. */
 const NOKV = { get: async () => null, put: async () => {}, delete: async () => {} };

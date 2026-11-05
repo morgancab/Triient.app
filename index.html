@@ -2146,9 +2146,12 @@ function cloudKeys(code){
   });
 }
 function cloudBase(){return (state.ui&&state.ui.pubApi)||PUB_API;}
-function cloudPayload(){
-  var u=state.ui||{};
-  return {app:'triient',v:1,done:state.done,links:state.links,race:state.race||(SETUP?null:CFG),prof:u.prof||{},lv:u.lvl||{},st:u.steps||[],ms:u.missed||{},away:u.away||[],rc:u.race||{}};
+// acc : envoi vers le compte Google, qui garde aussi la connexion Garmin (clé chiffrée par le serveur). Jamais dans la sauvegarde par code.
+function cloudPayload(acc){
+  var u=state.ui||{},sv=state.sv||{};
+  var p={app:'triient',v:1,done:state.done,links:state.links,race:state.race||(SETUP?null:CFG),prof:u.prof||{},lv:u.lvl||{},st:u.steps||[],ms:u.missed||{},away:u.away||[],rc:u.race||{}};
+  if(acc){if(sv.key){p.gk=sv.key;if(sv.url&&sv.url!==PUB_API)p.gu=sv.url;}else if(u.gkOff)p.gkx=1;}
+  return p;
 }
 function cloudEncrypt(keys,obj){
   var iv=crypto.getRandomValues(new Uint8Array(12));
@@ -2194,6 +2197,7 @@ function cloudApply(p){
   state.done=p.done||{};state.links=p.links||{};
   state.ui.prof=p.prof||{};state.ui.lvl=p.lv||{};state.ui.steps=p.st||[];state.ui.missed=p.ms||{};state.ui.away=p.away||[];state.ui.race=p.rc||{};
   if(p.race&&p.race.date&&p.race.start)state.race=p.race;
+  if(p.gk&&p.gk!==(state.sv&&state.sv.key)){state.sv={url:p.gu||PUB_API,key:p.gk};delete state.ui.gkOff;}   // connexion Garmin gardée dans le compte
 }
 // récupération (nouvel appareil ou restauration) : télécharge, déchiffre et remplace les données locales
 function cloudRestore(codeRaw,silent){
@@ -2262,7 +2266,8 @@ function cloudFoldHtml(){
 }
 /* ---------- Compte (connexion Google) ----------
    Après « Continuer avec Google », le serveur vérifie l'identité et renvoie une session (90 jours). Le plan, les séances cochées et les
-   réglages sont enregistrés dans le compte (lisibles par le service, contrairement à la sauvegarde par code). La clé intervals.icu n'est jamais envoyée. */
+   réglages sont enregistrés dans le compte (lisibles par le service, contrairement à la sauvegarde par code). La clé intervals.icu y est aussi,
+   chiffrée par le serveur : se connecter sur un autre appareil (ou une autre adresse de l'app) suffit pour retrouver Garmin. */
 /* Connexion obligatoire : tant qu'il n'est pas connecté, l'utilisateur ne voit qu'un écran « Crée ton compte ».
    Garde-fous : jamais en ouverture de fichier (file://, la connexion Google y est impossible) ; si le serveur n'a pas de connexion Google configurée,
    l'app reste ouverte ; un utilisateur déjà connecté n'est jamais bloqué, même hors ligne (la session est locale). */
@@ -2304,7 +2309,7 @@ function renderWiz(){
       '<input id="wz-key" class="wzkey" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Colle ta clé API ici" value="'+esc(wz.key)+'"'+(wz.busy?' disabled':'')+'>'+
       (wz.err?'<p class="wzerr">'+esc(wz.err)+'</p>':'')+
       '<div class="btns"><button class="btn" data-act="wzpaste"'+(wz.busy?' disabled':'')+'>Coller</button><button class="btn pri" data-act="wzverify"'+(wz.busy?' disabled':'')+'>'+(wz.busy?'Vérification…':'Vérifier et connecter')+'</button></div>'+
-      '<p class="small muted" style="margin:6px 0 10px;line-height:1.5">Ta clé reste enregistrée sur ton appareil : le serveur ne la conserve pas. Elle sert uniquement à lire tes activités et à envoyer tes séances.</p><button class="lnk" data-act="wzback" style="margin:0">Retour</button>';
+      '<p class="small muted" style="margin:6px 0 10px;line-height:1.5">Ta clé est enregistrée sur ton appareil et, chiffrée, dans ton compte : tu n’auras pas à la recoller sur un autre appareil. Elle sert uniquement à lire tes activités et à envoyer tes séances.</p><button class="lnk" data-act="wzback" style="margin:0">Retour</button>';
   }
   showSheet('Connecter Garmin','Étape '+s+' sur 3',h);
 }
@@ -2317,6 +2322,7 @@ function wzVerify(){
     if(j.status===401||j.connected===false)throw new Error(/refuse/.test(j.error||'')||j.status===401?'intervals.icu refuse cette clé. Vérifie que tu l’as copiée en entier.':(j.error||'Connexion refusée'));
     return fetch(base+'/api/activities?since='+isoDate(addDays(today(),-400)),{headers:H}).then(function(r){return r.json();}).then(function(a){
       var acts=a.activities||[];
+      delete state.ui.gkOff;
       state.sv=Object.assign(state.sv||{},{url:base,key:key,acts:acts,meta:a.meta||null,hrz:(a.meta&&a.meta.hrz)||(state.sv&&state.sv.hrz),conn:true,t:Date.now(),err:'',werr:''});
       save();
       if(acts.length&&!state.ui.gtracked){state.ui.gtracked=1;save();track('garmin_connected','');}
@@ -2397,7 +2403,7 @@ function acctPing(){
 function acctPush(loud){
   if(DEV)return Promise.resolve();
   var a=acct();if(!a||acctBusy)return Promise.resolve();
-  var payload=cloudPayload(),sig=JSON.stringify(payload);
+  var payload=cloudPayload(true),sig=JSON.stringify(payload);
   if(!loud&&sig===a.sig)return Promise.resolve();
   acctBusy=true;
   return acctCall('PUT','/pub/account/data',{data:payload,base:a.v||0}).then(function(j){
@@ -2426,7 +2432,7 @@ function acctAfterLogin(){
     if(j.data&&j.data.done){
       var nm=(j.data.race&&j.data.race.name)||'ton plan';
       if(SETUP||confirm('Un plan existe déjà dans ton compte (« '+nm+' »).\n\nOK : le charger sur cet appareil (remplace les données d’ici).\nAnnuler : garder cet appareil et remplacer le plan du compte.')){
-        cloudApply(j.data);a.sig=JSON.stringify(cloudPayload());a.t=j.updated||Date.now();save0();location.reload();return;
+        cloudApply(j.data);a.sig=JSON.stringify(cloudPayload(true));a.t=j.updated||Date.now();save0();location.reload();return;
       }
     }
     save0();
@@ -2441,9 +2447,9 @@ function acctBoot(){
     var x=acct();if(!x||!m||!m.ok)return;
     if(m.v>(x.v||0)){
       x.conflict=true;x.paused=true;save0();
-      if(JSON.stringify(cloudPayload())===x.sig)acctCall('GET','/pub/account/data').then(function(j){if(j.ok&&j.data){cloudApply(j.data);x.v=j.v;x.t=j.updated;x.conflict=false;x.paused=false;x.sig=JSON.stringify(cloudPayload());save0();location.reload();}});
+      if(JSON.stringify(cloudPayload(true))===x.sig)acctCall('GET','/pub/account/data').then(function(j){if(j.ok&&j.data){cloudApply(j.data);x.v=j.v;x.t=j.updated;x.conflict=false;x.paused=false;x.sig=JSON.stringify(cloudPayload(true));save0();location.reload();}});
       else toast('Une version plus récente existe dans ton compte (Réglages → Compte)');
-    }else if(JSON.stringify(cloudPayload())!==x.sig)acctSchedule();
+    }else if(JSON.stringify(cloudPayload(true))!==x.sig)acctSchedule();
   }).catch(function(){});
 }
 function acctForce(){
@@ -2510,7 +2516,7 @@ function legalHtml(){
   return '<h4>Éditeur</h4>'+p('Application gratuite, éditée à titre personnel et sans but commercial.'+(LEGAL.editor?' Éditeur : '+esc(LEGAL.editor)+'.':'')+(LEGAL.contact?' Contact : '+esc(LEGAL.contact)+'.':''))+
     p('Hébergement de l’application : Vercel Inc. Serveur relais (recherche de courses, synchronisation Garmin facultative) : Cloudflare, Inc.')+
     '<h4>Confidentialité</h4>'+p('Il n’y a ni publicité ni suivi publicitaire. Pour utiliser l’app, tu crées un compte en te connectant avec Google. Ton plan, tes séances cochées et tes réglages sont enregistrés sur ton appareil et dans ton compte, pour que tu les retrouves partout. Pour suivre le service, le propriétaire de l’app peut voir ton nom, ton e-mail, ta course, ta progression (nombre de séances faites) et ta date de dernière visite.')+
-    p('Seule la recherche de courses envoie le texte que tu tapes (3 caractères ou plus) à notre serveur relais, qui interroge le calendrier World Triathlon. Rien n’est enregistré à ton nom ; les réponses sont simplement mises en cache quelques heures. Si tu actives la synchronisation Garmin, tes activités passent par intervals.icu et ce serveur relais, sans y être conservées.')+p('Nous comptons de façon <b>anonyme</b> quelques événements (ouverture de l’app, création d’un plan avec son format, course choisie, recherche sans résultat) pour améliorer le service : ce sont de simples compteurs par jour, sans identifiant, sans cookie et sans adresse IP. Tu peux les désactiver dans Réglages → À propos, et ils respectent l’option « Ne pas me suivre » de ton navigateur.')+p('Si tu actives la <b>sauvegarde cloud</b>, une copie de ton plan et de tes séances cochées est envoyée <b>chiffrée</b> (la clé reste dans ton code de récupération, que nous ne connaissons pas) : nous ne pouvons pas la lire. Tu peux la supprimer à tout moment dans Réglages. Ta clé intervals.icu n’est jamais sauvegardée.')+p('À la création du compte (connexion avec <b>Google</b>), nous enregistrons ton identifiant Google, ton e-mail, ton nom et les dates de connexion, ainsi que ton plan (course choisie, séances cochées, notes, réglages) pour le retrouver sur tous tes appareils. Ces données ne sont ni vendues ni partagées. Tu peux les exporter ou supprimer ton compte à tout moment dans Réglages → Compte.')+
+    p('Seule la recherche de courses envoie le texte que tu tapes (3 caractères ou plus) à notre serveur relais, qui interroge le calendrier World Triathlon. Rien n’est enregistré à ton nom ; les réponses sont simplement mises en cache quelques heures. Si tu actives la synchronisation Garmin, tes activités passent par intervals.icu et ce serveur relais, sans y être conservées.')+p('Nous comptons de façon <b>anonyme</b> quelques événements (ouverture de l’app, création d’un plan avec son format, course choisie, recherche sans résultat) pour améliorer le service : ce sont de simples compteurs par jour, sans identifiant, sans cookie et sans adresse IP. Tu peux les désactiver dans Réglages → À propos, et ils respectent l’option « Ne pas me suivre » de ton navigateur.')+p('Si tu actives la <b>sauvegarde cloud</b>, une copie de ton plan et de tes séances cochées est envoyée <b>chiffrée</b> (la clé reste dans ton code de récupération, que nous ne connaissons pas) : nous ne pouvons pas la lire. Tu peux la supprimer à tout moment dans Réglages. Ta clé intervals.icu n’y figure jamais.')+p('À la création du compte (connexion avec <b>Google</b>), nous enregistrons ton identifiant Google, ton e-mail, ton nom et les dates de connexion, ainsi que ton plan (course choisie, séances cochées, notes, réglages) pour le retrouver sur tous tes appareils. Si tu connectes Garmin, ta clé intervals.icu y est aussi enregistrée, chiffrée ; « Déconnecter Garmin » l’efface. Ces données ne sont ni vendues ni partagées. Tu peux les exporter ou supprimer ton compte à tout moment dans Réglages → Compte.')+
     '<h4>Avertissement</h4>'+p('Les plans proposés sont <b>indicatifs</b> et générés automatiquement : ils ne remplacent ni l’avis d’un médecin, ni celui d’un entraîneur. Consulte un professionnel de santé avant de reprendre ou d’intensifier une pratique sportive, et arrête-toi en cas de douleur ou de malaise. Tu t’entraînes sous ta seule responsabilité.')+
     '<h4>Données des courses</h4>'+p('Les noms, lieux, formats, distances et dates du catalogue sont donnés à titre indicatif, d’après des sources publiques (dont le calendrier de la Fédération Française de Triathlon et World Triathlon). Ils peuvent être incomplets ou changer : vérifie toujours auprès de l’organisateur avant de t’inscrire.')+
     '<h4>Marques et crédits</h4>'+p('IRONMAN et IRONMAN 70.3 sont des marques de leurs propriétaires ; Garmin, intervals.icu et World Triathlon sont cités pour identifier des services. Cette application est indépendante : elle n’est ni affiliée à ces organisations, ni approuvée par elles. Photo d’accueil : départ natation d’un Ironman, U.S. Navy (Chief Journalist Deborah Carson), domaine public.');
@@ -3416,7 +3422,7 @@ document.addEventListener('click',function(e){
   else if(a==='wzverify')wzVerify();
   else if(a==='wzpaste')wzPaste();
   else if(a==='wzdone'){closeSheet();render(true);}
-  else if(a==='garminoff'){if(confirm('Déconnecter Garmin ? Tes séances ne se cocheront plus automatiquement. Tes données restent dans intervals.icu.')){state.sv={};save();render(true);openSheet();toast('Garmin déconnecté');}}
+  else if(a==='garminoff'){if(confirm('Déconnecter Garmin ? Tes séances ne se cocheront plus automatiquement. Tes données restent dans intervals.icu.')){state.sv={};state.ui.gkOff=1;save();render(true);openSheet();toast('Garmin déconnecté');}}
   else if(a==='closesheet')closeSheet();
   else if(a==='export')doExport();
   else if(a==='import')doImport();
@@ -4509,7 +4515,7 @@ function syncActs(force,loud){
 }
 function svSettings(){
   var sv=state.sv;
-  return '<h4>Garmin (synchronisation automatique)</h4><p>Garmin Connect envoie tes activités à <b>intervals.icu</b> (gratuit) ; l’app les lit et coche tes séances toute seule. Crée un compte sur intervals.icu, connecte-y Garmin, puis copie ta <b>clé API</b> (Réglages → Developer Settings → API Key) dans le champ ci-dessous. Ta clé reste sur ton téléphone ; le serveur ne la conserve pas.</p>'+
+  return '<h4>Garmin (synchronisation automatique)</h4><p>Garmin Connect envoie tes activités à <b>intervals.icu</b> (gratuit) ; l’app les lit et coche tes séances toute seule. Crée un compte sur intervals.icu, connecte-y Garmin, puis copie ta <b>clé API</b> (Réglages → Developer Settings → API Key) dans le champ ci-dessous. Ta clé est enregistrée sur ton téléphone et, chiffrée, dans ton compte, pour que tu n’aies pas à la recoller ailleurs.</p>'+
     '<label class="inp wide"><span>Adresse du serveur<small>laisse vide : serveur par défaut</small></span><input id="sv-url" name="triient-server-url" autocomplete="off" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://triient.….workers.dev" value="'+esc(sv.url||'')+'"></label>'+
     '<label class="inp wide"><span>Clé d’accès</span><input id="sv-key" type="text" name="triient-app-key" autocomplete="off" data-lpignore="true" style="-webkit-text-security:disc;text-security:disc" autocapitalize="off" autocorrect="off" spellcheck="false" value="'+esc(sv.key||'')+'"></label>'+
     '<button class="btn pri" data-act="svresync">Tester et resynchroniser</button>'+
@@ -4555,7 +4561,7 @@ if(DEV){
   window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 }
 
-window.IM={fm:fm,fh:fh,hms:hms,PHASES:PHASES,BLOCKS:BLOCKS,KINDS:KINDS,T_TAPER:T_TAPER,stepOps:stepOps,VIEWS:VIEWS,missedList:missedList,missAdvice:missAdvice,missDo:missDo,missUndo:missUndo,missAll:missAll,isMissed:isMissed,openWiz:openWiz,gatePreview:function(c){pubCfg=c;renderGate();},gateNeeded:gateNeeded,acctLogin:acctLogin,catSearch:catSearch,wtResults:wtResults,wtFormat:wtFormat,pickRace:pickRace,NSESS:NSESS,planSpan:planSpan,newRaceDraft:newRaceDraft,raceFormHtml:raceFormHtml,saveRace:saveRace,applyAway:applyAway,adaptFields:adaptFields,estKm:estKm,detailBody:detailBody,wkBlocks:wkBlocks,pushSession:pushSession,pushPreview:pushPreview,clearPreview:clearPreview,wkText:wkText,evOf:evOf,ALLS:ALLS,tx:tx,autoProf:autoProf,estRace:estRace,estAll:estAll,raceParams:raceParams,PLAN:PLAN,stats:stats,status:status,computeLinks:computeLinks,links:function(){return LK;},state:state,actSport:actSport};
+window.IM={fm:fm,fh:fh,hms:hms,PHASES:PHASES,BLOCKS:BLOCKS,KINDS:KINDS,T_TAPER:T_TAPER,stepOps:stepOps,VIEWS:VIEWS,missedList:missedList,missAdvice:missAdvice,missDo:missDo,missUndo:missUndo,missAll:missAll,isMissed:isMissed,openWiz:openWiz,cloudPayload:cloudPayload,cloudApply:cloudApply,gatePreview:function(c){pubCfg=c;renderGate();},gateNeeded:gateNeeded,acctLogin:acctLogin,catSearch:catSearch,wtResults:wtResults,wtFormat:wtFormat,pickRace:pickRace,NSESS:NSESS,planSpan:planSpan,newRaceDraft:newRaceDraft,raceFormHtml:raceFormHtml,saveRace:saveRace,applyAway:applyAway,adaptFields:adaptFields,estKm:estKm,detailBody:detailBody,wkBlocks:wkBlocks,pushSession:pushSession,pushPreview:pushPreview,clearPreview:clearPreview,wkText:wkText,evOf:evOf,ALLS:ALLS,tx:tx,autoProf:autoProf,estRace:estRace,estAll:estAll,raceParams:raceParams,PLAN:PLAN,stats:stats,status:status,computeLinks:computeLinks,links:function(){return LK;},state:state,actSport:actSport};
 applyAway();
 try{
   if(RCFG.migrate&&!state.ui.seen){state.ui.seen=1;save();}
