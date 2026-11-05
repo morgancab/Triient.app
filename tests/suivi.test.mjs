@@ -186,3 +186,15 @@ test('analyse du suivi : entonnoir, rétention et répartitions calculés sans l
   assert.match(h, /trifouillis/);
   assert.match(h, /Demi-distance \(70\.3\) · 7 séances · Intermédiaire/);
 });
+
+test('personnes actives par jour : comptes distincts, appareils multiples comptés une fois, propriétaire exclu', async () => {
+  const { db, env } = setup();
+  db.exec(schema('schema.sql'));
+  const day = new Date().toISOString().slice(0, 10), now = Date.now();
+  const v = (u, t, dev) => db.prepare("INSERT INTO visits (user_id, t, kind, device) VALUES (?, ?, 'visit', ?)").run(u, t, dev);
+  v('u1', now - 60e3, 'iPhone · app installée'); v('u1', now - 30e3, 'Windows · Chrome'); v('admin', now - 10e3, 'Mac · Safari');
+  const j = await call(env, 'admin', 'GET', '/pub/admin/stats?days=7');
+  assert.equal(j.ok, true);
+  assert.equal(j.acc[day], 1);
+  assert.equal((await call(env, 'u1', 'GET', '/pub/admin/stats?days=7')).status, 403);
+});

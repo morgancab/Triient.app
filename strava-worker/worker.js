@@ -422,7 +422,15 @@ async function adminStats(url, env) {
   }
   const ranked = {};
   for (const k of Object.keys(top)) ranked[k] = Object.entries(top[k]).sort((a, b) => b[1] - a[1]).slice(0, 15);
-  return json({ ok: true, days, since, totals: tot, daily, top: ranked });
+  // Comptes actifs par jour (UTC) : personnes distinctes ayant ouvert l'app ou s'étant connectées, sans les comptes propriétaires.
+  // Contrairement aux compteurs anonymes (un par appareil), une personne sur iPhone et ordinateur ne compte qu'une fois.
+  const acc = {};
+  try {
+    const own = String(env.ADMIN_EMAILS || '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
+    const q = "SELECT date(v.t / 1000, 'unixepoch') AS day, COUNT(DISTINCT v.user_id) AS n FROM visits v JOIN users u ON u.id = v.user_id WHERE v.t >= ?" + (own.length ? ' AND lower(u.email) NOT IN (' + own.map(() => '?').join(',') + ')' : '') + ' GROUP BY day';
+    for (const r of (await env.DB.prepare(q).bind(Date.now() - days * 86400000, ...own).all()).results || []) acc[r.day] = r.n;
+  } catch (e) { /* table visits absente */ }
+  return json({ ok: true, days, since, totals: tot, daily, top: ranked, acc });
 }
 
 /* ---------- utilitaires ---------- */

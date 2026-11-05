@@ -161,7 +161,7 @@ svg[data-ch]{touch-action:pan-y;cursor:crosshair}
 .ks{font-size:11.5px;color:var(--t2);margin-top:3px;line-height:1.25}
 .inp.tp-f{grid-template-columns:1fr auto}
 .tval{min-width:120px;height:44px;padding:0 14px;border:0;border-radius:12px;background:var(--card2);color:var(--t1);font-size:16px;font-weight:600;font-family:inherit;font-variant-numeric:tabular-nums;white-space:nowrap}
-.tval.empty{color:var(--t2);font-weight:500}
+.tval.unset{color:var(--t2);font-weight:500}   /* pas « empty » : déjà pris par les cartes d'état vide (grande marge intérieure) */
 .sheet .tval{background:var(--card3)}
 .tp-bg{position:fixed;left:0;right:0;top:0;bottom:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s}
 .tp-bg.on{opacity:1;pointer-events:auto}
@@ -274,6 +274,15 @@ svg[data-ch]{touch-action:pan-y;cursor:crosshair}
 .adm-hist{display:flex;align-items:flex-end;gap:3px;height:60px;padding:12px 14px 0}
 .adm-hist i{flex:1;min-height:2px;border-radius:2px;background:var(--brand,#D7FF3A)}
 .adm-hist i.z{background:var(--card3,#2a2a30)}
+.adm-ro{display:flex;justify-content:space-between;gap:10px;min-height:20px;margin:8px 0 0;font-size:12.5px;color:var(--t2)}
+.adm-ro b{color:var(--t1);font-weight:600}
+.adm-hist i{cursor:pointer}
+.adm-hist i.on{background:var(--t1)}
+.adm-hist i.z.on{background:var(--t2)}
+.adm-lex{margin:14px 0 0;font-size:13px;color:var(--t2)}
+.adm-lex summary{cursor:pointer;color:var(--t1);font-weight:600}
+.adm-lex p{margin:8px 0 0;line-height:1.45}
+.adm-lex b{color:var(--t1);font-weight:600}
 .adm-hl{display:flex;justify-content:space-between;padding:6px 14px 12px;font-size:11.5px;color:var(--t3)}
 .adm-v{display:flex;gap:12px;padding:10px 14px;border-bottom:.5px solid var(--sep);font-size:14px}
 .adm-v:last-child{border-bottom:0}
@@ -2536,7 +2545,7 @@ function renderGate(){
   var vw=document.getElementById('view'),cfg=pubCfg,ready=cfg&&!cfg.err&&cfg.googleClientId,body;
   try{document.body.classList.add('setup');}catch(e){}
   vw.className='';gateShown=true;
-  if(!gateTracked&&ready){gateTracked=true;track('gate_view','');}
+  if(!gateTracked&&ready){gateTracked=true;trackOnce('gate_view','');}
   body=!cfg?'<div class="g-gbox w"><span class="g-wait">Connexion au serveur…</span></div>':cfg.err?'<p class="small muted" style="margin:0 0 8px">Connexion impossible pour l’instant.</p><button class="btn" data-act="gateretry">Réessayer</button>':'<div class="g-gbox"><div id="g-btn" data-theme="filled_black" style="display:flex;justify-content:center;width:100%"></div></div>';
   var grow=function(sp,icn,t,s){return '<div class="g-row sp-'+sp+'"><span class="gi">'+ic(icn,19)+'</span><span><b>'+t+'</b><small>'+s+'</small></span></div>';};
   // Aperçu d'une semaine type : montre le produit (séances détaillées, cochées par Garmin, envoyées sur la montre)
@@ -2642,7 +2651,7 @@ function acctAfterLogin(){
     }
     if(pend){state.race=pend;delete state.ui.pendingRace;delete state.ui.guest;save0();return acctPush(true).then(function(){location.reload();});}
     save0();
-    if(SETUP){toast('Bienvenue ! Choisis ta course');gateShown=false;track('setup_view');if(!typing())renderSetup();return;}
+    if(SETUP){toast('Bienvenue ! Choisis ta course');gateShown=false;trackOnce('setup_view');if(!typing())renderSetup();return;}
     return acctPush(true).then(function(){
       if(gateShown)render(false);
       else if(document.getElementById('sheetbg').classList.contains('on'))openSheet();
@@ -2736,8 +2745,10 @@ function openLegal(){showSheet('Mentions légales','Confidentialité, avertissem
    Envoie seulement un nom d'événement et une propriété courte (ex. « plan_created », « half|7s|l1 ») ; le serveur ne garde que des compteurs
    par jour. Aucun identifiant, cookie ni donnée personnelle. Désactivable dans Réglages → À propos, et respecte « Ne pas me suivre » du navigateur. */
 function statsOn(){try{return !(state.ui&&state.ui.noStats)&&navigator.doNotTrack!=='1'&&window.doNotTrack!=='1';}catch(e){return true;}}
+// Étapes de l'entonnoir d'inscription : une seule fois par appareil, pour que l'entonnoir compte des visiteurs et non des affichages
+function trackOnce(name,prop){var tk=state.ui.tk||(state.ui.tk={});if(tk[name])return;tk[name]=1;save0();track(name,prop);}
 function track(name,prop){
-  if(DEV||!statsOn()||/^file:/.test(location.protocol))return;
+  if(DEV||!statsOn()||/^file:/.test(location.protocol)||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))return;   // local : tests et développement ne comptent pas
   try{
     var url=((state.ui&&state.ui.pubApi)||PUB_API)+'/pub/ev',body=JSON.stringify({e:name,p:prop||''});
     if(navigator.sendBeacon&&navigator.sendBeacon(url,new Blob([body],{type:'text/plain'})))return;
@@ -2867,8 +2878,8 @@ function saveRace(){
     if(!confirm('Remplacer ton plan actuel par un nouveau plan pour « '+cfg.name+' » ? Les séances cochées et les associations seront réinitialisées.'))return;
     state.done={};state.links={};state.ui.missed={};state.ui.away=[];state.ui.sent={};state.ui.race={};state.ui.welcomed=undefined;
   }
-  track(SETUP?'plan_created':'plan_changed',cls+'|'+nsess+'s|l'+d.level);
-  if(SETUP&&loginOn()){state.ui.pendingRace=cfg;save();track('login_step','');window.scrollTo(0,0);render(false);return;}
+  (SETUP?trackOnce:track)(SETUP?'plan_created':'plan_changed',cls+'|'+nsess+'s|l'+d.level);
+  if(SETUP&&loginOn()){state.ui.pendingRace=cfg;save();trackOnce('login_step','');window.scrollTo(0,0);render(false);return;}
   state.race=cfg;save();location.reload();
 }
 /* ---------- Catalogue de courses ----------
@@ -3530,7 +3541,13 @@ var adminEv=null,admDays=30;
 function admPct(a,b){return b?Math.round(a/b*100):0;}
 function admCount(list,key){var o={};list.forEach(function(x){var k=key(x);if(k)o[k]=(o[k]||0)+1;});return Object.keys(o).map(function(k){return [k,o[k]];}).sort(function(a,b){return b[1]-a[1];});}
 function admRows(list,total,col){var mx=Math.max.apply(null,list.map(function(x){return x[1];}).concat([1]));return list.map(function(x){return prRow(esc(x[0]),x[1]+(total?' · '+admPct(x[1],total)+' %':''),Math.round(x[1]/mx*100),col);}).join('');}
-function admHist(vals,lbl){var mx=Math.max.apply(null,vals.concat([1]));return '<div class="adm-hist" aria-hidden="true">'+vals.map(function(c){return '<i'+(c?'':' class="z"')+' style="height:'+(c?Math.max(8,Math.round(c/mx*100)):4)+'%"></i>';}).join('')+'</div><div class="adm-hl"><span>'+esc(lbl[0])+'</span><span>'+esc(lbl[1])+'</span></div>';}
+// Histogramme jour par jour : touche ou survole une barre pour lire sa valeur (dates : AAAA-MM-JJ, unit : [singulier, pluriel])
+function admHist(vals,lbl,dates,unit){
+  var mx=Math.max.apply(null,vals.concat([1])),tot=vals.reduce(function(p,c){return p+c;},0),u=function(n){return n+' '+(unit?(n>1?unit[1]:unit[0]):'');};
+  return '<div class="adm-hw"><div class="adm-ro"><span>Total '+u(tot)+'</span><span>max '+Math.max.apply(null,vals.concat([0]))+'</span></div><div class="adm-hist">'+vals.map(function(c,i){var d=dates&&parseISO(dates[i]),t=(d?DAYS[(d.getDay()+6)%7].slice(0,3).toLowerCase()+'. '+fmtDay(d):'')+' : '+u(c);return '<i'+(c?'':' class="z"')+' data-t="'+esc(t)+'" title="'+esc(t)+'" style="height:'+(c?Math.max(8,Math.round(c/mx*100)):4)+'%"></i>';}).join('')+'</div><div class="adm-hl"><span>'+esc(lbl[0])+'</span><span>'+esc(lbl[1])+'</span></div></div>';
+}
+function admHistPick(e){var b=e.target&&e.target.closest&&e.target.closest('.adm-hist i');if(!b)return;var w=b.closest('.adm-hw'),ro=w&&w.querySelector('.adm-ro');if(!ro)return;Array.prototype.forEach.call(w.querySelectorAll('.adm-hist i.on'),function(x){x.classList.remove('on');});b.classList.add('on');ro.innerHTML='<b>'+esc(b.getAttribute('data-t'))+'</b>';}
+document.addEventListener('pointerdown',admHistPick);document.addEventListener('pointerover',admHistPick);
 function admPlanLbl(p){var x=String(p).split('|'),f=FORMATS[x[0]];return (f?f.n:x[0])+(x[1]?' · '+x[1].replace('s',' séances'):'')+(x[2]?' · '+(['Débutant','Intermédiaire','Confirmé'][+x[2].slice(1)]||x[2]):'');}
 function admAnalytics(D,E,days,now){
   now=now||Date.now();
@@ -3550,10 +3567,19 @@ function admAnalytics(D,E,days,now){
   if(E){
     var dd=[],opens=[],plans=[],accs=[],i;
     for(i=days-1;i>=0;i--){var dt=new Date(now-i*DAY);dd.push(isoDate(dt));}
-    dd.forEach(function(d){var x=(E.daily||{})[d]||{};opens.push(x.open||0);plans.push(x.plan_created||0);accs.push(U.filter(function(u){return isoDate(new Date(u.created))===d;}).length);});
+    var people=[];
+    dd.forEach(function(d){var x=(E.daily||{})[d]||{};opens.push(x.open||0);plans.push(x.plan_created||0);people.push((E.acc||{})[d]||0);accs.push(U.filter(function(u){return isoDate(new Date(u.created))===d;}).length);});
     var sum=function(a){return a.reduce(function(p,c){return p+c;},0);},lbl=[fmtDay(parseISO(dd[0])),'Aujourd’hui'];
-    h+=card('Activité',days+' jours','<div class="adm-g" style="margin-top:0">'+tile(String(Math.round(sum(opens)/days*10)/10).replace('.',','),'Appareils actifs par jour','en moyenne')+tile(Math.max.apply(null,opens),'Record sur un jour')+tile(t('install'),'Nouveaux appareils')+tile(sum(plans),'Plans remplis')+'</div>'+
-      '<div class="eyebrow" style="margin:16px 0 0">Appareils qui ouvrent l’app</div>'+admHist(opens,lbl)+'<div class="eyebrow" style="margin:6px 0 0">Nouveaux comptes</div>'+admHist(accs,lbl));
+    var avg=function(a){return String(Math.round(sum(a)/days*10)/10).replace('.',',');};
+    h+=card('Activité',days+' jours','<div class="adm-g" style="margin-top:0">'+tile(avg(people),'Personnes actives par jour','en moyenne, comptes distincts')+tile(avg(opens),'Appareils actifs par jour','en moyenne')+tile(sum(accs),'Nouveaux comptes')+tile(t('install'),'Premiers lancements','navigateurs ou appareils neufs')+'</div>'+
+      '<div class="eyebrow" style="margin:16px 0 0">Personnes actives</div>'+admHist(people,lbl,dd,['personne','personnes'])+
+      '<div class="eyebrow" style="margin:10px 0 0">Appareils qui ouvrent l’app</div>'+admHist(opens,lbl,dd,['appareil','appareils'])+
+      '<div class="eyebrow" style="margin:10px 0 0">Nouveaux comptes</div>'+admHist(accs,lbl,dd,['compte','comptes'])+
+      '<details class="adm-lex"><summary>Comment lire ces chiffres</summary>'+
+        '<p><b>Personnes actives</b> : comptes distincts qui ont ouvert l’app ce jour-là. Une personne sur iPhone et sur ordinateur compte une fois. Seuls les comptes qui gardent les statistiques d’usage activées sont suivis.</p>'+
+        '<p><b>Appareils actifs</b> : navigateurs ou apps installées qui ont ouvert l’app ce jour-là, une fois par jour chacun, sans compte nécessaire. Une même personne peut en avoir plusieurs (sur iPhone, Safari et l’app installée comptent séparément).</p>'+
+        '<p><b>Premiers lancements</b> : premières ouvertures sur un navigateur ou un appareil. Changer de navigateur ou effacer ses données compte à nouveau : ce n’est pas un nombre de personnes.</p>'+
+        '<p><b>Nouveaux comptes</b> : inscriptions réelles, sans doublon. Toutes les dates sont en heure universelle (une heure de décalage avec la France en hiver).</p></details>');
   }
   // 3. Engagement des comptes
   if(n){
@@ -3696,7 +3722,7 @@ document.addEventListener('click',function(e){
   else if(a==='togstats'){state.ui.noStats=statsOn();save();openSheet();toast(statsOn()?'Statistiques activées':'Statistiques désactivées');}
   else if(a==='gateretry'){pubCfg=null;render(false);loadPubCfg();}
   else if(a==='editpending'){delete state.ui.pendingRace;save();window.scrollTo(0,0);render(false);}
-  else if(a==='gateguest'){state.ui.guest=Date.now();save();track('guest_start','');window.scrollTo(0,0);render(false);}
+  else if(a==='gateguest'){state.ui.guest=Date.now();save();trackOnce('guest_start','');window.scrollTo(0,0);render(false);}
   else if(a==='gatetop'){var gc=document.getElementById('g-cta');if(gc)gc.scrollIntoView({behavior:'smooth',block:'center'});}
   else if(a==='acctsave'){var ac=acct();if(ac){if(ac.conflict&&!confirm('Écraser la version du compte avec les données de cet appareil ?'))return;ac.paused=false;ac.conflict=false;acctForce();}}
   else if(a==='acctexport')acctExport();
@@ -4054,7 +4080,7 @@ function tpTxt(c){
 }
 function tpField(id,label,hint){
   var c=tpCfg(id);
-  return '<div class="inp tp-f"><span>'+label+'<small>'+hint+'</small></span><button type="button" class="tval'+(!c.v&&!c.zero?' empty':'')+'" id="tp-'+id+'" data-act="tpick" data-id="'+id+'" aria-haspopup="dialog">'+tpTxt(c)+'</button></div>';
+  return '<div class="inp tp-f"><span>'+label+'<small>'+hint+'</small></span><button type="button" class="tval'+(!c.v&&!c.zero?' unset':'')+'" id="tp-'+id+'" data-act="tpick" data-id="'+id+'" aria-haspopup="dialog">'+tpTxt(c)+'</button></div>';
 }
 function tpEl(){
   var bg=document.getElementById('tpbg');if(bg)return bg;
@@ -4092,7 +4118,7 @@ function tpClose(){
   bg.classList.remove('on');tpCur=null;
   var b=document.getElementById('tp-'+id);if(b)b.focus({preventScroll:true});
 }
-function tpSync(id){var b=document.getElementById('tp-'+id),c=tpCfg(id);if(b&&c){b.textContent=tpTxt(c);b.classList.toggle('empty',!c.v&&!c.zero);}}
+function tpSync(id){var b=document.getElementById('tp-'+id),c=tpCfg(id);if(b&&c){b.textContent=tpTxt(c);b.classList.toggle('unset',!c.v&&!c.zero);}}
 function tpOk(){
   var id=tpCur,c=id&&tpCfg(id);if(!c)return;
   var t=0;
@@ -4980,7 +5006,7 @@ try{
   if(!state.ui.seen){state.ui.seen=1;save();track('install');}
   var td=isoDate(today());if(state.ui.lastOpen!==td){state.ui.lastOpen=td;save();track('open');}
   loadPubCfg();
-  if(SETUP&&!gateNeeded())track('setup_view');else if(!SETUP){loadAdminStats();if(acct())acctBoot();else cloudBoot();}
+  if(SETUP&&!gateNeeded())trackOnce('setup_view');else if(!SETUP){loadAdminStats();if(acct())acctBoot();else cloudBoot();}
 }catch(e){}
 try{document.title='Triient · '+RNAME;}catch(e){}
 var r0=parseRoute();   // à lire avant le premier rendu, qui réécrit l'adresse
