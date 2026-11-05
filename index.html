@@ -2082,8 +2082,8 @@ function stepFromDraft(d){
   return o;
 }
 function stepResHtml(d){
-  if(!d.q||normS(d.q).length<2)return '';
-  if(!d.res.length)return '<p class="small muted" style="margin:8px 0 0">'+(d.load?'Recherche…':'Aucune course trouvée : saisis-la toi-même ci-dessous.')+'</p>';
+  if(d.picked||!d.q||normS(d.q).length<2)return '';
+  if(!d.res.length)return '<p class="small muted" style="margin:8px 0 0">'+(d.load?'Recherche…':'Aucune course trouvée : garde ce nom, puis choisis la discipline et la date ci-dessous.')+'</p>';
   return '<div class="rres">'+d.res.map(function(r,i){
     var loc=[r.city,CC_NAMES[r.cc]||r.cc].filter(Boolean).join(' · '),when=r.date?fmtLong(parseISO(r.date)):(r.month?'habituellement en '+MONTHS_L[r.month-1]:''),what=r.kind==='tri'?FORMATS[r.format].n:stepDist(r);
     return '<button class="rr" data-act="steppick" data-i="'+i+'"><span class="t"><b>'+esc(r.name)+'</b><small>'+esc(loc)+(loc&&when?' · ':'')+esc(when)+' · '+esc(what)+'</small></span><span class="tag'+(r.src==='wt'?' wt':'')+'">'+(r.src==='wt'?'World Triathlon':'Catalogue')+'</span></button>';
@@ -2092,7 +2092,7 @@ function stepResHtml(d){
 function stepPick(r){
   var d=stepDraft,b=stepBounds();if(!d||!r)return;
   track('race_pick',r.name);
-  d.name=r.name;d.city=r.city||'';d.kind=r.kind;d.q='';d.res=[];d.date='';d.hint='';
+  d.name=r.name;d.city=r.city||'';d.kind=r.kind;d.q='';d.picked=true;d.res=[];d.date='';d.hint='';
   if(r.kind==='tri')d.format=r.format;else d.distKm=r.distM?String(r.distM/1000).replace('.',','):'';
   var rd=r.date?parseISO(r.date):null;
   if(rd&&rd>=b.min&&rd<=b.max){d.date=r.date;d.cal={y:rd.getFullYear(),m:rd.getMonth()};d.hint='Date à reconfirmer à l’inscription.';}
@@ -2123,8 +2123,9 @@ function stepPvHtml(d){
 function renderStep(){
   var d=stepDraft,sh=document.getElementById('sheet'),st=sh.scrollTop,b=stepBounds();
   var seg=function(act,key,opts){return '<div class="rng" role="group">'+opts.map(function(o){return '<button data-act="'+act+'" data-v="'+o[0]+'" aria-pressed="'+(d[key]===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>';};
-  var h=(d.id?'':'<div class="eyebrow" style="margin:0 0 8px">Trouve ta course</div><input class="tinp" id="st-q" maxlength="60" autocomplete="off" placeholder="Nom, ville ou discipline (ex. marathon, Lyon)" value="'+esc(d.q||'')+'"><div id="st-res">'+stepResHtml(d)+'</div>')+
-    '<div class="eyebrow" style="margin:18px 0 8px">Nom de la course</div><input class="tinp" id="st-name" maxlength="60" autocomplete="off" placeholder="Ex. Semi-marathon de Nantes" value="'+esc(d.name||'')+'">'+
+  // Un seul champ, comme à la création du plan : on tape le nom (recherche) ; sans choix dans la liste, le texte tapé devient le nom de la course
+  var h='<div class="eyebrow" style="margin:0 0 8px">Ta course</div><input class="tinp" id="st-q" maxlength="60" autocomplete="off" placeholder="Nom, ville ou discipline (ex. marathon, Lyon)" value="'+esc(d.name||'')+'"><div id="st-res">'+stepResHtml(d)+'</div>'+
+    '<p class="small muted" id="st-help" style="margin:8px 0 0">'+(d.picked?ic('check',14).replace('class="ic"','class="ic" style="display:inline;vertical-align:-2px;color:var(--brand)"')+' Course trouvée : discipline, distance et date sont remplies ci-dessous.':'Pas dans la liste ? Garde simplement le nom que tu as tapé : ça marche pour n’importe quelle course.')+'</p>'+
     '<div class="eyebrow" style="margin:18px 0 8px">Discipline</div>'+seg('stepkind','kind',[['run','Course'],['bike','Vélo'],['swim','Natation'],['tri','Triathlon']]);
   if(d.kind==='tri')h+=seg('stepfmt','format',[['sprint','Sprint'],['olympic','Olympique'],['half','70.3'],['full','Complet']]);
   else h+='<label class="inp" style="margin-top:8px"><span>Distance<small>km</small></span><input id="st-dist" inputmode="decimal" autocomplete="off" placeholder="'+({run:'10',bike:'100',swim:'2'})[d.kind]+'" value="'+esc(d.distKm||'')+'"></label>';
@@ -3730,10 +3731,10 @@ document.addEventListener('keydown',function(e){
 });
 document.addEventListener('input',function(e){
   if(e.target&&e.target.id==='wz-key'){var prev=wz.key||'';wz.key=e.target.value;if(!wz.busy&&wz.key.trim().length>=20&&prev.length<5){setTimeout(function(){if(wz.step===3&&!wz.busy&&!wz.res)wzVerify();},250);}return;}
-  if(e.target&&e.target.id==='st-name'&&stepDraft){stepDraft.name=e.target.value;return;}
   if(e.target&&e.target.id==='st-dist'&&stepDraft){stepDraft.distKm=e.target.value;var spv=document.getElementById('st-pv');if(spv)spv.innerHTML=stepPvHtml(stepDraft);return;}
   if(e.target&&e.target.id==='st-q'&&stepDraft){
-    var sd=stepDraft,sq=e.target.value,sres=document.getElementById('st-res');sd.q=sq;sd.res=stepSearch(sq);sd.load=false;
+    var sd=stepDraft,sq=e.target.value,sres=document.getElementById('st-res');sd.q=sq;sd.name=sq;sd.res=stepSearch(sq);sd.load=false;
+    if(sd.picked){sd.picked=false;var shp=document.getElementById('st-help');if(shp)shp.textContent='Pas dans la liste ? Garde simplement le nom que tu as tapé : ça marche pour n’importe quelle course.';}
     clearTimeout(stepQT);
     if(sq.trim().length>=3){
       var sseq=++stepQS;sd.load=true;
