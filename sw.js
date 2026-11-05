@@ -1,8 +1,9 @@
 // Service worker de l'app Triient.
 // Stratégie « stale-while-revalidate » : l'app s'ouvre instantanément depuis le cache
 // (donc aussi sans réseau) et se met à jour en arrière-plan quand une connexion est disponible.
-var CACHE = 'triient-v5';   // à changer à chaque version importante : les anciens caches sont supprimés à l'activation
-var CORE = ['./', './index.html', './races.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+var CACHE = 'triient-v6';   // à changer à chaque version importante : les anciens caches sont supprimés à l'activation
+var CORE = ['./', './index.html', './races.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon-32.png',
+  './fonts/barlow-400.woff2', './fonts/barlow-500.woff2', './fonts/barlow-600.woff2', './fonts/barlow-700.woff2', './fonts/barlow-condensed-800-italic.woff2'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(

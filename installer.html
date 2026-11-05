@@ -7,17 +7,21 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Triient">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#0B0B0C">
 <meta name="color-scheme" content="dark">
 <meta name="description" content="Installe Triient sur ton téléphone : un plan d’entraînement triathlon sur mesure, gratuit, pour préparer ta course.">
 <meta property="og:title" content="Triient : installe l’app">
 <meta property="og:description" content="Un plan d’entraînement triathlon sur mesure, gratuit, de la première séance au jour J.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://triient.vercel.app/installer">
-<meta property="og:image" content="https://triient.vercel.app/icon-512.png">
+<meta property="og:image" content="https://triient.vercel.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <title>Installer Triient</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
 <script>if(/[?&](appareil|profil)=/.test(location.search)&&(/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)||location.protocol==='file:'))document.write('<script src="dev-appareil.js"><\/script>');</script>
 <style>
@@ -56,6 +60,18 @@ ol small{display:block;margin-top:2px;font-size:13.5px;color:var(--t2)}
 .foot{margin:18px 0 0;text-align:center;font-size:14.5px}
 .foot a{color:var(--t1);text-underline-offset:3px}
 .foot small{display:block;margin-top:10px;font-size:13px;color:var(--t2)}
+/* Charte Triient : voir marque/charte.png */
+@font-face{font-family:'Barlow';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/barlow-400.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/barlow-500.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/barlow-600.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-style:normal;font-weight:700 800;font-display:swap;src:url(fonts/barlow-700.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-style:italic;font-weight:800;font-display:swap;src:url(fonts/barlow-condensed-800-italic.woff2) format('woff2')}
+html,body{background:#0B0B0C}
+body{font-family:'Barlow',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-weight:500}
+h1{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-style:italic;font-weight:800;font-size:44px;letter-spacing:0;text-transform:uppercase;line-height:1}
+.btn{background:#D7FF3A;color:#0B0B0C}
+.btn:focus-visible,a:focus-visible{outline-color:#D7FF3A}
+.hero img{border-radius:22px}
 </style>
 </head>
 <body>

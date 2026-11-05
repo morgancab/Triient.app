@@ -67,6 +67,11 @@ Fenêtres (`s=`) : `settings`, `legal`, `away`, `acts`, `act:ID`, `assoc:ID`, `l
 - **Page d'installation** : https://triient.vercel.app/installer (`installer.html`, adresse courte dans `vercel.json`). C'est le lien à partager. `installer-qr.svg` contient cette adresse en dur : à régénérer si le domaine change.
 - **Serveur** : `cd strava-worker && npx wrangler deploy`.
 
+## Marque
+- **Charte** : vert `#D7FF3A`, noir `#0B0B0C`, blanc `#FFFFFF`. Titres en Barlow Condensed ExtraBold Italic, en majuscules ; textes en Barlow. Le vert sert d'accent (bouton principal, élément actif) ; les couleurs des sports restent celles de l'app.
+- **Fichiers** : [marque/](marque/) contient les logos, icônes, bannières et la charte (non publié sur le site). Icône d'app : `icon-*.png` et `apple-touch-icon.png` (TRI sur vert) ; favicon : `favicon-32.png` et `favicon-48.png` (le « T ») ; aperçu des liens partagés : `og-image.png` (1200 × 630).
+- **Polices** : Barlow et Barlow Condensed (licence SIL Open Font License), servies depuis `fonts/`, sans appel à Google Fonts.
+
 ## Documentation
 - [DEV.md](DEV.md) : tester en local, mode test (http://localhost:8080/dev.html), appareils simulés, profils de test, second compte.
 - [CATALOGUE.md](CATALOGUE.md) : mise à jour automatique du catalogue de courses.
