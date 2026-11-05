@@ -790,6 +790,14 @@ h1{font-size:38px;line-height:1}
 .g-demo p{margin:8px 0 0;padding-top:10px;border-top:.5px solid var(--sep);font-size:12.5px;color:var(--t2)}
 .g-prev{margin:0 0 20px}
 .g-again{max-width:380px;margin:0 0 14px}
+.g-go{height:56px;font-size:17px;margin:0}
+.g-or{display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--t3);font-size:12.5px}
+.g-or::before,.g-or::after{content:'';flex:1;height:.5px;background:var(--sep)}
+.lgs-sum{width:100%;max-width:380px;margin:0 0 16px;padding:4px 16px;border-radius:20px;background:var(--card);box-shadow:inset 0 0 0 1px var(--brd);text-align:left}
+.lgs-sum div{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-top:.5px solid var(--sep);font-size:14.5px}
+.lgs-sum div:first-child{border-top:0}
+.lgs-sum span{color:var(--t2)}
+.lgs-sum b{font-weight:600;text-align:right}
 @media (max-height:700px){.g-word{font-size:48px}}
 .btn.pri,a.btn.pri,.chip.hl,.now,.wkt.cur,.wd7.today .dn,.rng button[aria-pressed=true]{background:var(--brand);color:var(--ink)}
 .tab[aria-selected=true]{color:var(--brand)}
@@ -2489,8 +2497,26 @@ function svFoldHtml(){
   return h+mfold('svmanual','Saisie manuelle (avancé)',svSettings());
 }
 var pubCfg=null,acctTimer=null,acctBusy=false,gsiLoading=false;
+/* Parcours d'inscription : écran d'entrée → « Créer mon plan » (state.ui.guest) → choix de la course → « Ton plan est prêt » : connexion Google
+   obligatoire (state.ui.pendingRace garde le plan rempli) → le plan est créé et enregistré dans le compte. Sans compte, on ne voit jamais le plan. */
+function loginOn(){return !DEV&&LOGIN_REQUIRED&&!acct()&&!/^file:/.test(location.protocol)&&!(pubCfg&&!pubCfg.err&&!pubCfg.googleClientId);}
+function loginStepNeeded(){return !!state.ui.pendingRace&&loginOn();}
+function renderLoginStep(){
+  var vw=document.getElementById('view'),cfg=pubCfg,c=state.ui.pendingRace,rd=parseISO(c.date),F=FORMATS[c.format]||{};
+  try{document.body.classList.add('setup');}catch(e){}
+  vw.className='';gateShown=true;
+  var btn=!cfg?'<div class="g-gbox w"><span class="g-wait">Connexion au serveur…</span></div>':cfg.err?'<p class="small muted" style="margin:0 0 8px">Impossible de joindre le serveur. Vérifie ta connexion.</p><button class="btn" data-act="gateretry">Réessayer</button>':'<div class="g-gbox"><div id="g-btn" style="display:flex;justify-content:center;width:100%"></div></div>';
+  var row=function(k,v){return '<div><span>'+k+'</span><b>'+esc(v)+'</b></div>';};
+  vw.innerHTML='<div class="gate" style="padding-top:calc(var(--sat) + 40px)"><div class="g-body" style="margin-top:0">'+
+    '<div class="g-slogan" style="margin:0">Dernière étape</div><h1 class="g-t" style="margin-top:10px">Ton plan<br>est prêt.</h1>'+
+    '<div class="lgs-sum">'+row('Course',c.name)+row('Date',rd?fmtLong(rd):'')+row('Format',F.n||'')+row('Durée',c.weeks+' semaines')+row('Séances',(c.sessions||8)+' par semaine')+'</div>'+
+    '<div class="g-cta"><div class="g-ctal">Crée ton compte pour le voir</div>'+btn+'<p class="g-fine">Gratuit · sans mot de passe · sans pub<br>Ton plan te suit sur tous tes appareils</p></div>'+
+    '<button class="lnk" data-act="editpending" style="margin:0 0 6px;color:var(--t2)">Modifier ma course</button>'+
+    '<button class="lnk" data-act="legal" style="margin:0;color:var(--t3)">Mentions légales et confidentialité</button></div></div>';
+  if(cfg&&!cfg.err&&cfg.googleClientId)setTimeout(acctRenderBtn,60);
+}
 function gateNeeded(){
-  if(DEV||!LOGIN_REQUIRED||acct()||/^file:/.test(location.protocol))return false;
+  if(DEV||!LOGIN_REQUIRED||acct()||(state.ui.guest&&SETUP)||/^file:/.test(location.protocol))return false;
   return !(pubCfg&&!pubCfg.err&&!pubCfg.googleClientId);
 }
 function renderGate(){
@@ -2498,7 +2524,7 @@ function renderGate(){
   try{document.body.classList.add('setup');}catch(e){}
   vw.className='';gateShown=true;
   if(!gateTracked&&ready){gateTracked=true;track('gate_view','');}
-  body=!cfg?'<div class="g-gbox w"><span class="g-wait">Connexion au serveur…</span></div>':cfg.err?'<p class="muted" style="margin:0 0 12px">Impossible de joindre le serveur. Vérifie ta connexion.</p><button class="btn pri" data-act="gateretry">Réessayer</button>':'<div class="g-gbox"><div id="g-btn" style="display:flex;justify-content:center;width:100%"></div></div>';
+  body=!cfg?'<div class="g-gbox w"><span class="g-wait">Connexion au serveur…</span></div>':cfg.err?'<p class="small muted" style="margin:0 0 8px">Connexion impossible pour l’instant.</p><button class="btn" data-act="gateretry">Réessayer</button>':'<div class="g-gbox"><div id="g-btn" data-theme="filled_black" style="display:flex;justify-content:center;width:100%"></div></div>';
   var grow=function(sp,icn,t,s){return '<div class="g-row sp-'+sp+'"><span class="gi">'+ic(icn,19)+'</span><span><b>'+t+'</b><small>'+s+'</small></span></div>';};
   // Aperçu d'une semaine type : montre le produit (séances détaillées, cochées par Garmin, envoyées sur la montre)
   var demo=function(sp,icn,day,t,d,st){return '<div class="g-dr sp-'+sp+'"><span class="gi">'+ic(icn,17)+'</span><span class="g-dt"><small>'+day+'</small><b>'+t+'</b><small>'+d+'</small></span>'+st+'</div>';};
@@ -2507,7 +2533,8 @@ function renderGate(){
     '<div class="g-slogan">Personnalise ta prépa</div>'+
     '<h1 class="g-t">Ton plan triathlon,<br>fait pour toi.</h1>'+
     '<p class="g-s">Choisis ta course, ton niveau et tes jours d’entraînement : Triient prépare chaque séance jusqu’au jour J. Du sprint à l’Ironman.</p>'+
-    '<div class="g-cta" id="g-cta"><div class="g-ctal">Crée ton plan, c’est gratuit</div>'+body+'<p class="g-fine">Sans pub · sans mot de passe<br>Ton plan te suit sur tous tes appareils</p></div>'+
+    '<div class="g-cta" id="g-cta"><div class="g-ctal">Crée ton plan, c’est gratuit</div><button class="btn pri g-go" data-act="gateguest">Créer mon plan</button>'+
+      '<p class="g-fine">Choisis ta course, puis crée ton compte en un clic · sans pub</p><div class="g-or"><span>Déjà un compte ?</span></div>'+body+'</div>'+
     '<div class="g-demo" aria-label="Exemple de semaine"><div class="g-dh"><b>Semaine 6</b><span>Développement</span><span class="sp"></span><em>Exemple</em></div>'+
       demo('swim','swim','Mardi','Natation · Technique','45 min · 2,1 km','<span class="g-st ok">'+ic('check',14)+'Fait</span>')+
       demo('bike','bike','Mercredi','Vélo · Blocs allure course','1h30 · 3 × 12 min','<span class="g-st">'+ic('watch',14)+'Sur ta montre</span>')+
@@ -2516,7 +2543,7 @@ function renderGate(){
     '<div class="g-prev">'+grow('swim','race','Toutes les distances','Du sprint à l’Ironman, préparé sur 4 à 52 semaines : un premier triathlon comme un nouveau record.')+
       grow('bike','watch','Sur ta montre Garmin','Tes séances arrivent sur ta montre avec leurs allures, et se cochent dès que tu les as faites.')+
       grow('run','week','Au rythme de ta vie','Tu choisis tes séances par semaine ; vacances, week-ends chargés et courses de préparation sont pris en compte.')+'</div>'+
-    (ready?'<button class="btn pri g-again" data-act="gatetop">Créer mon plan gratuit</button>':'')+
+    '<button class="btn pri g-again" data-act="gateguest">Créer mon plan gratuit</button>'+
     '<button class="lnk" data-act="legal" style="margin:4px 0 0;color:var(--t3)">Mentions légales et confidentialité</button>'+
     '</div></div>';
   if(ready)setTimeout(acctRenderBtn,60);
@@ -2593,15 +2620,21 @@ function acctAfterLogin(){
     var a=acct();if(!a)return;
     if(!j.ok)throw new Error(j.error||'Erreur');
     a.v=j.v;
+    var pend=state.ui.pendingRace;   // plan rempli avant la connexion
     if(j.data&&j.data.done){
       var nm=(j.data.race&&j.data.race.name)||'ton plan';
-      if(SETUP||confirm('Un plan existe déjà dans ton compte (« '+nm+' »).\n\nOK : le charger sur cet appareil (remplace les données d’ici).\nAnnuler : garder cet appareil et remplacer le plan du compte.')){
-        cloudApply(j.data);a.sig=JSON.stringify(cloudPayload(true));a.t=j.updated||Date.now();save0();location.reload();return;
+      if(pend?confirm('Un plan existe déjà dans ton compte (« '+nm+' »).\n\nOK : reprendre ce plan.\nAnnuler : le remplacer par ton nouveau plan « '+pend.name+' ».'):(SETUP||confirm('Un plan existe déjà dans ton compte (« '+nm+' »).\n\nOK : le charger sur cet appareil (remplace les données d’ici).\nAnnuler : garder cet appareil et remplacer le plan du compte.'))){
+        delete state.ui.pendingRace;cloudApply(j.data);a.sig=JSON.stringify(cloudPayload(true));a.t=j.updated||Date.now();save0();location.reload();return;
       }
     }
+    if(pend){state.race=pend;delete state.ui.pendingRace;delete state.ui.guest;save0();return acctPush(true).then(function(){location.reload();});}
     save0();
     if(SETUP){toast('Bienvenue ! Choisis ta course');gateShown=false;track('setup_view');if(!typing())renderSetup();return;}
-    return acctPush(true).then(function(){if(gateShown){render(false);}else openSheet();});
+    return acctPush(true).then(function(){
+      if(gateShown)render(false);
+      else if(document.getElementById('sheetbg').classList.contains('on'))openSheet();
+      else{render(true);toast('C’est enregistré : ton plan est dans ton compte');}
+    });
   }).catch(function(e){toast('Connexion impossible : '+((e&&e.message)||e));});
 }
 // au démarrage : version plus récente dans le compte (autre appareil) ?
@@ -2653,7 +2686,7 @@ function acctRenderBtn(){
   loadGsi(function(err){
     if(err||!window.google){el.innerHTML='<p class="small muted">Connexion Google indisponible (bloqueur de contenu ?).</p>';return;}
     google.accounts.id.initialize({client_id:pubCfg.googleClientId,callback:function(r){acctLogin(r.credential);},auto_select:false});
-    google.accounts.id.renderButton(el,{theme:'outline',size:'large',text:'continue_with',shape:'pill',width:Math.min(340,el.clientWidth||300),locale:'fr',logo_alignment:'left'});
+    google.accounts.id.renderButton(el,{theme:el.getAttribute('data-theme')||'outline',size:'large',text:'continue_with',shape:'pill',width:Math.min(340,el.clientWidth||300),locale:'fr',logo_alignment:'left'});
   });
 }
 function accountFoldHtml(){
@@ -2679,7 +2712,7 @@ function legalHtml(){
   var p=function(t){return '<p style="font-size:14px;line-height:1.55">'+t+'</p>';};
   return '<h4>Éditeur</h4>'+p('Application gratuite, éditée à titre personnel et sans but commercial.'+(LEGAL.editor?' Éditeur : '+esc(LEGAL.editor)+'.':'')+(LEGAL.contact?' Contact : '+esc(LEGAL.contact)+'.':''))+
     p('Hébergement de l’application : Vercel Inc. Serveur relais (recherche de courses, synchronisation Garmin facultative) : Cloudflare, Inc.')+
-    '<h4>Confidentialité</h4>'+p('Il n’y a ni publicité ni suivi publicitaire. Pour utiliser l’app, tu crées un compte en te connectant avec Google. Ton plan, tes séances cochées et tes réglages sont enregistrés sur ton appareil et dans ton compte, pour que tu les retrouves partout. Pour suivre le service, le propriétaire de l’app peut voir ton nom, ton e-mail, ta course, ta progression (nombre de séances faites) et ta date de dernière visite.')+
+    '<h4>Confidentialité</h4>'+p('Il n’y a ni publicité ni suivi publicitaire. Pour créer ton plan, tu crées un compte en te connectant avec Google. Ton plan, tes séances cochées et tes réglages sont enregistrés sur ton appareil et dans ton compte, pour que tu les retrouves partout. Pour suivre le service, le propriétaire de l’app peut voir ton nom, ton e-mail, ta course, ta progression (nombre de séances faites) et ta date de dernière visite.')+
     p('Seule la recherche de courses envoie le texte que tu tapes (3 caractères ou plus) à notre serveur relais, qui interroge le calendrier World Triathlon. Rien n’est enregistré à ton nom ; les réponses sont simplement mises en cache quelques heures. Si tu actives la synchronisation Garmin, tes activités passent par intervals.icu et ce serveur relais, sans y être conservées.')+p('Nous comptons de façon <b>anonyme</b> quelques événements (ouverture de l’app, création d’un plan avec son format, course choisie, recherche sans résultat) pour améliorer le service : ce sont de simples compteurs par jour, sans identifiant, sans cookie et sans adresse IP. Tu peux les désactiver dans Réglages → À propos, et ils respectent l’option « Ne pas me suivre » de ton navigateur.')+p('Si tu actives la <b>sauvegarde cloud</b>, une copie de ton plan et de tes séances cochées est envoyée <b>chiffrée</b> (la clé reste dans ton code de récupération, que nous ne connaissons pas) : nous ne pouvons pas la lire. Tu peux la supprimer à tout moment dans Réglages. Ta clé intervals.icu n’y figure jamais.')+p('À la création du compte (connexion avec <b>Google</b>), nous enregistrons ton identifiant Google, ton e-mail, ton nom et les dates de connexion, ainsi que ton plan (course choisie, séances cochées, notes, réglages) pour le retrouver sur tous tes appareils. Si tu connectes Garmin, ta clé intervals.icu y est aussi enregistrée, chiffrée ; « Déconnecter Garmin » l’efface. Si les statistiques d’usage sont activées (Réglages → À propos), ton compte enregistre aussi ton type d’appareil et de navigateur (par exemple « iPhone · Safari »), si l’app est installée, si Garmin est connecté, le nombre de séances envoyées vers ta montre et d’activités Garmin reçues, et la date de tes visites (gardée un an). Elles servent uniquement à améliorer l’app ; les désactiver arrête cet enregistrement. Ces données ne sont ni vendues ni partagées. Tu peux les exporter ou supprimer ton compte à tout moment dans Réglages → Compte.')+
     '<h4>Avertissement</h4>'+p('Les plans proposés sont <b>indicatifs</b> et générés automatiquement : ils ne remplacent ni l’avis d’un médecin, ni celui d’un entraîneur. Consulte un professionnel de santé avant de reprendre ou d’intensifier une pratique sportive, et arrête-toi en cas de douleur ou de malaise. Tu t’entraînes sous ta seule responsabilité.')+
     '<h4>Données des courses</h4>'+p('Les noms, lieux, formats, distances et dates du catalogue sont donnés à titre indicatif, d’après des sources publiques (dont le calendrier de la Fédération Française de Triathlon et World Triathlon). Ils peuvent être incomplets ou changer : vérifie toujours auprès de l’organisateur avant de t’inscrire.')+
@@ -2709,7 +2742,7 @@ function statsHtml(){
   var conv=n('setup_view')?Math.round(n('plan_created')/n('setup_view')*100)+' %':'–';
   var top=function(k,title){var l=(s.top&&s.top[k])||[];return l.length?'<h4>'+title+'</h4><table style="width:100%;font-size:13.5px;border-collapse:collapse">'+l.slice(0,8).map(function(x){return cell(esc(x[0]),x[1]);}).join('')+'</table>':'';};
   return '<p class="small muted">'+s.days+' derniers jours, compteurs anonymes.</p><table style="width:100%;font-size:14px;border-collapse:collapse">'+
-    cell('Nouvelles installations',n('install'))+cell('Ouvertures (par jour et appareil)',n('open'))+cell('Écran « Ta course » vu',n('setup_view'))+cell('Plans créés',n('plan_created')+' <span class="muted">('+conv+' des vues)</span>')+cell('Changements de course',n('plan_changed'))+cell('Garmin connecté',n('garmin_connected'))+'</table>'+
+    cell('Nouvelles installations',n('install'))+cell('Ouvertures (par jour et appareil)',n('open'))+cell('Page d’accueil vue',n('gate_view'))+cell('« Créer mon plan » touché',n('guest_start'))+cell('Plan rempli, connexion demandée',n('login_step'))+cell('Connexions Google',n('login'))+cell('Écran « Ta course » vu',n('setup_view'))+cell('Plans créés',n('plan_created')+' <span class="muted">('+conv+' des vues)</span>')+cell('Changements de course',n('plan_changed'))+cell('Garmin connecté',n('garmin_connected'))+'</table>'+
     '<h4>7 derniers jours (ouvertures · plans)</h4><table style="width:100%;font-size:13.5px;border-collapse:collapse">'+days.map(function(d){var x=s.daily[d]||{};return cell(d.slice(5),(x.open||0)+' · '+(x.plan_created||0));}).join('')+'</table>'+
     top('plan_created','Plans créés (format | séances | niveau)')+top('race_pick','Courses choisies')+top('search_miss','Recherches sans résultat : à ajouter au catalogue');
 }
@@ -2761,8 +2794,9 @@ function raceFormHtml(d){
   var cls=raceCls(d),F=FORMATS[cls]||FORMATS.olympic,span=d.date?planSpan(d.date,cls,d):null,pk=peakOf(d),dn=function(x){return DAYS[(x.getDay()+6)%7].slice(0,3).toLowerCase()+' '+fmtDay(x);};
   var h='';
   if(SETUP)h+='<header class="top"><div class="top-t"><div class="eyebrow">Bienvenue</div><h1>Ta course</h1></div></header><p class="muted" style="margin:-6px 0 22px;line-height:1.5">Dis-nous quelle course tu prépares : l’app construit un plan sur mesure, jour par jour, de la première séance jusqu’au jour J.</p>';
-  h+='<div class="rsec"><div class="eyebrow">Trouve ta course</div><input class="tinp" id="rf-q" maxlength="60" autocomplete="off" placeholder="Nom, ville ou pays (ex. Nice, Roth, Embrun)" value="'+esc(d.q||'')+'"><div id="rf-res">'+raceResultsHtml(d)+'</div><p class="small muted" style="margin:8px 0 0">Elle n’est pas dans la liste ? Renseigne-la toi-même juste en dessous : ça marche pour n’importe quelle course.</p></div>';
-  h+='<div class="rsec"><div class="eyebrow">Nom de la course</div><input class="tinp" id="rf-name" maxlength="60" autocomplete="off" placeholder="Ex. Triathlon de Nice (facultatif)" value="'+esc(d.name)+'"></div>';
+  // Un seul champ : on tape le nom (recherche dans le catalogue et World Triathlon) ; sans choix dans la liste, le texte tapé devient le nom de la course
+  h+='<div class="rsec"><div class="eyebrow">Ta course</div><input class="tinp" id="rf-q" maxlength="60" autocomplete="off" placeholder="Nom, ville ou pays (ex. Nice, Roth, Embrun)" value="'+esc(d.name||'')+'"><div id="rf-res">'+raceResultsHtml(d)+'</div>'+
+    '<p class="small muted" style="margin:8px 0 0">'+(d.picked?ic('check',14).replace('class="ic"','class="ic" style="display:inline;vertical-align:-2px;color:var(--brand)"')+' Course trouvée : format et date sont remplis ci-dessous.':'Pas dans la liste ? Garde simplement le nom que tu as tapé : ça marche pour n’importe quelle course.')+'</p></div>';
   // date
   var mn=addDays(today(),28),mx=addDays(today(),800);
   h+='<div class="rsec"><div class="eyebrow">Date de la course</div><div class="cal-s">'+(d.date?'<b>'+esc(fmtLong(parseISO(d.date)))+'</b>':'<span class="cal-hint" style="margin:0">Touche le jour de la course</span>')+'</div>'+(d.hint?'<p class="rhint" style="margin:0 0 8px">'+esc(d.hint)+'</p>':'')+(d.note?'<p class="small muted" style="margin:0 0 8px">'+esc(d.note)+'</p>':'')+calHtml('race',d.date,d.date,mn,mx,d.cal.y,d.cal.m)+'</div>';
@@ -2816,6 +2850,7 @@ function saveRace(){
     state.done={};state.links={};state.ui.missed={};state.ui.away=[];state.ui.sent={};state.ui.race={};state.ui.welcomed=undefined;
   }
   track(SETUP?'plan_created':'plan_changed',cls+'|'+nsess+'s|l'+d.level);
+  if(SETUP&&loginOn()){state.ui.pendingRace=cfg;save();track('login_step','');window.scrollTo(0,0);render(false);return;}
   state.race=cfg;save();location.reload();
 }
 /* ---------- Catalogue de courses ----------
@@ -2859,8 +2894,8 @@ function remoteRaces(q,cb){
 }
 function raceResultsHtml(d){
   var all=(d.cres||[]).concat(d.rres||[]);d.shown=all;
-  if(!d.q||d.q.length<2)return '';
-  if(!all.length)return '<p class="small muted" style="margin:8px 0 0">'+(d.rload?'Recherche…':'Aucune course trouvée : saisis-la toi-même ci-dessous.')+'</p>';
+  if(d.picked||!d.q||d.q.length<2)return '';
+  if(!all.length)return '<p class="small muted" style="margin:8px 0 0">'+(d.rload?'Recherche…':'Aucune course trouvée : garde ce nom, puis choisis le format et la date ci-dessous.')+'</p>';
   return '<div class="rres">'+all.map(function(r,i){
     var loc=[r.city,CC_NAMES[r.cc]||r.cc].filter(Boolean).join(' · '),when=r.date?fmtLong(parseISO(r.date)):(r.month?'habituellement en '+MONTHS_L[r.month-1]:'');
     return '<button class="rr" data-act="racepick" data-i="'+i+'"><span class="t"><b>'+esc(r.name)+'</b><small>'+esc(loc)+(loc&&when?' · ':'')+esc(when)+' · '+FORMATS[r.format].n+'</small></span><span class="tag'+(r.src==='wt'?' wt':'')+'">'+(r.src==='wt'?'World Triathlon':'Catalogue')+'</span></button>';
@@ -2870,7 +2905,7 @@ function pickRace(r){
   var d=raceDraft;if(!d||!r)return;
   track('race_pick',r.name);
   d.name=r.name;d.city=r.city||'';d.format=r.format;d.sessions=null;d.peak=null;d.dist=r.dist||null;d.bikeUp=r.bikeUp?String(r.bikeUp):'';d.runUp=r.runUp?String(r.runUp):'';d.detail=!!(d.bikeUp||d.runUp);
-  d.q='';d.cres=[];d.rres=[];d.hint='';d.note=r.note||'';
+  d.q='';d.picked=true;d.cres=[];d.rres=[];d.hint='';d.note=r.note||'';
   if(r.date){d.date=r.date;var pd=parseISO(r.date);d.cal={y:pd.getFullYear(),m:pd.getMonth()};if(r.ff)d.hint='Date issue du calendrier officiel de la fédération (FFTRI) : à reconfirmer à l’inscription.';}
   else if(!r.month){d.date='';var t0=addDays(today(),112);d.cal={y:t0.getFullYear(),m:t0.getMonth()};d.hint='Date non connue : cherche-la sur le site officiel de la course, puis choisis le jour exact.';}
   else{
@@ -3494,6 +3529,7 @@ function renderTabs(){
 }
 function render(keep){
   if(gateNeeded()){renderGate();return;}
+  if(loginStepNeeded()){renderLoginStep();return;}
   acctPingSoon();
   gateShown=false;
   if(!SETUP){try{document.body.classList.remove('setup');}catch(e){}}
@@ -3568,6 +3604,8 @@ document.addEventListener('click',function(e){
   }
   else if(a==='togstats'){state.ui.noStats=statsOn();save();openSheet();toast(statsOn()?'Statistiques activées':'Statistiques désactivées');}
   else if(a==='gateretry'){pubCfg=null;render(false);loadPubCfg();}
+  else if(a==='editpending'){delete state.ui.pendingRace;save();window.scrollTo(0,0);render(false);}
+  else if(a==='gateguest'){state.ui.guest=Date.now();save();track('guest_start','');window.scrollTo(0,0);render(false);}
   else if(a==='gatetop'){var gc=document.getElementById('g-cta');if(gc)gc.scrollIntoView({behavior:'smooth',block:'center'});}
   else if(a==='acctsave'){var ac=acct();if(ac){if(ac.conflict&&!confirm('Écraser la version du compte avec les données de cet appareil ?'))return;ac.paused=false;ac.conflict=false;acctForce();}}
   else if(a==='acctexport')acctExport();
@@ -3688,7 +3726,8 @@ document.addEventListener('input',function(e){
     return;
   }
   if(e.target&&e.target.id==='rf-q'&&raceDraft){
-    var qd=raceDraft,qv=e.target.value;qd.q=qv;qd.cres=catSearch(qv);qd.rres=[];qd.rload=false;
+    var qd=raceDraft,qv=e.target.value;qd.q=qv;qd.name=qv;qd.cres=catSearch(qv);qd.rres=[];qd.rload=false;
+    if(qd.picked){qd.picked=false;var hp=e.target.parentNode&&e.target.parentNode.querySelector('p.small');if(hp)hp.textContent='Pas dans la liste ? Garde simplement le nom que tu as tapé : ça marche pour n’importe quelle course.';}
     var qr=document.getElementById('rf-res');if(qr)qr.innerHTML=raceResultsHtml(qd);
     clearTimeout(raceQT);
     if(qv.trim().length>=3){
