@@ -792,6 +792,9 @@ h1{font-size:38px;line-height:1}
 .g-again{max-width:380px;margin:0 0 14px}
 .g-go{height:56px;font-size:17px;margin:0}
 .fmtc[aria-pressed=true]{box-shadow:inset 0 0 0 2px var(--brand)}
+.gtip{padding:14px 16px}
+.gtip .gi{width:34px;height:34px;border-radius:10px;background:rgba(215,255,58,.14);color:var(--brand);display:grid;place-items:center;flex:none}
+.gtip b{font-size:14.5px}
 .fstep{display:flex;align-items:center;gap:8px}
 .fstep i{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--brand);color:var(--ink);font-style:normal;font-size:11.5px;font-weight:800;letter-spacing:0}
 .fcard{padding:14px;border-radius:18px;background:var(--card)}
@@ -1806,7 +1809,7 @@ function vHome(){
       '<div class="kpis" style="grid-template-columns:1fr 1fr"><div class="kpi"><div class="kl">Temps</div><div class="kv" style="font-size:19px">'+fh(S_.t.dmin)+'</div><div class="ks">sur '+fh(S_.t.min)+'</div></div><div class="kpi"><div class="kl">Semaines</div><div class="kv" style="font-size:19px">'+Math.min(st.w,NW)+'</div><div class="ks">sur '+NW+'</div></div></div>'+
       '<div class="quick"><button data-act="tab" data-tab="data">'+ic('chart',18)+'Mes données</button><button data-act="tab" data-tab="plan">'+ic('plan',18)+'Tout le plan</button></div></section>';
   }
-  if(!(state.sv.url&&state.sv.key))h+=vActs();
+  if(!(state.sv.url&&state.sv.key))h+=garminTip();
   return h;
 }
 function mrow(icon,t,sub,act,attrs,tint){return '<button class="mrow" data-act="'+act+'" '+(attrs||'')+'><span class="mi'+(tint?' t-'+tint:'')+'">'+ic(icon,22)+'</span><span style="flex:1;min-width:0"><b>'+t+'</b><small>'+sub+'</small></span>'+ic('right',18)+'</button>';}
@@ -3278,7 +3281,7 @@ function ago(t){if(!t)return 'jamais';var m=Math.round((Date.now()-t)/6e4);retur
 function vActs(list){
   var sv=state.sv,h='<section class="card"><div class="row"><h2 style="margin:0">Garmin</h2><span class="sp"></span>';
   if(!(sv.url&&sv.key))
-    return h+'</div><p class="small muted" style="margin:8px 0 12px">Connecte ton compte Garmin en 3 étapes guidées : tes séances se cocheront toutes seules à partir de tes activités.</p><button class="btn pri" data-act="garminwiz" style="margin:0">Connecter Garmin</button></section>';
+    return h+'<span class="chip">Facultatif</span></div><p class="small muted" style="margin:8px 0 12px">Avec une montre Garmin, tes séances se cochent toutes seules et partent sur ta montre. Sans montre, coche-les en touchant le rond de chaque séance : tout le reste marche pareil.</p><button class="btn" data-act="garminwiz" style="margin:0">Connecter Garmin</button></section>';
   var acts=(list||sv.acts||[]).slice().sort(function(x,y){return y.s>x.s?1:-1;});
   var chip=sv.err?'Hors ligne':sv.werr?'Problème':sv.conn===false?'Non connecté':'Connecté';
   h+='<span class="chip">'+chip+'</span></div>';
@@ -3691,6 +3694,7 @@ document.addEventListener('click',function(e){
   else if(a==='welcomeok'){state.ui.welcomed=true;save();closeSheet();}
   else if(a==='welcomegarmin'){state.ui.welcomed=true;save();openWiz(1);}
   else if(a==='garminwiz')openWiz(1);
+  else if(a==='hidegtip'){state.ui.hideGTip=1;save();render(true);}
   else if(a==='garminwiz3')openWiz(3);
   else if(a==='wznext'){wz.step=Math.min(3,wz.step+1);renderWiz();}
   else if(a==='wzback'){wz.step=Math.max(1,wz.step-1);renderWiz();}
@@ -3855,12 +3859,11 @@ function openSheet(){
 }
 function openWelcome(){
   var sh=document.getElementById('sheet'),linked=!!(state.sv.url&&state.sv.key);
-  sh.innerHTML='<div class="wl"><div class="logo">'+ic('race',38).replace('<svg','<svg style="color:#f5f4ef"')+'</div><h2>'+esc(RNAME)+'</h2><p class="lead">Ton plan de '+NW+' semaines pour '+(IS_SABLES?'les Sables d’Olonne':'ta course')+', au même endroit que tes séances Garmin.</p>'+
+  sh.innerHTML='<div class="wl"><div class="logo">'+ic('race',38).replace('<svg','<svg style="color:#f5f4ef"')+'</div><h2>'+esc(RNAME)+'</h2><p class="lead">Ton plan de '+NW+' semaines pour '+(IS_SABLES?'les Sables d’Olonne':'ta course')+' : chaque séance détaillée, jour par jour.</p>'+
     '<ul><li><span class="mi">'+ic('week',21)+'</span><div><b>Un plan précis, jour par jour</b><span>Zones, allures et conseils pour chaque séance de natation, vélo et course.</span></div></li>'+
-    '<li><span class="mi">'+ic('bike',21)+'</span><div><b>Suivi automatique</b><span>Tes activités Garmin cochent tes séances toutes seules.</span></div></li>'+
-    '<li><span class="mi">'+ic('chart',21)+'</span><div><b>Ton temps de course estimé</b><span>Calculé à partir de tes vraies sorties, et mis à jour au fil des semaines.</span></div></li></ul>'+
-    (linked?'':'<button class="btn pri" data-act="welcomegarmin">Connecter Garmin</button>')+
-    '<button class="btn'+(linked?' pri':'')+'" data-act="welcomeok">'+(linked?'C’est parti':'Plus tard')+'</button><p class="small muted" style="margin:12px 0 0">Plans indicatifs, sans avis médical. <button class="lnk" data-act="legal" style="margin:0">Mentions légales</button></p></div>';
+    '<li><span class="mi">'+ic('check',21)+'</span><div><b>Coche tes séances</b><span>D’un geste sur le rond de chaque séance, ou toutes seules avec une montre Garmin (facultatif).</span></div></li>'+
+    '<li><span class="mi">'+ic('chart',21)+'</span><div><b>Ton temps de course estimé</b><span>À partir de 3 questions rapides, ou de tes vraies sorties si tu connectes Garmin.</span></div></li></ul>'+
+    '<button class="btn pri" data-act="welcomeok">C’est parti</button>'+(linked?'':'<button class="btn" data-act="welcomegarmin">J’ai une montre Garmin</button>')+'<p class="small muted" style="margin:12px 0 0">Plans indicatifs, sans avis médical. <button class="lnk" data-act="legal" style="margin:0">Mentions légales</button></p></div>';
   sh.scrollTop=0;document.getElementById('sheetbg').classList.add('on');
 }
 function closeSheet(){
@@ -4488,18 +4491,41 @@ function mfold(id,title,inner){return '<details class="mf" data-mf="'+id+'"'+(mf
 var FORMES={'Frais':{c:'#30d158',t:'Tu es bien reposé : c’est le bon moment pour une séance exigeante.'},'Équilibré':{c:'#6aa8f0',t:'Ta charge d’entraînement et ta récupération sont bien équilibrées.'},'En charge':{c:'#ffd60a',t:'Tu accumules de la fatigue : normal en pleine préparation. Soigne ton sommeil et ton alimentation.'},'Surcharge':{c:'#ff6b5e',t:'Fatigue élevée : allège les prochains jours pour éviter la blessure.'}};
 // Progression dans le plan (sans Garmin) : séances cochées et temps réalisé jusqu'à aujourd'hui
 function planProgressCard(){
-  var st=status();if(st.s==='before')return '';
-  var n=0,d=0,min=0,dmin=0,w;
-  for(w=0;w<Math.min(NW,st.w);w++){var s=wkStats(PLAN[w]);n+=s.n;d+=s.d;min+=s.min;dmin+=s.dmin;}
+  var st=status();   // avant le début du plan : affichée seulement si des séances sont déjà cochées
+  var n=0,d=0,min=0,dmin=0,w,lim=st.s==='before'?0:st.w;
+  // séances prévues jusqu'à cette semaine, plus celles cochées en avance (semaines suivantes)
+  for(w=0;w<NW;w++)PLAN[w].days.forEach(function(day){day.sessions.forEach(function(s){
+    if(s.sp==='rest')return;var ok=isDone(s);if(w>=lim&&!ok)return;
+    n++;min+=s.min;if(ok){d++;dmin+=doneMin(s);}
+  });});
   if(!n)return '';
   var p=pct(d,n);
   return '<section class="card dsum"><div class="eyebrow">Ta progression dans le plan</div><div class="dbig">'+d+'<small>séance'+(d>1?'s':'')+' sur '+n+' prévues jusqu’ici</small></div>'+bar(p)+
     '<div class="kpis"><div class="kpi"><div class="kl">Réalisé</div><div class="kv">'+p+' %</div></div><div class="kpi"><div class="kl">Temps</div><div class="kv" style="font-size:19px">'+fh(dmin)+'</div><div class="ks">sur '+fh(min)+'</div></div><div class="kpi"><div class="kl">Semaine</div><div class="kv">'+Math.min(NW,st.w)+'</div><div class="ks">sur '+NW+'</div></div></div>'+
     '<div class="dnote">'+(p>=85?'<b>Très régulier.</b> Continue comme ça.':p>=60?'<b>Bon rythme.</b> Quelques séances manquées, ce n’est pas grave : la régularité sur la durée compte plus.':'<b>Tu as pris du retard.</b> Reprends sans chercher à tout rattraper : choisis les séances clés de la semaine.')+'</div></section>';
 }
+/* Sans Garmin (ou avant la première activité) : avancement par sport, calculé sur les séances cochées (durées prévues) */
+function sportProgressCard(){
+  var st=status();
+  var K=[['swim','Natation'],['bike','Vélo'],['run','Course à pied'],['str','Renforcement']],a={},w,lim=st.s==='before'?0:st.w;
+  K.forEach(function(k){a[k[0]]={n:0,d:0,min:0,dmin:0};});
+  for(w=0;w<NW;w++)PLAN[w].days.forEach(function(day){day.sessions.forEach(function(s){
+    var k=s.sp==='brick'?'run':s.sp;if(!a[k]||(w>=lim&&!isDone(s)))return;   // + séances cochées en avance
+    a[k].n++;a[k].min+=s.min;if(isDone(s)){a[k].d++;a[k].dmin+=doneMin(s);}
+  });});
+  var rows=K.filter(function(k){return a[k[0]].n;}).map(function(k){var x=a[k[0]];return prRow(k[1],x.d+' / '+x.n+' · '+fh(x.dmin),pct(x.d,x.n),'var(--'+k[0]+')');}).join('');
+  return rows?'<section class="card"><h2>Par sport<small>séances cochées jusqu’ici</small></h2>'+rows+'</section>':'';
+}
+// Accueil sans Garmin : rappel discret (coche à la main), Garmin proposé sans insister ; « Masquer » le retire
+function garminTip(){
+  if(state.ui.hideGTip)return '';
+  return '<section class="card gtip"><div class="row" style="align-items:flex-start;gap:12px"><span class="gi">'+ic('check',18)+'</span><div style="flex:1;min-width:0"><b>Séance faite ? Touche son rond</b>'+
+    '<p class="small muted" style="margin:3px 0 0;line-height:1.45">Ta progression se met à jour. Avec une montre Garmin, c’est automatique.</p>'+
+    '<div class="row" style="gap:16px;margin-top:8px"><button class="lnk" data-act="garminwiz" style="margin:0">Connecter Garmin</button><button class="lnk" data-act="hidegtip" style="margin:0;color:var(--t3)">Masquer</button></div></div></div></section>';
+}
 function vData(){
   var all=dataActs(),sv=state.sv,linked=!!(sv.url&&sv.key);
-  if(!linked||!all.length)return planProgressCard()+vActs();
+  if(!linked||!all.length)return planProgressCard()+sportProgressCard()+vActs();
   var cw=curWk(),aggAll=weekAgg(all),tw=aggAll[cw]||{n:0,l:0,sec:0,msum:0},pw=aggAll[cw-1]||{n:0,l:0,sec:0,msum:0},h='',d0=wStart(cw),dist=dMetric()==='dist',st0=status();
   // 1. Le point du coach : comment je vais, que faire
   var fsAll=fitSeries(all);
