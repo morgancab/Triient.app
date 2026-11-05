@@ -26,6 +26,7 @@ test('l’ancienne adresse du serveur est remplacée par la nouvelle', () => {
 test('plus aucune trace de l’ancien nom dans ce que voit l’utilisateur', () => {
   for (const f of ['index.html', 'installer.html', 'manifest.webmanifest', 'sw.js']) {
     const s = readFileSync(new URL('../' + f, import.meta.url), 'utf8');
-    assert.doesNotMatch(s, /Plan tri|plan-triathlon|ironmanproject|ironman-strava.morgan/i, f);
+    // « Plan tri » avec majuscule : l’ancien nom, pas « ton plan triathlon »
+    assert.doesNotMatch(s, /Plan tri|plan-triathlon|ironmanproject|ironman-strava.morgan/, f);
   }
 });

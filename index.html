@@ -702,8 +702,6 @@ details.mf .card{background:var(--card2);box-shadow:none}
 .g-logo{width:84px;height:84px;border-radius:24px;box-shadow:0 10px 34px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.14);display:block}
 .g-t{font-size:31px;line-height:1.12;font-weight:800;letter-spacing:-.035em;margin:18px 0 10px}
 .g-s{color:var(--t2);font-size:15.5px;line-height:1.5;margin:0 6px 16px;max-width:30em}
-.g-sports{display:flex;gap:8px;justify-content:center;margin:0 0 18px}
-.g-sports span{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 9px;border-radius:999px;background:var(--cb);color:var(--c);font-size:13px;font-weight:700}
 .g-prev{width:100%;max-width:380px;display:flex;flex-direction:column;gap:8px;margin:0 0 22px;text-align:left}
 .g-row{display:flex;align-items:center;gap:12px;padding:11px 14px 11px 12px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1px var(--brd);position:relative;overflow:hidden}
 .g-row::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3.5px;border-radius:0 3px 3px 0;background:var(--c)}
@@ -768,7 +766,29 @@ h1,.g-t,.hero .big,.hero2 .big,.rhero .big,.tot b{font-family:var(--title);font-
 h1{font-size:38px;line-height:1}
 .g-t{font-size:38px;line-height:1.02}
 .g-hero::after{background:linear-gradient(180deg,rgba(11,11,12,.35) 0%,rgba(11,11,12,.05) 40%,#0B0B0C 100%)}
-.g-logo{box-shadow:0 10px 34px rgba(0,0,0,.6)}
+.g-brand{display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 6px 22px rgba(0,0,0,.7))}
+.g-word{font-family:var(--title);font-style:italic;font-weight:800;font-size:58px;line-height:.9;letter-spacing:.01em;color:#fff}
+.g-word i{font-style:inherit;color:var(--brand)}
+.g-wave{width:150px;height:14px;margin-top:6px;fill:none;stroke:var(--brand);stroke-width:3.4;stroke-linecap:round}
+.g-slogan{margin:10px 0 0;font-size:12px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:var(--t2)}
+.g-t{margin-top:22px}
+.g-demo{width:100%;max-width:380px;margin:26px 0 12px;padding:14px 14px 12px;border-radius:20px;background:var(--card);box-shadow:inset 0 0 0 1px var(--brd);text-align:left}
+.g-dh{display:flex;align-items:baseline;gap:8px;margin:0 0 8px;font-size:13px;color:var(--t2)}
+.g-dh b{font-family:var(--title);font-style:italic;font-weight:800;font-size:17px;text-transform:uppercase;color:var(--t1)}
+.g-dh em{font-style:normal;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.g-dr{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:.5px solid var(--sep)}
+.g-dr .gi{width:34px;height:34px;border-radius:10px;background:var(--cb);color:var(--c);display:grid;place-items:center;flex:none}
+.g-dt{flex:1;min-width:0}
+.g-dt b{display:block;font-size:14.5px;font-weight:700}
+.g-dt small{display:block;font-size:12px;color:var(--t2);line-height:1.35}
+.g-dt small:first-child{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--t3)}
+.g-st{display:inline-flex;align-items:center;gap:4px;flex:none;padding:4px 9px;border-radius:999px;background:var(--card2);color:var(--t2);font-size:11.5px;font-weight:700;white-space:nowrap}
+.g-st.ok{background:rgba(215,255,58,.14);color:var(--brand)}
+.g-st .ic{display:inline-block}
+.g-demo p{margin:8px 0 0;padding-top:10px;border-top:.5px solid var(--sep);font-size:12.5px;color:var(--t2)}
+.g-prev{margin:0 0 20px}
+.g-again{max-width:380px;margin:0 0 14px}
+@media (max-height:700px){.g-word{font-size:48px}}
 .btn.pri,a.btn.pri,.chip.hl,.now,.wkt.cur,.wd7.today .dn,.rng button[aria-pressed=true]{background:var(--brand);color:var(--ink)}
 .tab[aria-selected=true]{color:var(--brand)}
 #ptr{position:fixed;left:50%;top:calc(var(--sat) + 6px);z-index:40;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--card2);color:var(--t2);box-shadow:0 6px 20px rgba(0,0,0,.5);opacity:0;transform:translate(-50%,-44px);transition:transform .2s,opacity .2s;pointer-events:none}
@@ -894,7 +914,8 @@ var ICONS={
   gear:'<path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
   share:'<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/>',
   info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
-  alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/>'
+  alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/>',
+  watch:'<rect x="6" y="6" width="12" height="12" rx="3"/><path d="m9 6 .6-3h4.8l.6 3M9 18l.6 3h4.8l.6-3M12 9.5V12l1.5 1.2"/>'
 };
 function ic(n,s){s=s||22;return '<svg class="ic" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICONS[n]+'</svg>';}
 
@@ -2403,14 +2424,24 @@ function renderGate(){
   if(!gateTracked&&ready){gateTracked=true;track('gate_view','');}
   body=!cfg?'<div class="g-gbox w"><span class="g-wait">Connexion au serveur…</span></div>':cfg.err?'<p class="muted" style="margin:0 0 12px">Impossible de joindre le serveur. Vérifie ta connexion.</p><button class="btn pri" data-act="gateretry">Réessayer</button>':'<div class="g-gbox"><div id="g-btn" style="display:flex;justify-content:center;width:100%"></div></div>';
   var grow=function(sp,icn,t,s){return '<div class="g-row sp-'+sp+'"><span class="gi">'+ic(icn,19)+'</span><span><b>'+t+'</b><small>'+s+'</small></span></div>';};
+  // Aperçu d'une semaine type : montre le produit (séances détaillées, cochées par Garmin, envoyées sur la montre)
+  var demo=function(sp,icn,day,t,d,st){return '<div class="g-dr sp-'+sp+'"><span class="gi">'+ic(icn,17)+'</span><span class="g-dt"><small>'+day+'</small><b>'+t+'</b><small>'+d+'</small></span>'+st+'</div>';};
   vw.innerHTML='<div class="gate"><div class="g-hero"><img src="'+HERO_IMG+'" alt=""></div><div class="g-body">'+
-    '<img class="g-logo" src="icon-192.png" alt="Triient" width="84" height="84">'+
-    '<h1 class="g-t">Prépare ta course,<br>franchis la ligne.</h1>'+
-    '<p class="g-s">Ton premier triathlon ou la chasse à un chrono : ton plan s’adapte à ta course, à ton niveau et à ton emploi du temps.</p>'+
-    '<div class="g-sports"><span class="sp-swim">'+ic('swim',17)+'Natation</span><span class="sp-bike">'+ic('bike',17)+'Vélo</span><span class="sp-run">'+ic('run',17)+'Course</span></div>'+
-    '<div class="g-cta">'+body+'</div>'+
-    '<p class="g-fine">Crée ton compte gratuit en un clic · sans mot de passe<br>Ton plan te suit sur tous tes appareils</p>'+
-    '<div class="g-prev" style="margin-top:22px">'+grow('swim','race','Réussir ton premier triathlon','Arrive au départ prêt, termine avec le sourire, quel que soit ton niveau.')+grow('run','chart','Viser un temps','Des allures adaptées et une progression séance après séance vers ton chrono.')+grow('bike','week','Au rythme de ta vie','Tu choisis le nombre de séances ; vacances et week-ends sont pris en compte.')+'</div>'+
+    '<div class="g-brand" role="img" aria-label="Triient"><span class="g-word"><i>TRI</i>IENT</span><svg class="g-wave" viewBox="0 0 120 12" aria-hidden="true"><path d="M2 8c9-6 17-6 26 0s17 6 26 0 17-6 26 0 17 6 26 0 11-4 12-4"/></svg></div>'+
+    '<div class="g-slogan">Personnalise ta prépa</div>'+
+    '<h1 class="g-t">Ton plan triathlon,<br>fait pour toi.</h1>'+
+    '<p class="g-s">Choisis ta course, ton niveau et tes jours d’entraînement : Triient prépare chaque séance jusqu’au jour J. Du sprint à l’Ironman.</p>'+
+    '<div class="g-cta" id="g-cta">'+body+'</div>'+
+    '<p class="g-fine">Gratuit · sans pub · sans mot de passe<br>Ton plan te suit sur tous tes appareils</p>'+
+    '<div class="g-demo" aria-label="Exemple de semaine"><div class="g-dh"><b>Semaine 6</b><span>Développement</span><span class="sp"></span><em>Exemple</em></div>'+
+      demo('swim','swim','Mardi','Natation · Technique','45 min · 2,1 km','<span class="g-st ok">'+ic('check',14)+'Fait</span>')+
+      demo('bike','bike','Mercredi','Vélo · Blocs allure course','1h30 · 3 × 12 min','<span class="g-st">'+ic('watch',14)+'Sur ta montre</span>')+
+      demo('run','run','Samedi','Course · Sortie longue','1h05 · facile','<span class="g-st">À venir</span>')+
+    '<p>Faite avec ta montre Garmin, la séance se coche toute seule.</p></div>'+
+    '<div class="g-prev">'+grow('swim','race','Toutes les distances','Du sprint à l’Ironman, préparé sur 4 à 52 semaines : un premier triathlon comme un nouveau record.')+
+      grow('bike','watch','Sur ta montre Garmin','Tes séances arrivent sur ta montre avec leurs allures, et se cochent dès que tu les as faites.')+
+      grow('run','week','Au rythme de ta vie','Tu choisis tes séances par semaine ; vacances, week-ends chargés et courses de préparation sont pris en compte.')+'</div>'+
+    (ready?'<button class="btn pri g-again" data-act="gatetop">Créer mon plan gratuit</button>':'')+
     '<button class="lnk" data-act="legal" style="margin:4px 0 0;color:var(--t3)">Mentions légales et confidentialité</button>'+
     '</div></div>';
   if(ready)setTimeout(acctRenderBtn,60);
@@ -3457,6 +3488,7 @@ document.addEventListener('click',function(e){
   }
   else if(a==='togstats'){state.ui.noStats=statsOn();save();openSheet();toast(statsOn()?'Statistiques activées':'Statistiques désactivées');}
   else if(a==='gateretry'){pubCfg=null;render(false);loadPubCfg();}
+  else if(a==='gatetop'){var gc=document.getElementById('g-cta');if(gc)gc.scrollIntoView({behavior:'smooth',block:'center'});}
   else if(a==='acctsave'){var ac=acct();if(ac){if(ac.conflict&&!confirm('Écraser la version du compte avec les données de cet appareil ?'))return;ac.paused=false;ac.conflict=false;acctForce();}}
   else if(a==='acctexport')acctExport();
   else if(a==='acctout')acctLogout();
