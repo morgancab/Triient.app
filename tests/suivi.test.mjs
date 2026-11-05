@@ -213,3 +213,16 @@ test('personnes actives par jour : comptes distincts, appareils multiples compt�
   assert.equal(j.acc[day], 1);
   assert.equal((await call(env, 'u1', 'GET', '/pub/admin/stats?days=7')).status, 403);
 });
+
+test('distances personnalisées : visibles dans la liste et dans la fiche', async () => {
+  const { db, env } = setup();
+  db.prepare('UPDATE users SET data = ? WHERE id = ?').run(JSON.stringify({ done: {}, race: { name: 'Triathlon du lac', date: '2027-06-13', format: 'custom', weeks: 20, swimM: 2000, bikeM: 60000, runM: 15000, bikeUp: 800, runUp: 0 } }), 'u1');
+  const o = await call(env, 'admin', 'GET', '/pub/admin/overview');
+  const u1 = o.users.find((u) => u.id === 'u1');
+  assert.deepEqual([u1.swimM, u1.bikeM, u1.runM], [2000, 60000, 15000]);
+  const a = loadApp({ race: raceConfig({ format: 'half', weeks: 12 }) });
+  const j = await call(env, 'admin', 'GET', '/pub/admin/user?id=u1');
+  const html = a.IM.admDetail(j);
+  assert.match(html, /Distances<\/span><b>2 · 60 · 15 km/);
+  assert.match(html, /vélo D\+ 800 m/);
+});

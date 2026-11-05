@@ -3470,6 +3470,8 @@ function adminLoad(){
   }).catch(function(){adminErr='Serveur injoignable.';}).then(function(){adminBusy=false;if(tab==='admin')safeRender();});
 }
 function admFmt(k){return (FORMATS[k]&&FORMATS[k].n)||(k==='custom'?'Distances libres':'');}
+// Distances de sa course (natation · vélo · course), vide si l'app ne les a pas transmises
+function admDist(x){return x&&x.swimM>0&&x.bikeM>0&&x.runM>0?fk(x.swimM)+' · '+fk(x.bikeM)+' · '+fk(x.runM)+' km':'';}
 // Pastilles d'un utilisateur : appareil, installation, Garmin, envois vers la montre (inconnu tant que son app n'a rien envoyé)
 function admBadges(u){
   var b=[];
@@ -3483,7 +3485,7 @@ function admUser(u){
   var pctv=u.total?Math.round(u.done/u.total*100):0,rd=parseISO(u.raceDate);
   return '<button class="adm-u" data-act="admuser" data-id="'+esc(u.id||'')+'"><div class="row"><b class="adm-n">'+esc(u.name||u.email)+'</b>'+(u.owner?'<span class="chip">Toi</span>':'')+'<span class="sp"></span><span class="small muted">'+esc(ago(u.seen))+'</span>'+ic('right',16)+'</div>'+
     (u.name?'<div class="small muted adm-e">'+esc(u.email)+'</div>':'')+
-    '<div class="adm-r">'+(u.race?'<b>'+esc(u.race)+'</b><br><span class="small muted">'+[rd?fmtDay(rd)+' '+rd.getFullYear():'',admFmt(u.format),u.weeks?u.weeks+' semaines':''].filter(Boolean).map(esc).join(' · ')+'</span>':'<span class="small muted">Aucun plan créé</span>')+'</div>'+
+    '<div class="adm-r">'+(u.race?'<b>'+esc(u.race)+'</b><br><span class="small muted">'+[rd?fmtDay(rd)+' '+rd.getFullYear():'',u.format==='custom'&&admDist(u)?admDist(u):admFmt(u.format),u.weeks?u.weeks+' semaines':''].filter(Boolean).map(esc).join(' · ')+'</span>':'<span class="small muted">Aucun plan créé</span>')+'</div>'+
     (u.race?(u.total?'<div class="pr-h" style="margin:8px 0 5px"><span>Progression</span><span>'+u.done+' / '+u.total+' séances · '+pctv+' %</span></div>'+bar(pctv):'<div class="small muted" style="margin-top:8px">Progression pas encore reçue</div>'):'')+
     admBadges(u)+'<div class="small muted" style="margin-top:8px">Inscrit le '+esc(admFull(u.created))+(u.visits?' · '+u.visits+' visite'+(u.visits>1?'s':''):'')+'</div></button>';
 }
@@ -3511,7 +3513,7 @@ function admDetail(j){
     kv('Visites',u.visits==null?'<span class="muted">Inconnu</span>':u.visits)+kv('Dernier appareil',u.device?esc(u.device):'<span class="muted">Inconnu</span>')+kv('App installée',yn(u.installed,'Oui','Pas encore vue')));
   h+=grp2('Garmin',kv('Connexion',yn(u.garmin,'Connecté','Non connecté')+(u.garminKey?' · clé dans le compte':''))+kv('Séances envoyées vers la montre',u.sent==null?'<span class="muted">Inconnu</span>':u.sent)+kv('Activités Garmin reçues',u.acts==null?'<span class="muted">Inconnu</span>':u.acts));
   if(r){var rd=parseISO(r.date),pc=u.total?Math.round(u.done/u.total*100):0;
-    h+=grp2('Plan',kv('Course',esc(r.name||'Sans nom'))+kv('Date',esc(rd?fmtDay(rd)+' '+rd.getFullYear():'–'))+kv('Format',esc(admFmt(r.format)||'–'))+kv('Durée',esc((r.weeks||'–')+' semaines'))+(r.sessions?kv('Séances par semaine',r.sessions):'')+
+    h+=grp2('Plan',kv('Course',esc(r.name||'Sans nom'))+kv('Date',esc(rd?fmtDay(rd)+' '+rd.getFullYear():'–'))+kv('Format',esc(admFmt(r.format)||'–'))+(admDist(r)?kv('Distances',esc(admDist(r))+(r.bikeUp||r.runUp?'<br><span class="small muted">'+esc([r.bikeUp?'vélo D+ '+r.bikeUp+' m':'',r.runUp?'course D+ '+r.runUp+' m':''].filter(Boolean).join(' · '))+'</span>':'')):'')+kv('Durée',esc((r.weeks||'–')+' semaines'))+(r.sessions?kv('Séances par semaine',r.sessions):'')+
       kv('Progression',u.total?u.done+' / '+u.total+' · '+pc+' %':'<span class="muted">Pas encore reçue</span>')+(p?kv('Séances cochées',p.checked)+kv('Associations manuelles',p.linked)+kv('Questionnaire de niveau',p.levelTest?'Rempli':'Non')+kv('Absences',p.away)+kv('Séances manquées traitées',p.missed):''));}
   else h+=grp2('Plan',kv('Course','<span class="muted">Aucun plan créé</span>'));
   var sts=(j.steps||[]).slice().sort(function(x,y){return x.date>y.date?1:-1;});

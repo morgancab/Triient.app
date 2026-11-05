@@ -323,7 +323,8 @@ async function adminUser(req, url, env) {
     ok: true,
     user: { id, email: u.email, name: u.name, created: u.created, lastLogin: u.last_login, seen: u.last_seen || u.last_login, done: u.prog_done, total: u.prog_total,
       device: u.device || null, installed: u.installed, garmin: u.garmin, garminKey: !!(d && d.gks), sent: u.sent, acts: u.acts, visits: u.visits, owner: isAdmin(env, u.email), dataUpdated: u.data_updated || null },
-    race: r ? { name: r.name, city: r.city, date: r.date, format: r.format, weeks: r.weeks, level: r.level, sessions: r.sessions } : null,
+    race: r ? { name: r.name, city: r.city, date: r.date, format: r.format, weeks: r.weeks, level: r.level, sessions: r.sessions,
+      swimM: Number(r.swimM) || 0, bikeM: Number(r.bikeM) || 0, runM: Number(r.runM) || 0, bikeUp: Number(r.bikeUp) || 0, runUp: Number(r.runUp) || 0 } : null,
     plan: d ? { checked: n(d.done), linked: n(d.links), levelTest: n(d.lv) > 0, races: Array.isArray(d.st) ? d.st.length : 0, away: Array.isArray(d.away) ? d.away.length : 0, missed: n(d.ms) } : null,
     // Courses intermédiaires, champs utiles seulement
     steps: (Array.isArray(d && d.st) ? d.st : []).slice(0, 50).map((x) => ({ name: String(x.name || '').slice(0, 120), city: String(x.city || '').slice(0, 80), kind: x.kind, format: x.format, distM: Number(x.distM) || 0, date: x.date, prio: x.prio, added: x.added })),
@@ -336,7 +337,7 @@ function isAdmin(env, email) {
 async function adminOverview(req, env) {
   const a = await adminMe(req, env);
   if (a.res) return a.res;
-  const base = "id, email, name, created, COALESCE(last_seen, last_login) AS seen, prog_done, prog_total, json_extract(data, '$.race.name') AS race, json_extract(data, '$.race.date') AS race_date, json_extract(data, '$.race.format') AS race_format, json_extract(data, '$.race.weeks') AS race_weeks";
+  const base = "id, email, name, created, COALESCE(last_seen, last_login) AS seen, prog_done, prog_total, json_extract(data, '$.race.name') AS race, json_extract(data, '$.race.date') AS race_date, json_extract(data, '$.race.format') AS race_format, json_extract(data, '$.race.weeks') AS race_weeks, json_extract(data, '$.race.swimM') AS race_swim, json_extract(data, '$.race.bikeM') AS race_bike, json_extract(data, '$.race.runM') AS race_run";
   let rows;
   try { rows = (await env.DB.prepare('SELECT ' + base + ', device, installed, garmin, sent, visits FROM users ORDER BY seen DESC LIMIT 1000').all()).results || []; }
   catch (e) { rows = (await env.DB.prepare('SELECT ' + base + ' FROM users ORDER BY seen DESC LIMIT 1000').all()).results || []; }   // schema5.sql pas encore appliqué
@@ -346,7 +347,7 @@ async function adminOverview(req, env) {
     ok: true,
     totals: { users: others.length, withPlan: count((r) => r.race), new7: count((r) => r.created >= ago(7)), new30: count((r) => r.created >= ago(30)), active7: count((r) => r.seen >= ago(7)), active30: count((r) => r.seen >= ago(30)),
       installed: count((r) => r.installed), garmin: count((r) => r.garmin), sent: others.reduce((s, r) => s + (r.sent || 0), 0) },
-    users: rows.map((r) => ({ id: r.id, email: r.email, name: r.name, created: r.created, seen: r.seen, done: r.prog_done, total: r.prog_total, race: r.race, raceDate: r.race_date, format: r.race_format, weeks: r.race_weeks, owner: isAdmin(env, r.email),
+    users: rows.map((r) => ({ id: r.id, email: r.email, name: r.name, created: r.created, seen: r.seen, done: r.prog_done, total: r.prog_total, race: r.race, raceDate: r.race_date, format: r.race_format, weeks: r.race_weeks, swimM: Number(r.race_swim) || 0, bikeM: Number(r.race_bike) || 0, runM: Number(r.race_run) || 0, owner: isAdmin(env, r.email),
       device: r.device || null, installed: r.installed, garmin: r.garmin, sent: r.sent, visits: r.visits })),
   });
 }
