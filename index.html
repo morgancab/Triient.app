@@ -695,7 +695,7 @@ details.mf>div{padding-top:10px}
 details.mf .card{background:var(--card2);box-shadow:none}
 /* écran d'entrée */
 .gate{margin:calc(-10px - var(--sat)) -16px -20px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:#000}
-.g-hero{position:relative;height:clamp(210px,34vh,300px);overflow:hidden;flex:none}
+.g-hero{position:relative;height:clamp(190px,28vh,260px);overflow:hidden;flex:none}
 .g-hero img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%;filter:saturate(1.05)}
 .g-hero::after{content:'';position:absolute;left:0;right:0;top:0;bottom:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.05) 40%,#000 100%)}
 .g-body{position:relative;margin-top:-62px;padding:0 22px calc(26px + var(--sab));display:flex;flex-direction:column;align-items:center;text-align:center;flex:1}
@@ -709,7 +709,9 @@ details.mf .card{background:var(--card2);box-shadow:none}
 .g-row b{display:block;font-size:14.5px;font-weight:700}
 .g-row small{display:block;color:var(--t2);font-size:12.5px;margin-top:2px;line-height:1.4}
 .g-row .gd{margin-left:auto;font-size:12px;font-weight:700;color:var(--c);background:var(--cb);padding:3px 9px;border-radius:999px;white-space:nowrap}
-.g-cta{width:100%;max-width:380px;margin:0 0 12px}
+.g-cta{width:100%;max-width:380px;margin:4px 0 22px;padding:16px 16px 12px;border-radius:24px;background:linear-gradient(160deg,rgba(215,255,58,.13),rgba(215,255,58,.04));box-shadow:inset 0 0 0 1.5px rgba(215,255,58,.55),0 14px 40px rgba(215,255,58,.08)}
+.g-ctal{margin:0 0 12px;font-family:var(--title);font-style:italic;font-weight:800;font-size:21px;text-transform:uppercase;color:var(--brand)}
+.g-cta .g-fine{margin:10px 0 0}
 .g-gbox{display:flex;justify-content:center;align-items:center;min-height:52px;border-radius:999px;color-scheme:light}
 .g-gbox.w{background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
 #g-btn{color-scheme:light;background:transparent}
@@ -772,7 +774,7 @@ h1{font-size:38px;line-height:1}
 .g-wave{width:150px;height:14px;margin-top:6px;fill:none;stroke:var(--brand);stroke-width:3.4;stroke-linecap:round}
 .g-slogan{margin:10px 0 0;font-size:12px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:var(--t2)}
 .g-t{margin-top:22px}
-.g-demo{width:100%;max-width:380px;margin:26px 0 12px;padding:14px 14px 12px;border-radius:20px;background:var(--card);box-shadow:inset 0 0 0 1px var(--brd);text-align:left}
+.g-demo{width:100%;max-width:380px;margin:0 0 12px;padding:14px 14px 12px;border-radius:20px;background:var(--card);box-shadow:inset 0 0 0 1px var(--brd);text-align:left}
 .g-dh{display:flex;align-items:baseline;gap:8px;margin:0 0 8px;font-size:13px;color:var(--t2)}
 .g-dh b{font-family:var(--title);font-style:italic;font-weight:800;font-size:17px;text-transform:uppercase;color:var(--t1)}
 .g-dh em{font-style:normal;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
@@ -2431,8 +2433,7 @@ function renderGate(){
     '<div class="g-slogan">Personnalise ta prépa</div>'+
     '<h1 class="g-t">Ton plan triathlon,<br>fait pour toi.</h1>'+
     '<p class="g-s">Choisis ta course, ton niveau et tes jours d’entraînement : Triient prépare chaque séance jusqu’au jour J. Du sprint à l’Ironman.</p>'+
-    '<div class="g-cta" id="g-cta">'+body+'</div>'+
-    '<p class="g-fine">Gratuit · sans pub · sans mot de passe<br>Ton plan te suit sur tous tes appareils</p>'+
+    '<div class="g-cta" id="g-cta"><div class="g-ctal">Crée ton plan, c’est gratuit</div>'+body+'<p class="g-fine">Sans pub · sans mot de passe<br>Ton plan te suit sur tous tes appareils</p></div>'+
     '<div class="g-demo" aria-label="Exemple de semaine"><div class="g-dh"><b>Semaine 6</b><span>Développement</span><span class="sp"></span><em>Exemple</em></div>'+
       demo('swim','swim','Mardi','Natation · Technique','45 min · 2,1 km','<span class="g-st ok">'+ic('check',14)+'Fait</span>')+
       demo('bike','bike','Mercredi','Vélo · Blocs allure course','1h30 · 3 × 12 min','<span class="g-st">'+ic('watch',14)+'Sur ta montre</span>')+
@@ -2578,7 +2579,7 @@ function acctRenderBtn(){
   loadGsi(function(err){
     if(err||!window.google){el.innerHTML='<p class="small muted">Connexion Google indisponible (bloqueur de contenu ?).</p>';return;}
     google.accounts.id.initialize({client_id:pubCfg.googleClientId,callback:function(r){acctLogin(r.credential);},auto_select:false});
-    google.accounts.id.renderButton(el,{theme:'filled_black',size:'large',text:'continue_with',shape:'pill',width:Math.min(320,el.clientWidth||300),locale:'fr',logo_alignment:'left'});
+    google.accounts.id.renderButton(el,{theme:'outline',size:'large',text:'continue_with',shape:'pill',width:Math.min(340,el.clientWidth||300),locale:'fr',logo_alignment:'left'});
   });
 }
 function accountFoldHtml(){
