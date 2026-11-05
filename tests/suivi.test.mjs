@@ -187,6 +187,21 @@ test('analyse du suivi : entonnoir, rétention et répartitions calculés sans l
   assert.match(h, /Demi-distance \(70\.3\) · 7 séances · Intermédiaire/);
 });
 
+test('Garmin : le taux de l’assistant ne compare que des compteurs du même genre et ne dépasse pas 100 %', () => {
+  const a = loadApp({ race: raceConfig({ format: 'half', weeks: 12 }) });
+  const now = Date.UTC(2027, 1, 10, 12);
+  const data = { users: [{ id: 'a', created: now, seen: now, garmin: 1 }, { id: 'b', created: now, seen: now, garmin: 0 }, { id: 'moi', owner: true, created: now, seen: now, garmin: 1 }] };
+  // 6 anciennes ouvertures sans marque + 4 appareils marqués ; 9 « connecté » dont 2 via l'assistant, 1 clé retrouvée, 6 anciens
+  const ev = { totals: { wiz_start: 10, garmin_connected: 9, wiz_error: 1 }, daily: {}, top: { wiz_start: [['u', 4]], garmin_connected: [['wiz', 2], ['sync', 1]] } };
+  const h = a.IM.admAnalytics(data, ev, 30, now);
+  assert.match(h, /<b>4<\/b><span>Ont ouvert l’assistant/);
+  assert.match(h, /<b>2<\/b><span>Connectés via l’assistant/);
+  assert.match(h, /<b>50 %<\/b><span>Assistant réussi<\/span><small>2 sur 4/);
+  assert.match(h, /Comptes avec Garmin connecté \(aujourd’hui\)<\/b><span>1</);   // propriétaire exclu
+  assert.match(h, /6 ouvertures de l’assistant et 6 « Garmin connecté »/);
+  assert.doesNotMatch(h, /150 %/);
+});
+
 test('personnes actives par jour : comptes distincts, appareils multiples comptés une fois, propriétaire exclu', async () => {
   const { db, env } = setup();
   db.exec(schema('schema.sql'));

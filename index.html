@@ -2451,7 +2451,7 @@ var LOGIN_REQUIRED=true,gateShown=false,gateTracked=false;
    immédiatement (nom du compte, nombre d'activités) et explique quoi faire quand rien n'arrive. Plus tard, l'étape 3 pourra devenir un bouton
    « Se connecter avec intervals.icu » (OAuth) sans changer le reste. */
 var wz={step:1,key:'',busy:false,err:'',res:null};
-function openWiz(step){wz={step:step||1,key:'',busy:false,err:'',res:null};track('wiz_start','');renderWiz();}
+function openWiz(step){wz={step:step||1,key:'',busy:false,err:'',res:null};trackOnce('wiz_start','u');renderWiz();}   // « u » : une fois par appareil (avant : à chaque ouverture)
 function renderWiz(){
   var s=wz.step,h='',dots='<div class="wzs" aria-hidden="true">'+[1,2,3].map(function(i){return '<i class="'+(wz.res?'d':i<s?'d':i===s?'c':'')+'"></i>';}).join('')+'</div>';
   if(wz.res){
@@ -2499,7 +2499,7 @@ function wzVerify(){
       delete state.ui.gkOff;
       state.sv=Object.assign(state.sv||{},{url:base,key:key,acts:acts,meta:a.meta||null,hrz:(a.meta&&a.meta.hrz)||(state.sv&&state.sv.hrz),conn:true,t:Date.now(),err:'',werr:''});
       save();
-      if(acts.length&&!state.ui.gtracked){state.ui.gtracked=1;save();track('garmin_connected','');}
+      if(acts.length&&!state.ui.gtracked){state.ui.gtracked=1;save();track('garmin_connected','wiz');}   // réussite de l'assistant
       wz.res={ok:true,name:j.athlete||'',count:acts.length,last:acts[0]||null};
     });
   }).catch(function(e){
@@ -2610,6 +2610,7 @@ function acctPing(){
   acctCall('POST','/pub/account/ping',b).then(function(j){
     var x=acct();
     if(!j||!j.ok)pingSig='';
+    if(j&&j.ok&&j.admin&&!state.ui.own){state.ui.own=1;save0();}   // appareil du propriétaire : exclu des compteurs anonymes, même déconnecté
     if(x&&j&&j.ok&&!!x.admin!==!!j.admin){x.admin=!!j.admin;save0();safeRender();}
   }).catch(function(){pingSig='';});
 }
@@ -2749,6 +2750,7 @@ function statsOn(){try{return !(state.ui&&state.ui.noStats)&&navigator.doNotTrac
 function trackOnce(name,prop){var tk=state.ui.tk||(state.ui.tk={});if(tk[name])return;tk[name]=1;save0();track(name,prop);}
 function track(name,prop){
   if(DEV||!statsOn()||/^file:/.test(location.protocol)||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))return;   // local : tests et développement ne comptent pas
+  if(state.ui.own||(acct()&&acct().admin))return;   // les appareils du propriétaire ne comptent pas non plus
   try{
     var url=((state.ui&&state.ui.pubApi)||PUB_API)+'/pub/ev',body=JSON.stringify({e:name,p:prop||''});
     if(navigator.sendBeacon&&navigator.sendBeacon(url,new Blob([body],{type:'text/plain'})))return;
@@ -3609,7 +3611,14 @@ function admAnalytics(D,E,days,now){
   if(E){
     var tp=(E.top||{}),lst=function(k,f){return (tp[k]||[]).slice(0,8).map(function(x){return [f?f(x[0]):x[0],x[1]];});};
     var pc=lst('plan_created',admPlanLbl),rp=lst('race_pick'),sm=lst('search_miss');
-    var gw='<div class="adm-g" style="margin-top:0">'+tile(t('wiz_start'),'Assistant Garmin ouvert')+tile(t('garmin_connected'),'Garmin connecté')+tile(t('wiz_error'),'Erreurs de clé')+tile(t('wiz_start')?admPct(t('garmin_connected'),t('wiz_start'))+' %':'–','Assistant réussi')+'</div>';
+    // Garmin : seuls les compteurs marqués (« u » : assistant ouvert, une fois par appareil ; « wiz » : réussite de l'assistant ; « sync » : clé déjà présente)
+    // sont comparables entre eux. Les anciens compteurs sans marque mélangeaient ouvertures répétées et synchronisations : affichés à part.
+    var pv=function(k,p){var r=(tp[k]||[]).filter(function(x){return x[0]===p;})[0];return r?r[1]:0;},wo=pv('wiz_start','u'),wk2=pv('garmin_connected','wiz'),gs=pv('garmin_connected','sync');
+    var oldW=t('wiz_start')-wo,oldG=t('garmin_connected')-wk2-gs,gAcc=U.filter(function(u){return u.garmin===1;}).length;
+    var gw='<div class="adm-g" style="margin-top:0">'+tile(wo,'Ont ouvert l’assistant','appareils')+tile(wk2,'Connectés via l’assistant','appareils')+tile(t('wiz_error'),'Échecs de connexion','tentatives, une personne peut réessayer')+tile(wo?admPct(Math.min(wk2,wo),wo)+' %':'–','Assistant réussi',wo?wk2+' sur '+wo:'pas encore de données')+'</div>'+
+      '<div class="eyebrow" style="margin:16px 0 8px">Autres repères</div>'+admRows([['Comptes avec Garmin connecté (aujourd’hui)',gAcc],['Garmin retrouvé sur un nouvel appareil, sans l’assistant',gs]],0)+
+      (oldW||oldG?'<p class="small muted" style="margin:10px 0 0">Anciens compteurs, avant la correction du 5 novembre : '+oldW+' ouverture'+(oldW>1?'s':'')+' de l’assistant et '+oldG+' « Garmin connecté ». Ils comptaient chaque ouverture et chaque appareil qui retrouvait sa clé (changement de domaine, deuxième appareil, propriétaire compris) : ils ne se comparent pas entre eux.</p>':'')+
+      '<p class="small muted" style="margin:10px 0 0">Le chiffre fiable des personnes est « Comptes avec Garmin connecté » : il vient des comptes, sans doublon, et se met à jour à la prochaine ouverture de l’app de chacun.</p>';
     h+=card('Choix et recherches',days+' jours',
       (pc.length?'<div class="eyebrow" style="margin:0 0 8px">Plans remplis (format · séances · niveau)</div>'+admRows(pc,0):'')+
       (rp.length?'<div class="eyebrow" style="margin:16px 0 8px">Courses choisies dans la liste</div>'+admRows(rp,0):'')+
@@ -4941,7 +4950,7 @@ function syncActs(force,loud){
     .then(function(j){
       var acts=j.activities||[],changed=JSON.stringify(acts)!==JSON.stringify(sv.acts||[])||sv.conn!==!!j.connected||!!sv.err||(sv.werr||'')!==(j.error||'');
       sv.acts=acts;if(j.meta){if(j.meta.hrz)sv.hrz=j.meta.hrz;sv.meta=j.meta;}sv.conn=!!j.connected;sv.werr=j.error||'';sv.t=Date.now();sv.err='';save();
-      if(j.connected&&acts.length&&!state.ui.gtracked){state.ui.gtracked=1;save();track('garmin_connected');}
+      if(j.connected&&acts.length&&!state.ui.gtracked){state.ui.gtracked=1;save();track('garmin_connected','sync');}   // clé déjà là (retrouvée depuis le compte, ancien domaine…) : pas une connexion via l'assistant
       if(loud)toast('Activités synchronisées');
       if(changed||loud)safeRender();
     })
