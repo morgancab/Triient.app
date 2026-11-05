@@ -58,6 +58,7 @@ async function route(req, env) {
       if (url.pathname === '/pub/auth/google' && req.method === 'POST') return authGoogle(req, env);
       if (url.pathname.startsWith('/pub/account')) return accountRoutes(req, url, env);
       if (url.pathname === '/pub/admin/overview' && req.method === 'GET') return adminOverview(req, env);
+      if (url.pathname === '/pub/admin/user' && req.method === 'GET') return adminUser(req, url, env);
       return new Response('Triient worker : OK', { status: 200 });
     } catch (e) {
       return json({ error: String((e && e.message) || e) }, 500);
@@ -190,6 +191,7 @@ async function authGoogle(req, env) {
   try { u = await verifyGoogle(env, b && b.credential); } catch (e) { return json({ ok: false, error: String((e && e.message) || e) }, 401); }
   const now = Date.now();
   await env.DB.prepare('INSERT INTO users (id, email, name, created, last_login, v) VALUES (?, ?, ?, ?, ?, 0) ON CONFLICT(id) DO UPDATE SET email = excluded.email, name = excluded.name, last_login = excluded.last_login').bind(u.sub, u.email, u.name, now, now).run();
+  try { await env.DB.prepare("INSERT INTO visits (user_id, t, kind) VALUES (?, ?, 'login')").bind(u.sub, now).run(); } catch (e) { /* table absente : schema5.sql pas encore appliqué */ }
   return json({ ok: true, token: await makeSession(env, u.sub), user: { email: u.email, name: u.name } });
 }
 async function accountRoutes(req, url, env) {
@@ -203,22 +205,41 @@ async function accountRoutes(req, url, env) {
   }
   if (path === '' && req.method === 'DELETE') {
     await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(sub).run();
+    try { await env.DB.prepare('DELETE FROM visits WHERE user_id = ?').bind(sub).run(); } catch (e) { /* table absente */ }
     return json({ ok: true });
   }
   if (path === '/export' && req.method === 'GET') {
-    const u = await env.DB.prepare('SELECT email, name, created, last_login, last_seen, prog_done, prog_total, v, data, data_updated FROM users WHERE id = ?').bind(sub).first();
+    const u = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(sub).first();
     if (!u) return json({ ok: false, error: 'compte introuvable' }, 404);
+    let visits = [];
+    try { visits = ((await env.DB.prepare('SELECT t, kind, device, installed FROM visits WHERE user_id = ? ORDER BY t DESC').bind(sub).all()).results || []).map((x) => ({ date: new Date(x.t).toISOString(), type: x.kind === 'login' ? 'connexion' : 'visite', device: x.device, installed: x.installed })); } catch (e) { visits = []; }
     let data = null;
     try { data = u.data ? JSON.parse(u.data) : null; } catch (e) { data = null; }
     if (data && data.gks) { delete data.gks; data.garmin_key = 'enregistrée, chiffrée'; }
-    return json({ ok: true, export: { email: u.email, name: u.name, created: new Date(u.created).toISOString(), last_login: new Date(u.last_login).toISOString(), last_seen: u.last_seen ? new Date(u.last_seen).toISOString() : null, sessions_done: u.prog_done, sessions_total: u.prog_total, plan_data: data } });
+    return json({ ok: true, export: { email: u.email, name: u.name, created: new Date(u.created).toISOString(), last_login: new Date(u.last_login).toISOString(), last_seen: u.last_seen ? new Date(u.last_seen).toISOString() : null, sessions_done: u.prog_done, sessions_total: u.prog_total, device: u.device || null, app_installed: u.installed == null ? null : !!u.installed, garmin_connected: u.garmin == null ? null : !!u.garmin, sessions_sent_to_watch: u.sent, garmin_activities: u.acts, visits_count: u.visits, visits, plan_data: data } });
   }
   // Visite : dernière visite + progression (séances faites / prévues, calculées sur l'appareil car les coches Garmin n'existent que là).
+  // Si l'utilisateur n'a pas désactivé les statistiques, l'app ajoute : appareil (« iPhone · Safari »), app installée, Garmin connecté,
+  // séances envoyées vers la montre, activités Garmin reçues. Une visite est comptée quand l'app est ouverte après 30 min d'absence.
   if (path === '/ping' && req.method === 'POST') {
     let b = null;
     try { b = await req.json(); } catch (e) { b = null; }
+    b = b && typeof b === 'object' ? b : {};
     const count = (x) => (Number.isInteger(x) && x >= 0 && x <= 5000 ? x : null);
-    await env.DB.prepare('UPDATE users SET last_seen = ?, prog_done = COALESCE(?, prog_done), prog_total = COALESCE(?, prog_total) WHERE id = ?').bind(Date.now(), count(b && b.done), count(b && b.total), sub).run();
+    const flag = (x) => (x === 0 || x === 1 ? x : null);
+    const now = Date.now(), dev = typeof b.dev === 'string' && b.dev.trim() ? b.dev.trim().slice(0, 40) : null, inst = flag(b.inst);
+    const prev = await env.DB.prepare('SELECT last_seen FROM users WHERE id = ?').bind(sub).first();
+    try {
+      await env.DB.prepare('UPDATE users SET last_seen = ?, prog_done = COALESCE(?, prog_done), prog_total = COALESCE(?, prog_total), device = COALESCE(?, device), installed = CASE WHEN ? = 1 THEN 1 ELSE COALESCE(installed, ?) END, garmin = COALESCE(?, garmin), sent = COALESCE(?, sent), acts = COALESCE(?, acts) WHERE id = ?')
+        .bind(now, count(b.done), count(b.total), dev, inst, inst, flag(b.g), count(b.sent), count(b.acts), sub).run();
+      if (dev && prev && (!prev.last_seen || now - prev.last_seen > 30 * 60000)) {
+        await env.DB.prepare("INSERT INTO visits (user_id, t, kind, device, installed) VALUES (?, ?, 'visit', ?, ?)").bind(sub, now, dev, inst).run();
+        await env.DB.prepare('UPDATE users SET visits = COALESCE(visits, 0) + 1 WHERE id = ?').bind(sub).run();
+        await env.DB.prepare('DELETE FROM visits WHERE user_id = ? AND t < ?').bind(sub, now - 365 * 86400000).run();
+      }
+    } catch (e) {   // colonnes absentes (schema5.sql pas encore appliqué) : on garde le suivi d'origine
+      await env.DB.prepare('UPDATE users SET last_seen = ?, prog_done = COALESCE(?, prog_done), prog_total = COALESCE(?, prog_total) WHERE id = ?').bind(now, count(b.done), count(b.total), sub).run();
+    }
     const u = await env.DB.prepare('SELECT email FROM users WHERE id = ?').bind(sub).first();
     return u ? json({ ok: true, admin: isAdmin(env, u.email) }) : json({ ok: false, error: 'compte introuvable' }, 404);
   }
@@ -257,23 +278,59 @@ async function accountRoutes(req, url, env) {
 
 /* ---------- Suivi propriétaire ----------
    Route : GET /pub/admin/overview (session Google d'un e-mail listé dans le secret ADMIN_EMAILS, séparés par des virgules).
-   Seules la course et la progression sont lues dans le plan, jamais les réglages. Les comptes propriétaires sont listés mais exclus des totaux. */
+   Seules la course et la progression sont lues dans le plan, jamais les réglages. Les comptes propriétaires sont listés mais exclus des totaux.
+   GET /pub/admin/user?id=<identifiant> : fiche d'un utilisateur (appareils, visites, Garmin, envois vers la montre, usage du plan). */
+async function adminMe(req, env) {
+  if (!env.DB) return { res: json({ ok: false, error: 'indisponible' }, 501) };
+  const sub = await readSession(req, env);
+  if (!sub) return { res: json({ ok: false, error: 'non connecté' }, 401) };
+  const me = await env.DB.prepare('SELECT email FROM users WHERE id = ?').bind(sub).first();
+  if (!me || !isAdmin(env, me.email)) return { res: json({ ok: false, error: 'accès réservé' }, 403) };
+  return { sub };
+}
+async function adminUser(req, url, env) {
+  const a = await adminMe(req, env);
+  if (a.res) return a.res;
+  const id = String(url.searchParams.get('id') || '').slice(0, 64);
+  const u = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(id).first();
+  if (!u) return json({ ok: false, error: 'utilisateur introuvable' }, 404);
+  let d = null;
+  try { d = u.data ? JSON.parse(u.data) : null; } catch (e) { d = null; }
+  const n = (o) => (o && typeof o === 'object' ? Object.keys(o).length : 0), r = (d && d.race) || null;
+  let visits = [], devices = [];
+  try {
+    visits = (await env.DB.prepare('SELECT t, kind, device, installed FROM visits WHERE user_id = ? ORDER BY t DESC LIMIT 100').bind(id).all()).results || [];
+    devices = (await env.DB.prepare("SELECT device, MAX(installed) AS installed, COUNT(*) AS n, MAX(t) AS last FROM visits WHERE user_id = ? AND kind = 'visit' GROUP BY device ORDER BY last DESC").bind(id).all()).results || [];
+  } catch (e) { /* table absente */ }
+  return json({
+    ok: true,
+    user: { id, email: u.email, name: u.name, created: u.created, lastLogin: u.last_login, seen: u.last_seen || u.last_login, done: u.prog_done, total: u.prog_total,
+      device: u.device || null, installed: u.installed, garmin: u.garmin, garminKey: !!(d && d.gks), sent: u.sent, acts: u.acts, visits: u.visits, owner: isAdmin(env, u.email), dataUpdated: u.data_updated || null },
+    race: r ? { name: r.name, city: r.city, date: r.date, format: r.format, weeks: r.weeks, level: r.level, sessions: r.sessions } : null,
+    plan: d ? { checked: n(d.done), linked: n(d.links), levelTest: n(d.lv) > 0, races: Array.isArray(d.st) ? d.st.length : 0, away: Array.isArray(d.away) ? d.away.length : 0, missed: n(d.ms) } : null,
+    // Courses intermédiaires, champs utiles seulement
+    steps: (Array.isArray(d && d.st) ? d.st : []).slice(0, 50).map((x) => ({ name: String(x.name || '').slice(0, 120), city: String(x.city || '').slice(0, 80), kind: x.kind, format: x.format, distM: Number(x.distM) || 0, date: x.date, prio: x.prio, added: x.added })),
+    visits, devices,
+  });
+}
 function isAdmin(env, email) {
   return String(env.ADMIN_EMAILS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean).includes(String(email || '').toLowerCase());
 }
 async function adminOverview(req, env) {
-  if (!env.DB) return json({ ok: false, error: 'indisponible' }, 501);
-  const sub = await readSession(req, env);
-  if (!sub) return json({ ok: false, error: 'non connecté' }, 401);
-  const me = await env.DB.prepare('SELECT email FROM users WHERE id = ?').bind(sub).first();
-  if (!me || !isAdmin(env, me.email)) return json({ ok: false, error: 'accès réservé' }, 403);
-  const rows = (await env.DB.prepare("SELECT email, name, created, COALESCE(last_seen, last_login) AS seen, prog_done, prog_total, json_extract(data, '$.race.name') AS race, json_extract(data, '$.race.date') AS race_date, json_extract(data, '$.race.format') AS race_format, json_extract(data, '$.race.weeks') AS race_weeks FROM users ORDER BY seen DESC LIMIT 1000").all()).results || [];
+  const a = await adminMe(req, env);
+  if (a.res) return a.res;
+  const base = "id, email, name, created, COALESCE(last_seen, last_login) AS seen, prog_done, prog_total, json_extract(data, '$.race.name') AS race, json_extract(data, '$.race.date') AS race_date, json_extract(data, '$.race.format') AS race_format, json_extract(data, '$.race.weeks') AS race_weeks";
+  let rows;
+  try { rows = (await env.DB.prepare('SELECT ' + base + ', device, installed, garmin, sent, visits FROM users ORDER BY seen DESC LIMIT 1000').all()).results || []; }
+  catch (e) { rows = (await env.DB.prepare('SELECT ' + base + ' FROM users ORDER BY seen DESC LIMIT 1000').all()).results || []; }   // schema5.sql pas encore appliqué
   const now = Date.now(), ago = (d) => now - d * 86400000, others = rows.filter((r) => !isAdmin(env, r.email));
   const count = (f) => others.filter(f).length;
   return json({
     ok: true,
-    totals: { users: others.length, withPlan: count((r) => r.race), new7: count((r) => r.created >= ago(7)), new30: count((r) => r.created >= ago(30)), active7: count((r) => r.seen >= ago(7)), active30: count((r) => r.seen >= ago(30)) },
-    users: rows.map((r) => ({ email: r.email, name: r.name, created: r.created, seen: r.seen, done: r.prog_done, total: r.prog_total, race: r.race, raceDate: r.race_date, format: r.race_format, weeks: r.race_weeks, owner: isAdmin(env, r.email) })),
+    totals: { users: others.length, withPlan: count((r) => r.race), new7: count((r) => r.created >= ago(7)), new30: count((r) => r.created >= ago(30)), active7: count((r) => r.seen >= ago(7)), active30: count((r) => r.seen >= ago(30)),
+      installed: count((r) => r.installed), garmin: count((r) => r.garmin), sent: others.reduce((s, r) => s + (r.sent || 0), 0) },
+    users: rows.map((r) => ({ id: r.id, email: r.email, name: r.name, created: r.created, seen: r.seen, done: r.prog_done, total: r.prog_total, race: r.race, raceDate: r.race_date, format: r.race_format, weeks: r.race_weeks, owner: isAdmin(env, r.email),
+      device: r.device || null, installed: r.installed, garmin: r.garmin, sent: r.sent, visits: r.visits })),
   });
 }
 
