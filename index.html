@@ -1796,7 +1796,8 @@ function vHome(){
   h+='<header class="top"><div class="top-t"><div class="eyebrow">'+esc(fmtLong(today()))+'</div><h1>'+(first?'Bonjour '+esc(first):'Accueil')+'</h1></div><button class="iconbtn" data-act="settings" aria-label="Réglages et sauvegarde">'+ic('gear',22)+'</button></header>';
   h+=heroHtml(st);
   if(st.s==='during')h+='<p class="hline"><b>Semaine '+st.w+' sur '+NW+'</b> · '+esc(cur.ph.n)+(cur.kind==='rec'?' · semaine plus légère pour récupérer':cur.kind==='taper'?' · on baisse le volume avant la course':'')+'</p>';
-  h+=missCard();
+  var inj0=injCard();
+  h+=inj0||missCard();   // blessure en cours : pas de relance sur les séances manquées
   var nxs=nextStep();if(nxs){var nxd=diffDays(parseYmd(nxs.date),today());h+='<p class="hline"><b>Prochaine course : '+esc(nxs.name)+'</b> · '+(nxd?'J-'+nxd:'aujourd’hui')+'</p>';}
   // installation iOS
   var ios=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
@@ -1829,7 +1830,7 @@ function vMore(){
     '<button class="mhero" data-act="tab" data-tab="plan"><span class="mh-top"><span class="eyebrow">Ma course</span>'+(rd>=0?'<span class="mh-j">J-'+rd+'</span>':'')+'</span><b class="mh-n">'+esc(RNAME)+'</b>'+
       '<span class="mh-s">'+esc(fmtLong(RACE_DATE))+' · '+FMT.n+'</span>'+bar(pct(t.d,t.n))+
       '<span class="mh-f"><span>'+t.d+' / '+t.n+' séances</span><span class="mh-l">Voir mon plan de '+NW+' semaines'+ic('right',16)+'</span></span></button>'+
-    grp('Mon entraînement',mrow('race','Mes courses',stepList().length?stepList().length+' course'+(stepList().length>1?'s':'')+' intermédiaire'+(stepList().length>1?'s':''):'Ajouter une course intermédiaire','steps','','red')+mrow('week','Vacances & week-ends',aw?aw+' période'+(aw>1?'s':'')+' enregistrée'+(aw>1?'s':''):'Alléger le plan pendant une absence','awaylist','','green')+(lvOffered()?mrow('chart','Mon niveau',lvAny()?'Modifier mes temps de référence':'Estimer mes allures en 3 questions','level','','orange'):''))+
+    grp('Mon entraînement',mrow('race','Mes courses',stepList().length?stepList().length+' course'+(stepList().length>1?'s':'')+' intermédiaire'+(stepList().length>1?'s':''):'Ajouter une course intermédiaire','steps','','red')+mrow('week','Vacances & blessures',injNow()?esc(injNow().label+' · '+awayDesc(injNow())):aw?aw+' période'+(aw>1?'s':'')+' enregistrée'+(aw>1?'s':''):'Vacances, week-end ou blessure : le plan s’adapte','awaylist','','green')+(lvOffered()?mrow('chart','Mon niveau',lvAny()?'Modifier mes temps de référence':'Estimer mes allures en 3 questions','level','','orange'):''))+
     grp('L’app',mrow('gear','Réglages','Garmin, compte, sauvegarde','settings','','blue')+mrow('share','Partager l’app','Envoyer le lien à un ami','shareapp','','purple'))+
     (acct()&&acct().admin?grp('Propriétaire',mrow('chart','Suivi de l’app','Utilisateurs, courses, progression','tab','data-tab="admin"','grey')):'')+
     '<div style="text-align:center;margin:6px 0 4px"><button class="lnk" data-act="legal" style="margin:0;color:var(--t3)">Mentions légales et confidentialité</button></div>';
@@ -1860,8 +1861,32 @@ function durTxt(n,u){return u==='m'?(n<60?n+' min':fm(n)):u==='s'?n+' s':u==='mt
 /* ---------- Mode vacances / week-end ----------
    Une période (dates + intensité + matériel dispo) remplace, pendant ces jours, chaque séance par sa variante « récupération »
    générée par les mêmes constructeurs que le plan (mêmes cibles, même envoi Garmin, même rapprochement). Les séances sont modifiées
-   sur place ; s.orig garde l'original pour revenir en arrière à tout moment. La semaine de course n'est jamais modifiée. */
+   sur place ; s.orig garde l'original pour revenir en arrière à tout moment. La semaine de course n'est jamais modifiée.
+   Blessure (type 'injury') : p.stop = sports arrêtés {swim, bike, run, str}, leurs séances deviennent du repos ; les autres sports suivent
+   p.mode (identique, allégé, minimum). p.open : pause « jusqu'à nouvel ordre », recalculée chaque jour jusqu'à 7 jours devant (awayTo),
+   jusqu'à ce que l'athlète indique sa reprise. La date de course ne bouge pas : les séances de la période sont retirées, pas décalées. */
 var AWAY_F={light:0.7,min:0.4},AWAY_N={same:'Identique',light:'Allégé',min:'Minimum',off:'Repos',eve:'Veille de course'},awayDraft=null;
+var INJ_SP=[['swim','Natation'],['bike','Vélo'],['run','Course à pied'],['str','Renforcement']],INJ_AHEAD=7;
+function isInj(p){return p&&p.type==='injury';}
+// fin effective d'une période : une pause ouverte avance avec les jours
+function awayTo(p){if(!p.open)return p.to;var f=parseYmd(p.from),h=addDays(today(),INJ_AHEAD);return isoDate(f&&f>h?f:h);}
+function injRest(w){
+  var r=restDay(w);r.title='Repos · blessure';r.sum='Pause pour guérir';r.goal='Laisser la blessure guérir. La reprise se décide avec ton médecin ou ton kiné.';
+  r.lines=['Suis les consignes de ton médecin ou de ton kiné','Sommeil, hydratation et repas équilibrés aident aussi à guérir','Si la douleur persiste ou augmente, consulte de nouveau'];
+  return r;
+}
+function injStopped(o,p){var x=p.stop||{};return o.sp==='brick'?!!(x.bike||x.run):!!x[o.sp];}
+function injAll(p){var x=p.stop||{};return INJ_SP.every(function(k){return x[k[0]];});}
+// résumé lisible : « Pause complète », « Vélo et course à pied à l’arrêt », « Identique »…
+function awayDesc(p){
+  if(!isInj(p))return AWAY_N[p.mode];
+  if(injAll(p))return 'Pause complète';
+  var l=INJ_SP.filter(function(k){return (p.stop||{})[k[0]];}).map(function(k){return k[1].toLowerCase();});
+  return l.length?(l.length>1?l.slice(0,-1).join(', ')+' et '+l[l.length-1]:l[0]).replace(/^./,function(c){return c.toUpperCase();})+' à l’arrêt':'Aucun sport arrêté';
+}
+function awaySpan(p){var f=parseYmd(p.from);return p.open?'depuis le '+fmtDay(f)+' · jusqu’à nouvel ordre':fmtDay(f)+' → '+fmtDay(parseYmd(p.to));}
+// blessure en cours aujourd'hui (pour le bandeau d'accueil)
+function injNow(){var t=isoDate(today());return awayList().filter(function(p){return isInj(p)&&p.from<=t&&awayTo(p)>=t;})[0]||null;}
 function r5(n){return Math.round(n/5)*5;}
 function awayRun(w,ph,min,f){return runMid(w,'rec',ph,Math.max(20,Math.min(60,r5(min*f*0.6))));}
 // la séance est-elle faisable sur place (matériel dispo, pas en repos) ?
@@ -1905,8 +1930,19 @@ function gday(g){return PLAN[Math.floor(g/7)].days[g%7].sessions;}
 function awaySrc(s){var pos=ORIGPOS[s.id]||{w:s.w,d:s.d};return Object.assign({},s.orig||s,{w:pos.w,d:pos.d});}
 // Plan d'une période (sans rien modifier) : pour chaque séance de la période, sa version adaptée et, si besoin, le jour (global) où la reporter
 function planAway(p){
-  var a=parseYmd(p.from),b=parseYmd(p.to),ops=[];
+  var a=parseYmd(p.from),b=parseYmd(awayTo(p)),ops=[];
   if(!a||!b||b<a)return null;
+  if(isInj(p)){
+    var ia=Math.max(0,idxOfDate(a)),ib=Math.min(NW*7-1,idxOfDate(b)),gi,lp={mode:p.mode==='off'?'min':p.mode,pool:true,bike:true};
+    for(gi=ia;gi<=ib;gi++){
+      if(Math.floor(gi/7)+1>=NW)continue;
+      gday(gi).forEach(function(s){
+        var src=awaySrc(s);if(src.sp==='rest'||src.sp==='race')return;
+        ops.push({s:s,src:src,d0:gi,to:null,nf:injStopped(src,p)?injRest(src.w):lp.mode==='same'?null:adaptFields(src,lp)});
+      });
+    }
+    return ops;
+  }
   var fi=idxOfDate(a),ti=idxOfDate(b),N=NW*7,tod=idxOfDate(today()),g,extra={},movers=[];
   var mp={mode:p.mode==='off'?'same':p.mode,pool:true,bike:true};
   var load=function(x){var t=extra[x]||0;gday(x).forEach(function(s){if(s.sp!=='rest')t+=s.min;});return t;};
@@ -2123,7 +2159,7 @@ function stepPvHtml(d){
   var dn=function(x){return DAYS[(x.getDay()+6)%7].slice(0,3)+' '+dnum(x);},h='';
   h+='<div class="dh"><span>Aperçu</span><span class="dstat"><b class="c-del">'+(nr+nd)+' supprimée'+(nr+nd>1?'s':'')+'</b> · <b class="c-mod">'+na+' modifiée'+(na>1?'s':'')+'</b></span></div>';
   if(left<21)h+='<p class="small" style="margin:0 0 8px;color:#ffd60a">Cette course a lieu '+left+' jours avant ta course principale : cela peut nuire à ton objectif.</p>';
-  var aw=awayList().filter(function(p){return p.from<=d.date&&p.to>=d.date;})[0];
+  var aw=awayList().filter(function(p){return p.from<=d.date&&awayTo(p)>=d.date;})[0];
   if(aw)h+='<p class="small muted" style="margin:0 0 8px">Pendant « '+esc(aw.label)+' » : la course passe avant.</p>';
   if(!ops.length)h+='<p class="small muted" style="margin:0">Aucune séance modifiée sur ces dates.</p>';
   ops.forEach(function(o){h+='<div class="arow"><span class="ad">'+dn(addDays(PLAN_START,o.g))+'</span><span class="ar"><s>'+awayLine(o.src)+'</s><br><b class="'+(o.race||o.nf.sp==='rest'?'c-del':'c-mod')+'">'+(o.race?'Remplacée par la course':o.nf.sp==='rest'?'Supprimée (repos)':awayLine(o.nf))+'</b></span></div>';});
@@ -2293,6 +2329,10 @@ function applyAway(skip,skipStep){
 }
 function newAwayDraft(wn,type){
   var mon=PLAN[Math.max(0,Math.min(NW-1,wn-1))].start,vac=type==='vacances';
+  if(type==='injury'){   // blessure : à partir d'aujourd'hui (ou du début du plan), tout arrêté, jusqu'à nouvel ordre
+    var t0=today(),f0=t0<PLAN_START?PLAN_START:t0>RACE_DATE?mon:t0;
+    return {id:'',type:'injury',label:'Blessure',from:isoDate(f0),to:isoDate(addDays(f0,13)),open:true,stop:{swim:true,bike:true,run:true,str:true},mode:'same',move:'none',pool:true,bike:true};
+  }
   return {id:'',type:type,label:vac?'Vacances':'Week-end',from:isoDate(vac?mon:addDays(mon,4)),to:isoDate(addDays(mon,6)),mode:vac?'min':'same',move:vac?'none':'out',pool:true,bike:true};
 }
 /* ---------- Choisir sa course (premier lancement ou changement de course) ---------- */
@@ -2564,7 +2604,7 @@ function renderGate(){
     '<p>Faite avec ta montre Garmin, la séance se coche toute seule.</p></div>'+
     '<div class="g-prev">'+grow('swim','race','Toutes les distances','Du sprint à l’Ironman, préparé sur 4 à 52 semaines : un premier triathlon comme un nouveau record.')+
       grow('bike','watch','Sur ta montre Garmin','Tes séances arrivent sur ta montre avec leurs allures, et se cochent dès que tu les as faites.')+
-      grow('run','week','Au rythme de ta vie','Tu choisis tes séances par semaine ; vacances, week-ends chargés et courses de préparation sont pris en compte.')+'</div>'+
+      grow('run','week','Au rythme de ta vie','Tu choisis tes séances par semaine ; vacances, week-ends chargés, blessures et courses de préparation sont pris en compte.')+'</div>'+
     '<button class="btn pri g-again" data-act="gateguest">Créer mon plan gratuit</button>'+
     '<button class="lnk" data-act="legal" style="margin:4px 0 0;color:var(--t3)">Mentions légales et confidentialité</button>'+
     '</div></div>';
@@ -2967,6 +3007,14 @@ function awayCalInit(d){var f=parseYmd(d.from)||PLAN_START;d.cal={y:f.getFullYea
 function awayDates(p){
   var f=parseYmd(p.from),t=parseYmd(p.to),dn=function(d){return DAYS[(d.getDay()+6)%7].slice(0,3).toLowerCase()+' '+fmtDay(d);},n=f&&t?diffDays(t,f)+1:0;
   if(!p.cal)awayCalInit(p);
+  if(isInj(p)){
+    var seg2='<div class="rng" role="group"><button data-act="injopen" data-v="1" aria-pressed="'+!!p.open+'">Jusqu’à nouvel ordre</button><button data-act="injopen" data-v="0" aria-pressed="'+!p.open+'">Jusqu’à une date</button></div>';
+    if(p.open)return '<div class="eyebrow" style="margin:18px 0 8px">Durée</div>'+seg2+'<p class="small muted" style="margin:8px 0 0">Le plan reste en pause jusqu’à ce que tu indiques ta reprise. Touche le jour où la blessure a commencé.</p>'+
+      '<div class="cal-s">'+(f?'Depuis le <b>'+dn(f)+'</b>':'')+'</div>'+calHtml('away',p.from,p.from,PLAN_START,RACE_DATE,p.cal.y,p.cal.m);
+    return '<div class="eyebrow" style="margin:18px 0 8px">Durée</div>'+seg2+'<div class="rng" role="group" aria-label="Raccourcis" style="margin-top:8px">'+[['1w','1 semaine'],['2weeks','2 semaines'],['month','1 mois']].map(function(x){return '<button data-act="calpreset" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>'+
+      '<div class="cal-s">'+(f&&t?'<b>'+dn(f)+'</b> → <b>'+dn(t)+'</b> · '+n+' jour'+(n>1?'s':''):'')+(p.pending?'<span class="cal-hint">Touche le dernier jour</span>':'')+'</div>'+
+      calHtml('away',p.from,p.to,PLAN_START,RACE_DATE,p.cal.y,p.cal.m);
+  }
   return '<div class="eyebrow" style="margin:18px 0 8px">Dates</div><div class="rng" role="group" aria-label="Raccourcis">'+[['weekend','Week-end'],['week','Semaine'],['2weeks','2 semaines']].map(function(x){return '<button data-act="calpreset" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>'+
     '<div class="cal-s">'+(f&&t?'<b>'+dn(f)+'</b> → <b>'+dn(t)+'</b> · '+n+' jour'+(n>1?'s':''):'')+(p.pending?'<span class="cal-hint">Touche le dernier jour</span>':'')+'</div>'+
     calHtml('away',p.from,p.to,PLAN_START,RACE_DATE,p.cal.y,p.cal.m);
@@ -2974,6 +3022,7 @@ function awayDates(p){
 function awayPreset(p,v){
   var a=parseYmd(p.from)||PLAN_START,mon=addDays(a,-((a.getDay()+6)%7)),lo=PLAN_START,hi=RACE_DATE;
   var cl=function(d){return d<lo?lo:d>hi?hi:d;},r={weekend:[4,6],week:[0,6],'2weeks':[0,13]}[v];
+  if(isInj(p)){p.to=isoDate(cl(addDays(a,{'1w':6,'2weeks':13,month:29}[v]||6)));p.touched=true;awayCalInit(p);return;}   // blessure : à partir du jour de début
   p.from=isoDate(cl(addDays(mon,r[0])));p.to=isoDate(cl(addDays(mon,r[1])));p.touched=true;awayCalInit(p);
 }
 function awayPreview(p){
@@ -2993,13 +3042,25 @@ function awayLine(x){return esc(x.title)+(x.sp==='rest'?'':' · '+fh(x.min));}
 function renderAway(){
   var p=awayDraft,sh=document.getElementById('sheet'),st=sh.scrollTop,pv=awayPreview(p);
   var seg=function(act,key,opts){return '<div class="rng" role="group">'+opts.map(function(o){return '<button data-act="'+act+'" data-v="'+o[0]+'" aria-pressed="'+(p[key]===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>';};
-  var b='<div class="eyebrow" style="margin:0 0 8px">Type</div>'+seg('awaytype','type',[['weekend','Week-end'],['vacances','Vacances']])+
-    awayDates(p)+
+  var b='<div class="eyebrow" style="margin:0 0 8px">Type</div>'+seg('awaytype','type',[['weekend','Week-end'],['vacances','Vacances'],['injury','Blessure']]);
+  if(isInj(p)){
+    var sx=p.stop||{},all=injAll(p),stx=stepList().filter(function(st){return st.date>=p.from&&st.date<=awayTo(p);});
+    b+='<div class="tip" style="margin:14px 0 0"><b>Demande conseil à un médecin.</b> Lui ou ton kiné peut te dire quels sports arrêter, combien de temps, et quand reprendre. L’app adapte ton plan, elle ne remplace pas un avis médical.</div>'+
+      awayDates(p)+
+      '<div class="eyebrow" style="margin:18px 0 8px">Sports arrêtés</div><div class="rng" role="group">'+INJ_SP.map(function(k){return '<button data-act="injsp" data-v="'+k[0]+'" aria-pressed="'+!!sx[k[0]]+'">'+k[1]+'</button>';}).join('')+'</div>'+
+      '<button class="chip" style="border:0;min-height:32px;margin-top:8px" data-act="injall">'+(all?'Garder certains sports':'Tout arrêter : pause du plan')+'</button>'+
+      '<p class="small muted" style="margin:8px 0 0">'+(all?'Aucune séance pendant la période : le plan est en pause.':'Les séances des sports arrêtés deviennent du repos. L’enchaînement vélo-course s’arrête si l’un des deux l’est.')+'</p>';
+    if(!all)b+='<div class="eyebrow" style="margin:18px 0 8px">Les autres sports</div>'+seg('awaymode','mode',[['same','Identique'],['light','Allégé'],['min','Minimum']])+
+      '<p class="small muted" style="margin:8px 0 0">'+({same:'Séances inchangées.',light:'Environ −30 % : séances plus courtes et faciles, sans intensité.',min:'Environ −60 % : un simple entretien.'})[p.mode==='off'?'min':p.mode]+'</p>';
+    if(stx.length)b+='<p class="small" style="margin:12px 0 0;color:#ffd60a">'+esc(stx.map(function(st){return st.name;}).join(', '))+' tombe'+(stx.length>1?'nt':'')+' pendant cette période et reste'+(stx.length>1?'nt':'')+' au programme. Retire-'+(stx.length>1?'les':'la')+' dans Mes courses si tu ne peux pas y participer.</p>';
+  }else{
+  b+=awayDates(p)+
     '<div class="eyebrow" style="margin:18px 0 8px">Intensité</div>'+seg('awaymode','mode',[['same','Identique'],['light','Allégé'],['min','Minimum'],['off','Repos']])+
     '<p class="small muted" style="margin:8px 0 0">'+({same:'Séances inchangées : seul le matériel manquant les modifie.',light:'Environ −30 % : mêmes jours, séances plus courtes et faciles, plus d’intensité.',min:'Environ −60 % : un simple entretien, séances courtes et faciles.',off:'Aucune séance pendant la période.'})[p.mode]+'</p>';
   if(p.mode!=='off')b+='<div class="eyebrow" style="margin:18px 0 8px">Matériel sur place</div><div class="rng"><button data-act="awayeq" data-v="pool" aria-pressed="'+!!p.pool+'">Piscine</button><button data-act="awayeq" data-v="bike" aria-pressed="'+!!p.bike+'">Vélo</button></div><p class="small muted" style="margin:8px 0 0">Sans piscine ou sans vélo, la séance est remplacée par un footing'+(p.mode==='same'?' de même logique':' facile')+'.</p>';
   b+='<div class="eyebrow" style="margin:18px 0 8px">Séances impossibles sur place</div>'+seg('awaymove','move',[['none','Les remplacer'],['out','Les reporter']])+
     '<p class="small muted" style="margin:8px 0 0">'+(p.move==='out'?'Les séances que tu ne peux pas faire (matériel absent, ou repos) sont déplacées sur les jours autour de la période (jusqu’à 8 jours avant ou après), les moins chargés d’abord, sans toucher aux jours de repos. Elles gardent leur contenu.':'Elles restent sur leur jour, remplacées par une version adaptée (ou du repos).')+'</p>';
+  }
   b+='<div class="card ad-ch" style="margin:18px 0 14px"><div class="dh"><span>Aperçu</span>'+(pv.bad?'':'<span class="dstat">'+pv.rows.length+' séance'+(pv.rows.length>1?'s':'')+(pv.saved?' · <b>'+(pv.saved>=0?'−':'+')+fh(Math.abs(pv.saved))+'</b>':'')+'</span>')+'</div>';
   if(pv.bad)b+='<p class="small muted" style="margin:0">Vérifie les dates.</p>';
   else if(!pv.rows.length)b+='<p class="small muted" style="margin:0">Aucune séance modifiée sur ces dates.</p>';
@@ -3007,17 +3068,21 @@ function renderAway(){
     var dn=function(d){return DAYS[(d.getDay()+6)%7].slice(0,3)+' '+dnum(d);},dl=function(d){return DAYS[(d.getDay()+6)%7]+' '+fmtDay(d);};
     b+='<div class="arow"><span class="ad">'+dn(r.d)+'</span><span class="ar">'+(r.nf?'<s>'+awayLine(r.src)+'</s><br><b class="'+(r.nf.sp==='rest'?'c-del':'c-mod')+'">'+(r.nf.sp==='rest'?'Repos':awayLine(r.nf))+'</b>':'<b>'+awayLine(r.src)+'</b>')+(r.to?'<div class="mvto">→ Reportée au <b>'+dl(r.to)+'</b></div>':'')+'</span></div>';
   });
-  b+='</div><button class="btn pri" data-act="awaysave" style="margin:0 0 10px">'+(p.id?'Enregistrer':'Activer')+'</button>'+(p.id?'<button class="btn dng" data-act="awaydel">Supprimer la période</button>':'<button class="btn" data-act="closesheet">Annuler</button>');
-  showSheet(p.id?'Modifier la période':'Vacances / week-end','Le plan s’adapte, tu peux revenir en arrière à tout moment',b);
+  if(isInj(p)&&p.open&&!pv.bad)b+='<p class="small muted" style="margin:10px 0 0">L’aperçu montre les 7 prochains jours : la pause continue ensuite tant que tu n’as pas indiqué ta reprise.</p>';
+  b+='</div>'+(isInj(p)&&p.id&&p.open?'<button class="btn pri" data-act="injresume" data-id="'+esc(p.id)+'" style="margin:0 0 10px">J’ai repris l’entraînement</button>':'')+
+    '<button class="btn'+(isInj(p)&&p.id&&p.open?'':' pri')+'" data-act="awaysave" style="margin:0 0 10px">'+(p.id?'Enregistrer':isInj(p)?(injAll(p)?'Mettre le plan en pause':'Adapter mon plan'):'Activer')+'</button>'+(p.id?'<button class="btn dng" data-act="awaydel">Supprimer la période</button>':'<button class="btn" data-act="closesheet">Annuler</button>');
+  showSheet(p.id?'Modifier la période':isInj(p)?'Blessure':'Vacances / week-end',isInj(p)?'La date de ta course ne change pas : les séances de la période sont retirées':'Le plan s’adapte, tu peux revenir en arrière à tout moment',b);
   sh.scrollTop=st;
 }
 function saveAway(){
-  var p=awayDraft,a=parseYmd(p.from),b=parseYmd(p.to);
+  var p=awayDraft,inj=isInj(p),a=parseYmd(p.from),b=parseYmd(inj&&p.open?p.from:p.to);
   if(!a||!b||b<a){toast('Vérifie les dates');return;}
-  var list=state.ui.away=state.ui.away||[],o={id:p.id||('a'+Date.now()),type:p.type,label:p.label,from:p.from,to:p.to,mode:p.mode,move:p.move||'none',pool:!!p.pool,bike:!!p.bike},i,done=false;
+  var list=state.ui.away=state.ui.away||[],o={id:p.id||('a'+Date.now()),type:p.type,label:p.label,from:p.from,to:inj&&p.open?p.from:p.to,mode:p.mode,move:p.move||'none',pool:!!p.pool,bike:!!p.bike},i,done=false;
+  if(inj){var sx=p.stop||{};o.open=!!p.open;o.stop={};INJ_SP.forEach(function(k){if(sx[k[0]])o.stop[k[0]]=true;});o.move='none';if(o.mode==='off')o.mode='min';}
   for(i=0;i<list.length;i++)if(list[i].id===o.id){list[i]=o;done=true;}
   if(!done)list.push(o);
-  applyAway();save();closeSheet();render(true);toast(o.label+' enregistré : plan adapté');
+  applyAway();save();closeSheet();render(true);
+  toast(inj?(injAll(o)?'Plan en pause. Prends soin de toi':'Plan adapté à ta blessure'):o.label+' enregistré : plan adapté');
 }
 function delAway(){
   if(!awayDraft||!awayDraft.id)return;
@@ -3025,27 +3090,52 @@ function delAway(){
   state.ui.away=awayList().filter(function(x){return x.id!==awayDraft.id;});
   applyAway();save();closeSheet();render(true);toast('Plan rétabli');
 }
+// Reprise après une blessure : la période s'arrête la veille, avec ou sans semaine allégée
+function injResume(id){
+  var p=awayList().filter(function(x){return x.id===id;})[0];if(!p)return;
+  showSheet('Reprise de l’entraînement','Reprends avec l’accord de ton médecin ou de ton kiné',
+    '<p style="margin:0 0 14px">Après une pause, quelques jours en douceur limitent le risque de rechute. Si la douleur revient, arrête-toi et demande conseil.</p>'+
+    '<button class="btn pri" data-act="injback" data-id="'+esc(id)+'" data-v="soft" style="margin:0 0 10px">Reprise progressive : 1 semaine allégée</button>'+
+    '<button class="btn" data-act="injback" data-id="'+esc(id)+'" data-v="full" style="margin:0 0 10px">Reprendre le plan normalement</button>'+
+    '<button class="btn" data-act="closesheet">Pas encore</button>');
+}
+function injBack(id,v){
+  var list=awayList(),p=list.filter(function(x){return x.id===id;})[0];if(!p)return;
+  var t=today(),y=isoDate(addDays(t,-1));
+  if(p.from>y)state.ui.away=list.filter(function(x){return x.id!==id;});   // commencée aujourd'hui : rien à garder
+  else{p.open=false;p.to=y;}
+  if(v==='soft')(state.ui.away=state.ui.away||[]).push({id:'a'+Date.now(),type:'vacances',label:'Reprise progressive',from:isoDate(t),to:isoDate(addDays(t,6)),mode:'light',move:'none',pool:true,bike:true});
+  applyAway();save();closeSheet();render(true);toast(v==='soft'?'Bonne reprise : une semaine en douceur':'Bonne reprise');
+}
+// Accueil : blessure en cours (pause ouverte ou période datée)
+function injCard(){
+  var p=injNow();if(!p)return '';
+  var n=diffDays(today(),parseYmd(p.from));
+  return '<section class="card"><div class="install">'+ic('info',22)+'<div><p><b>'+(injAll(p)?'Plan en pause':'Plan adapté')+' · '+esc(p.label)+'</b><br><span class="small muted">'+esc(awayDesc(p))+' · '+(p.open?(n>0?'depuis '+n+' jour'+(n>1?'s':''):'depuis aujourd’hui'):'jusqu’au '+fmtDay(parseYmd(p.to)))+'</span></p>'+
+    '<div class="btns" style="margin-top:10px">'+(p.open?'<button class="btn pri" data-act="injresume" data-id="'+esc(p.id)+'" style="height:44px">J’ai repris</button>':'')+'<button class="btn" data-act="awayedit" data-id="'+esc(p.id)+'" style="height:44px">Modifier</button></div></div></div></section>';
+}
 function openAwayList(){
   var list=awayList().slice().sort(function(x,y){return x.from<y.from?-1:1;}),b='';
-  if(!list.length)b+='<p class="muted">Aucune période pour l’instant. Pendant un week-end ou des vacances, le plan est allégé ou modifié selon ce que tu choisis.</p>';
+  if(!list.length)b+='<p class="muted">Aucune période pour l’instant. Pendant un week-end ou des vacances, le plan est allégé ou modifié selon ce que tu choisis. En cas de blessure, il arrête les sports que tu ne peux plus pratiquer, ou se met en pause.</p>';
   list.forEach(function(p){
-    b+='<button class="srow" data-act="awayedit" data-id="'+esc(p.id)+'"><span class="sr-t"><b>'+esc(p.label)+' · '+AWAY_N[p.mode]+'</b><small>'+esc(fmtDay(parseYmd(p.from))+' → '+fmtDay(parseYmd(p.to)))+'</small></span><span class="sr-b">Modifier</span></button>';
+    b+='<button class="srow" data-act="awayedit" data-id="'+esc(p.id)+'"><span class="sr-t"><b>'+esc(p.label)+' · '+esc(awayDesc(p))+'</b><small>'+esc(awaySpan(p))+'</small></span><span class="sr-b">Modifier</span></button>';
   });
-  b+='<button class="btn pri" data-act="awayopen" data-w="'+wv+'" style="margin-top:12px">Ajouter une période</button>';
-  showSheet('Vacances & week-ends','Alléger le plan pendant une absence',b);sheetRoute('away');
+  b+='<div class="btns" style="margin-top:12px"><button class="btn pri" data-act="awayopen" data-w="'+wv+'">Vacances ou week-end</button><button class="btn" data-act="awayopen" data-t="injury" data-w="'+wv+'">Déclarer une blessure</button></div>';
+  showSheet('Vacances & blessures','Adapter le plan pendant une absence ou une blessure',b);sheetRoute('away');
 }
 function awayBanner(wk){
-  var a0=idxOfDate(wk.start),a1=a0+6,ps=awayList().filter(function(p){var f=parseYmd(p.from),t=parseYmd(p.to);return f&&t&&idxOfDate(f)<=a1&&idxOfDate(t)>=a0;});
+  var a0=idxOfDate(wk.start),a1=a0+6,ps=awayList().filter(function(p){var f=parseYmd(p.from),t=parseYmd(awayTo(p));return f&&t&&idxOfDate(f)<=a1&&idxOfDate(t)>=a0;});
   var sts=stepsOfWeek(wk.n).map(function(st){return '<div class="banner" style="align-items:center">'+ic('race',20)+'<div style="flex:1"><b>'+esc(st.name)+'</b><br>'+esc(fmtLong(parseYmd(st.date))+' · '+STEP_P[st.prio])+'</div><button class="chip" style="border:0" data-act="stepedit" data-id="'+esc(st.id)+'">Modifier</button></div>';}).join('');
   if(!ps.length)return sts;
-  return sts+ps.map(function(p){return '<div class="banner" style="align-items:center">'+ic('info',20)+'<div style="flex:1"><b>'+esc(p.label)+' · '+AWAY_N[p.mode]+'</b><br>'+esc(fmtDay(parseYmd(p.from))+' → '+fmtDay(parseYmd(p.to)))+'</div><button class="chip" style="border:0" data-act="awayedit" data-id="'+esc(p.id)+'">Modifier</button></div>';}).join('');
+  return sts+ps.map(function(p){return '<div class="banner" style="align-items:center">'+ic('info',20)+'<div style="flex:1"><b>'+esc(p.label)+' · '+esc(awayDesc(p))+'</b><br>'+esc(awaySpan(p))+'</div><button class="chip" style="border:0" data-act="awayedit" data-id="'+esc(p.id)+'">Modifier</button></div>';}).join('');
 }
 function awayNote(s){
   if(s.moved&&s.moved.pid==='miss'){var o0=addDays(PLAN_START,s.moved.from);return '<div class="goal adp-n"><b>Séance reportée</b>Prévue à l’origine le '+DAYS[(o0.getDay()+6)%7].toLowerCase()+' '+fmtDay(o0)+(s.adapt?', en version plus longue':'')+'.<br><button class="chip" style="border:0;min-height:28px;margin-top:8px" data-act="missundo" data-id="'+s.id+'">Annuler le report</button></div>';}
   if(s.step)return '<div class="goal adp-n"><b>Course intermédiaire</b>Tes séances autour de cette course sont adaptées.<br><button class="chip" style="border:0;min-height:28px;margin-top:8px" data-act="stepedit" data-id="'+esc(s.step)+'">Modifier la course</button></div>';
   if(!s.adapt&&!s.moved)return '';
   var pid=(s.adapt||s.moved).pid,lab=(s.adapt||s.moved).label,t='';
-  if(s.adapt&&s.orig)t+='<b>Séance adaptée · '+esc(lab)+' ('+AWAY_N[s.adapt.mode]+')</b>Séance d’origine : '+esc(s.orig.title)+(s.orig.sp!=='rest'?' · '+fh(s.orig.min):'')+'.<br>';
+  var ap=awayList().filter(function(x){return x.id===pid;})[0];
+  if(s.adapt&&s.orig)t+='<b>Séance adaptée · '+esc(lab)+' ('+esc(ap?awayDesc(ap):AWAY_N[s.adapt.mode])+')</b>Séance d’origine : '+esc(s.orig.title)+(s.orig.sp!=='rest'?' · '+fh(s.orig.min):'')+'.<br>';
   else t+='<b>Séance déplacée · '+esc(lab)+'</b>';
   if(s.moved){var o=addDays(PLAN_START,s.moved.from);t+='Prévue à l’origine le '+DAYS[(o.getDay()+6)%7].toLowerCase()+' '+fmtDay(o)+'.<br>';}
   return '<div class="goal adp-n">'+t+'<button class="chip" style="border:0;min-height:28px;margin-top:8px" data-act="'+(s.adapt&&s.adapt.step?'stepedit':'awayedit')+'" data-id="'+esc(pid)+'">'+(s.adapt&&s.adapt.step?'Modifier la course':'Modifier la période')+'</button></div>';
@@ -3514,7 +3604,7 @@ function admDetail(j){
   h+=grp2('Garmin',kv('Connexion',yn(u.garmin,'Connecté','Non connecté')+(u.garminKey?' · clé dans le compte':''))+kv('Séances envoyées vers la montre',u.sent==null?'<span class="muted">Inconnu</span>':u.sent)+kv('Activités Garmin reçues',u.acts==null?'<span class="muted">Inconnu</span>':u.acts));
   if(r){var rd=parseISO(r.date),pc=u.total?Math.round(u.done/u.total*100):0;
     h+=grp2('Plan',kv('Course',esc(r.name||'Sans nom'))+kv('Date',esc(rd?fmtDay(rd)+' '+rd.getFullYear():'–'))+kv('Format',esc(admFmt(r.format)||'–'))+(admDist(r)?kv('Distances',esc(admDist(r))+(r.bikeUp||r.runUp?'<br><span class="small muted">'+esc([r.bikeUp?'vélo D+ '+r.bikeUp+' m':'',r.runUp?'course D+ '+r.runUp+' m':''].filter(Boolean).join(' · '))+'</span>':'')):'')+kv('Durée',esc((r.weeks||'–')+' semaines'))+(r.sessions?kv('Séances par semaine',r.sessions):'')+
-      kv('Progression',u.total?u.done+' / '+u.total+' · '+pc+' %':'<span class="muted">Pas encore reçue</span>')+(p?kv('Séances cochées',p.checked)+kv('Associations manuelles',p.linked)+kv('Questionnaire de niveau',p.levelTest?'Rempli':'Non')+kv('Absences',p.away)+kv('Séances manquées traitées',p.missed):''));}
+      kv('Progression',u.total?u.done+' / '+u.total+' · '+pc+' %':'<span class="muted">Pas encore reçue</span>')+(p?kv('Séances cochées',p.checked)+kv('Associations manuelles',p.linked)+kv('Questionnaire de niveau',p.levelTest?'Rempli':'Non')+kv('Absences',p.away)+(p.injuries!=null?kv('Blessures déclarées',p.injuries+(p.paused?' · <span class="chip">en pause</span>':'')):'')+kv('Séances manquées traitées',p.missed):''));}
   else h+=grp2('Plan',kv('Course','<span class="muted">Aucun plan créé</span>'));
   var sts=(j.steps||[]).slice().sort(function(x,y){return x.date>y.date?1:-1;});
   if(r)h+=grp2('Courses intermédiaires'+(sts.length?' · '+sts.length:''),sts.length?sts.map(function(st){
@@ -3754,9 +3844,19 @@ document.addEventListener('click',function(e){
   else if(a==='setlvl'&&raceDraft){raceDraft.level=+d.v;raceDraft.peak=null;raceDraft.sessions=null;renderSetup();}
   else if(a==='setpeak'&&raceDraft){var cl=raceCls(raceDraft),lim={sprint:[3,12],olympic:[4,16],half:[6,22],full:[8,29]}[cl]||[3,29];lim=[lim[0],Math.max(lim[0],Math.min(lim[1],Math.round(maxPeak(sessOf(raceDraft),cl)+1.5)))];raceDraft.peak=Math.max(lim[0],Math.min(lim[1],Math.round((peakOf(raceDraft)+0.5*(+d.v))*2)/2));renderSetup();}
   else if(a==='racesave'&&raceDraft)saveRace();
-  else if(a==='awayopen'){awayDraft=awayCalInit(newAwayDraft(+d.w||wv,'weekend'));renderAway();}
+  else if(a==='awayopen'){awayDraft=awayCalInit(newAwayDraft(+d.w||wv,d.t||'weekend'));renderAway();}
   else if(a==='awayedit'){var ap=awayList().filter(function(x){return x.id===d.id;})[0];if(ap){awayDraft=awayCalInit(Object.assign({},ap));renderAway();}}
   else if(a==='awaylist')openAwayList();
+  else if(a==='awaytype'&&awayDraft&&(d.v==='injury')!==isInj(awayDraft)){   // vers ou depuis la blessure : nouveau brouillon (mêmes dates si déjà choisies)
+    var wasInj=isInj(awayDraft),nd2=newAwayDraft(Math.max(1,Math.min(NW,Math.floor(idxOfDate(parseYmd(awayDraft.from))/7)+1)),d.v);
+    nd2.id=awayDraft.id;if(awayDraft.touched){nd2.from=awayDraft.from;if(!wasInj||!awayDraft.open)nd2.to=awayDraft.to;if(d.v==='injury'&&!wasInj)nd2.open=false;nd2.touched=true;}
+    awayDraft=awayCalInit(nd2);renderAway();
+  }
+  else if(a==='injopen'&&awayDraft){awayDraft.open=d.v==='1';if(!awayDraft.open&&awayDraft.to<=awayDraft.from)awayDraft.to=isoDate(addDays(parseYmd(awayDraft.from),13));awayDraft.pending=false;awayDraft.touched=true;renderAway();}
+  else if(a==='injsp'&&awayDraft){var sx2=awayDraft.stop=awayDraft.stop||{};sx2[d.v]=!sx2[d.v];awayDraft.touched=true;renderAway();}
+  else if(a==='injall'&&awayDraft){var al=injAll(awayDraft);awayDraft.stop=al?{}:{swim:true,bike:true,run:true,str:true};awayDraft.touched=true;renderAway();}
+  else if(a==='injresume')injResume(d.id);
+  else if(a==='injback')injBack(d.id,d.v);
   else if(a==='awaytype'&&awayDraft){awayDraft.type=d.v;awayDraft.label=d.v==='vacances'?'Vacances':'Week-end';if(!awayDraft.touched&&!awayDraft.id){var nd=newAwayDraft(Math.max(1,Math.min(NW,Math.floor(idxOfDate(parseYmd(awayDraft.from))/7)+1)),d.v);awayDraft.from=nd.from;awayDraft.to=nd.to;awayDraft.mode=nd.mode;awayDraft.move=nd.move;awayCalInit(awayDraft);}renderAway();}
   else if(a==='calpreset'&&awayDraft){awayPreset(awayDraft,d.v);renderAway();}
   else if(a==='calnav'){
@@ -3769,6 +3869,7 @@ document.addEventListener('click',function(e){
   }
   else if(a==='calday'){
     if(d.ns==='step'&&stepDraft){stepDraft.date=d.d;stepDraft.hint='';renderStep();}
+    else if(d.ns==='away'&&awayDraft&&isInj(awayDraft)&&awayDraft.open){awayDraft.from=awayDraft.to=d.d;awayDraft.pending=false;awayDraft.touched=true;renderAway();}   // pause ouverte : seul le début se choisit
     else if(d.ns==='away'&&awayDraft){var r1=calPick(awayDraft.from,awayDraft.to,awayDraft.pending,d.d);awayDraft.from=r1.from;awayDraft.to=r1.to;awayDraft.pending=r1.pending;awayDraft.touched=true;renderAway();}
     else if(d.ns==='rstart'&&raceDraft){raceDraft.start=d.d;renderSetup();}
     else if(d.ns==='race'&&raceDraft){raceDraft.date=d.d;renderSetup();}
@@ -5010,7 +5111,7 @@ if(DEV){
   window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 }
 
-window.IM={fm:fm,fh:fh,hms:hms,PHASES:PHASES,BLOCKS:BLOCKS,KINDS:KINDS,T_TAPER:T_TAPER,stepOps:stepOps,VIEWS:VIEWS,missedList:missedList,missAdvice:missAdvice,missDo:missDo,missUndo:missUndo,missAll:missAll,isMissed:isMissed,openWiz:openWiz,cloudPayload:cloudPayload,cloudApply:cloudApply,devInfo:devInfo,admAnalytics:admAnalytics,admDetail:admDetail,gatePreview:function(c){pubCfg=c;renderGate();},gateNeeded:gateNeeded,acctLogin:acctLogin,catSearch:catSearch,wtResults:wtResults,wtFormat:wtFormat,pickRace:pickRace,NSESS:NSESS,planSpan:planSpan,newRaceDraft:newRaceDraft,raceFormHtml:raceFormHtml,saveRace:saveRace,applyAway:applyAway,adaptFields:adaptFields,estKm:estKm,detailBody:detailBody,wkBlocks:wkBlocks,pushSession:pushSession,pushPreview:pushPreview,clearPreview:clearPreview,wkText:wkText,evOf:evOf,ALLS:ALLS,tx:tx,autoProf:autoProf,estRace:estRace,estAll:estAll,raceParams:raceParams,PLAN:PLAN,stats:stats,status:status,computeLinks:computeLinks,links:function(){return LK;},state:state,actSport:actSport};
+window.IM={fm:fm,fh:fh,hms:hms,PHASES:PHASES,BLOCKS:BLOCKS,KINDS:KINDS,T_TAPER:T_TAPER,stepOps:stepOps,VIEWS:VIEWS,missedList:missedList,missAdvice:missAdvice,missDo:missDo,missUndo:missUndo,missAll:missAll,isMissed:isMissed,openWiz:openWiz,cloudPayload:cloudPayload,cloudApply:cloudApply,devInfo:devInfo,admAnalytics:admAnalytics,admDetail:admDetail,gatePreview:function(c){pubCfg=c;renderGate();},gateNeeded:gateNeeded,acctLogin:acctLogin,catSearch:catSearch,wtResults:wtResults,wtFormat:wtFormat,pickRace:pickRace,NSESS:NSESS,planSpan:planSpan,newRaceDraft:newRaceDraft,raceFormHtml:raceFormHtml,saveRace:saveRace,applyAway:applyAway,awayDesc:awayDesc,awayTo:awayTo,injBack:injBack,injCard:injCard,newAwayDraft:newAwayDraft,adaptFields:adaptFields,estKm:estKm,detailBody:detailBody,wkBlocks:wkBlocks,pushSession:pushSession,pushPreview:pushPreview,clearPreview:clearPreview,wkText:wkText,evOf:evOf,ALLS:ALLS,tx:tx,autoProf:autoProf,estRace:estRace,estAll:estAll,raceParams:raceParams,PLAN:PLAN,stats:stats,status:status,computeLinks:computeLinks,links:function(){return LK;},state:state,actSport:actSport};
 applyAway();
 try{
   if(RCFG.migrate&&!state.ui.seen){state.ui.seen=1;save();}
