@@ -3333,7 +3333,7 @@ function admFmt(k){return (FORMATS[k]&&FORMATS[k].n)||(k==='custom'?'Distances l
 function admBadges(u){
   var b=[];
   if(u.device)b.push('<span class="chip">'+esc(u.device)+'</span>');
-  if(u.installed!=null)b.push(u.installed?'<span class="chip ok">App installée</span>':'<span class="chip">Pas installée</span>');
+  if(u.installed!=null)b.push(u.installed?'<span class="chip ok">App installée</span>':'<span class="chip">Navigateur</span>');
   if(u.garmin!=null)b.push(u.garmin?'<span class="chip ok">Garmin</span>':'<span class="chip">Sans Garmin</span>');
   if(u.sent)b.push('<span class="chip">'+u.sent+' envoi'+(u.sent>1?'s':'')+' montre</span>');
   return b.length?'<div class="adm-b">'+b.join('')+'</div>':'';
@@ -3344,12 +3344,14 @@ function admUser(u){
     (u.name?'<div class="small muted adm-e">'+esc(u.email)+'</div>':'')+
     '<div class="adm-r">'+(u.race?'<b>'+esc(u.race)+'</b><br><span class="small muted">'+[rd?fmtDay(rd)+' '+rd.getFullYear():'',admFmt(u.format),u.weeks?u.weeks+' semaines':''].filter(Boolean).map(esc).join(' · ')+'</span>':'<span class="small muted">Aucun plan créé</span>')+'</div>'+
     (u.race?(u.total?'<div class="pr-h" style="margin:8px 0 5px"><span>Progression</span><span>'+u.done+' / '+u.total+' séances · '+pctv+' %</span></div>'+bar(pctv):'<div class="small muted" style="margin-top:8px">Progression pas encore reçue</div>'):'')+
-    admBadges(u)+'<div class="small muted" style="margin-top:8px">Inscrit le '+esc(fmtDay(new Date(u.created))+' '+new Date(u.created).getFullYear())+(u.visits?' · '+u.visits+' visite'+(u.visits>1?'s':''):'')+'</div></button>';
+    admBadges(u)+'<div class="small muted" style="margin-top:8px">Inscrit le '+esc(admFull(u.created))+(u.visits?' · '+u.visits+' visite'+(u.visits>1?'s':''):'')+'</div></button>';
 }
 /* Fiche d'un utilisateur (#admin?s=usr:ID) */
 var admCache={},admCur=null;
-function admWhen(t){var d=new Date(t);return DAYS[(d.getDay()+6)%7].slice(0,3)+'. '+fmtDay(d)+' · '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
-function admDate(t){if(!t)return '–';var d=new Date(t);return fmtDay(d)+' '+d.getFullYear();}
+// Date et heure : « jeu. 5 nov. · 09:54 » (année ajoutée si ce n'est pas l'année en cours) ; admFull : toujours avec l'année
+function admHM(d){return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+function admWhen(t){var d=new Date(t);return DAYS[(d.getDay()+6)%7].slice(0,3).toLowerCase()+'. '+fmtDay(d)+(d.getFullYear()!==new Date().getFullYear()?' '+d.getFullYear():'')+' · '+admHM(d);}
+function admFull(t){if(!t)return '–';var d=new Date(t);return DAYS[(d.getDay()+6)%7].slice(0,3).toLowerCase()+'. '+fmtDay(d)+' '+d.getFullYear()+' à '+admHM(d);}
 function openAdmUser(id){
   var u=((adminD&&adminD.users)||[]).filter(function(x){return x.id===id;})[0];
   admCur=id;
@@ -3364,8 +3366,8 @@ function admDetail(j){
   var u=j.user,r=j.race,p=j.plan,vs=j.visits||[],kv=function(k,v){return '<div class="adm-kv"><span>'+k+'</span><b>'+v+'</b></div>';};
   var yn=function(v,a,b){return v==null?'<span class="muted">Inconnu</span>':v?a:b;},grp2=function(t,rows){return '<div class="eyebrow sgl">'+t+'</div><div class="scard">'+rows+'</div>';};
   var h=grp2('Profil',
-    kv('E-mail',esc(u.email))+kv('Inscrit le',esc(admDate(u.created)))+kv('Dernière visite',esc(ago(u.seen)))+kv('Dernière connexion Google',esc(admDate(u.lastLogin)))+
-    kv('Visites',u.visits==null?'<span class="muted">Inconnu</span>':u.visits)+kv('Appareil',u.device?esc(u.device):'<span class="muted">Inconnu</span>')+kv('App installée',yn(u.installed,'Oui','Non')));
+    kv('E-mail',esc(u.email))+kv('Inscrit le',esc(admFull(u.created)))+kv('Dernière visite',esc(admFull(u.seen))+'<br><span class="small muted">'+esc(ago(u.seen))+'</span>')+kv('Connexion Google',esc(admFull(u.lastLogin)))+
+    kv('Visites',u.visits==null?'<span class="muted">Inconnu</span>':u.visits)+kv('Dernier appareil',u.device?esc(u.device):'<span class="muted">Inconnu</span>')+kv('App installée',yn(u.installed,'Oui','Pas encore vue')));
   h+=grp2('Garmin',kv('Connexion',yn(u.garmin,'Connecté','Non connecté')+(u.garminKey?' · clé dans le compte':''))+kv('Séances envoyées vers la montre',u.sent==null?'<span class="muted">Inconnu</span>':u.sent)+kv('Activités Garmin reçues',u.acts==null?'<span class="muted">Inconnu</span>':u.acts));
   if(r){var rd=parseISO(r.date),pc=u.total?Math.round(u.done/u.total*100):0;
     h+=grp2('Plan',kv('Course',esc(r.name||'Sans nom'))+kv('Date',esc(rd?fmtDay(rd)+' '+rd.getFullYear():'–'))+kv('Format',esc(admFmt(r.format)||'–'))+kv('Durée',esc((r.weeks||'–')+' semaines'))+(r.sessions?kv('Séances par semaine',r.sessions):'')+
@@ -3384,9 +3386,12 @@ function admDetail(j){
   vs.forEach(function(v){if(v.kind!=='visit'||v.t<d0)return;var k=Math.floor((v.t-d0)/864e5);if(k>=0&&k<30){days[k]++;n30++;}});
   var mx=Math.max.apply(null,days)||1;
   h+=grp2('Visites sur 30 jours · '+n30,'<div class="adm-hist" aria-hidden="true">'+days.map(function(c){return '<i'+(c?'':' class="z"')+' style="height:'+(c?Math.max(8,Math.round(c/mx*100)):4)+'%"></i>';}).join('')+'</div><div class="adm-hl"><span>'+esc(fmtDay(new Date(d0)))+'</span><span>Aujourd’hui</span></div>');
-  if((j.devices||[]).length)h+=grp2('Appareils',j.devices.map(function(x){return kv(esc(x.device||'Inconnu'),x.n+' visite'+(x.n>1?'s':'')+' · '+esc(ago(x.last)));}).join(''));
+  // Appareils : chacun avec ses propres valeurs (Garmin et envois vers la montre sont enregistrés sur chaque appareil)
+  if((j.devices||[]).length)h+=grp2('Appareils · '+j.devices.length,j.devices.map(function(x){
+    var t=[x.n?x.n+' visite'+(x.n>1?'s':''):'',x.garmin===1?'Garmin':x.garmin===0?'sans Garmin':'',x.sent?x.sent+' envoi'+(x.sent>1?'s':'')+' montre':'','vu '+admWhen(x.last)].filter(Boolean);
+    return '<div class="adm-kv"><span>'+esc(x.device||'Inconnu')+'</span><b>'+esc(t.join(' · '))+'</b></div>';}).join(''));
   h+=grp2('Historique',vs.length?vs.slice(0,60).map(function(v){return '<div class="adm-v"><time>'+esc(admWhen(v.t))+'</time><span>'+(v.kind==='login'?'<b>Connexion Google</b>':esc(v.device||'Visite'))+'</span></div>';}).join(''):'<div class="adm-kv"><span>Aucune visite enregistrée pour l’instant</span></div>');
-  h+='<p class="small muted" style="margin:12px 4px 0">Appareil, installation, Garmin et visites ne sont connus que si l’utilisateur a gardé les statistiques d’usage activées, et seulement depuis cette version de l’app.</p>';
+  h+='<p class="small muted" style="margin:12px 4px 0">Installation, Garmin et envois vers la montre réunissent tous ses appareils : oui si c’est vrai sur au moins un, et le plus grand nombre d’envois. Ces informations ne sont connues que si l’utilisateur a gardé les statistiques d’usage activées, et seulement depuis cette version de l’app.</p>';
   return '<div id="adm-det">'+h+'</div>';
 }
 function vAdmin(){

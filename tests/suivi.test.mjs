@@ -30,7 +30,7 @@ function setup(withSchema5 = true) {
   const db = new DatabaseSync(':memory:');
   db.exec(schema('schema3.sql'));
   db.exec(schema('schema4.sql'));
-  if (withSchema5) db.exec(schema('schema5.sql'));
+  if (withSchema5) { db.exec(schema('schema5.sql')); db.exec(schema('schema6.sql')); }
   const add = (id, email, data = null) => db.prepare('INSERT INTO users (id, email, name, created, last_login, v, data) VALUES (?, ?, ?, ?, ?, 0, ?)').run(id, email, 'Nom ' + id, Date.now() - 864e5, Date.now() - 864e5, data);
   add('admin', ADMIN);
   add('u1', 'a@b.c', JSON.stringify({ done: { s1: 1, s2: 1 }, links: {}, lv: { run: 1 }, st: [{ id: 'x1', name: 'Semi-marathon de Paris', city: 'Paris', kind: 'run', distM: 21097, date: '2027-03-07', prio: 'key', added: '2027-01-10', secret: 'ne doit pas sortir' }], away: [], ms: {}, gks: 'secret-chiffre', race: { name: 'Triathlon de Nice', date: '2027-06-27', format: 'half', weeks: 25, sessions: 8 } }));
@@ -71,6 +71,29 @@ test('une visite est comptée à l’ouverture, pas à chaque mise à jour, et l
   await ping(env, { dev: 'Windows · Chrome', inst: 0 });
   assert.equal(visits(db).length, 2);
   assert.equal(row(db).visits, 2);
+});
+
+test('la première visite suivie est comptée même juste après un passage de l’ancienne version', async () => {
+  const { db, env } = setup();
+  await ping(env, { done: 1, total: 100 });                         // ancienne version : sans appareil
+  await ping(env, { done: 1, total: 100, dev: 'iPhone · app installée', inst: 1 });
+  assert.equal(visits(db).length, 1);
+  assert.equal(row(db).visits, 1);
+  await ping(env, { done: 2, total: 100, dev: 'iPhone · app installée', inst: 1 });   // même visite
+  assert.equal(visits(db).length, 1);
+});
+
+test('l’ordinateur n’écrase pas les valeurs de l’iPhone', async () => {
+  const { db, env } = setup();
+  await ping(env, { dev: 'iPhone · app installée', inst: 1, g: 1, sent: 14, acts: 60 });
+  await ping(env, { dev: 'Windows · Chrome', inst: 0, g: 0, sent: 0, acts: 0 });
+  let u = row(db);
+  assert.deepEqual([u.device, u.installed, u.garmin, u.sent, u.acts], ['Windows · Chrome', 1, 1, 14, 60]);
+  await ping(env, { dev: 'iPhone · app installée', inst: 1, g: 0, sent: 15, acts: 61 });   // Garmin déconnecté sur l’iPhone aussi
+  u = row(db);
+  assert.deepEqual([u.garmin, u.sent], [0, 15]);
+  const j = await call(env, 'admin', 'GET', '/pub/admin/user?id=u1');
+  assert.deepEqual(j.devices.map((d) => [d.device, d.installed, d.sent]), [['iPhone · app installée', 1, 15], ['Windows · Chrome', 0, 0]]);
 });
 
 test('statistiques désactivées : seule la progression est enregistrée', async () => {
@@ -120,6 +143,7 @@ test('supprimer son compte efface aussi son historique de visites', async () => 
   await ping(env, { dev: 'iPhone · Safari', inst: 0 });
   await call(env, 'u1', 'DELETE', '/pub/account');
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM visits WHERE user_id = 'u1'").get().n, 0);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM devices WHERE user_id = 'u1'").get().n, 0);
 });
 
 test('la fiche affichée échappe ce que l’appareil envoie', () => {

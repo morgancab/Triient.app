@@ -206,17 +206,19 @@ async function accountRoutes(req, url, env) {
   if (path === '' && req.method === 'DELETE') {
     await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(sub).run();
     try { await env.DB.prepare('DELETE FROM visits WHERE user_id = ?').bind(sub).run(); } catch (e) { /* table absente */ }
+    try { await env.DB.prepare('DELETE FROM devices WHERE user_id = ?').bind(sub).run(); } catch (e) { /* table absente */ }
     return json({ ok: true });
   }
   if (path === '/export' && req.method === 'GET') {
     const u = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(sub).first();
     if (!u) return json({ ok: false, error: 'compte introuvable' }, 404);
-    let visits = [];
+    let visits = [], devices = [];
+    try { devices = ((await env.DB.prepare('SELECT device, installed, garmin, sent, acts, first, last FROM devices WHERE user_id = ? ORDER BY last DESC').bind(sub).all()).results || []).map((x) => ({ device: x.device, app_installed: x.installed == null ? null : !!x.installed, garmin_connected: x.garmin == null ? null : !!x.garmin, sessions_sent_to_watch: x.sent, garmin_activities: x.acts, first_seen: new Date(x.first).toISOString(), last_seen: new Date(x.last).toISOString() })); } catch (e) { devices = []; }
     try { visits = ((await env.DB.prepare('SELECT t, kind, device, installed FROM visits WHERE user_id = ? ORDER BY t DESC').bind(sub).all()).results || []).map((x) => ({ date: new Date(x.t).toISOString(), type: x.kind === 'login' ? 'connexion' : 'visite', device: x.device, installed: x.installed })); } catch (e) { visits = []; }
     let data = null;
     try { data = u.data ? JSON.parse(u.data) : null; } catch (e) { data = null; }
     if (data && data.gks) { delete data.gks; data.garmin_key = 'enregistrée, chiffrée'; }
-    return json({ ok: true, export: { email: u.email, name: u.name, created: new Date(u.created).toISOString(), last_login: new Date(u.last_login).toISOString(), last_seen: u.last_seen ? new Date(u.last_seen).toISOString() : null, sessions_done: u.prog_done, sessions_total: u.prog_total, device: u.device || null, app_installed: u.installed == null ? null : !!u.installed, garmin_connected: u.garmin == null ? null : !!u.garmin, sessions_sent_to_watch: u.sent, garmin_activities: u.acts, visits_count: u.visits, visits, plan_data: data } });
+    return json({ ok: true, export: { email: u.email, name: u.name, created: new Date(u.created).toISOString(), last_login: new Date(u.last_login).toISOString(), last_seen: u.last_seen ? new Date(u.last_seen).toISOString() : null, sessions_done: u.prog_done, sessions_total: u.prog_total, device: u.device || null, app_installed: u.installed == null ? null : !!u.installed, garmin_connected: u.garmin == null ? null : !!u.garmin, sessions_sent_to_watch: u.sent, garmin_activities: u.acts, visits_count: u.visits, devices, visits, plan_data: data } });
   }
   // Visite : dernière visite + progression (séances faites / prévues, calculées sur l'appareil car les coches Garmin n'existent que là).
   // Si l'utilisateur n'a pas désactivé les statistiques, l'app ajoute : appareil (« iPhone · Safari »), app installée, Garmin connecté,
@@ -228,11 +230,20 @@ async function accountRoutes(req, url, env) {
     const count = (x) => (Number.isInteger(x) && x >= 0 && x <= 5000 ? x : null);
     const flag = (x) => (x === 0 || x === 1 ? x : null);
     const now = Date.now(), dev = typeof b.dev === 'string' && b.dev.trim() ? b.dev.trim().slice(0, 40) : null, inst = flag(b.inst);
-    const prev = await env.DB.prepare('SELECT last_seen FROM users WHERE id = ?').bind(sub).first();
+    const prev = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(sub).first();
     try {
       await env.DB.prepare('UPDATE users SET last_seen = ?, prog_done = COALESCE(?, prog_done), prog_total = COALESCE(?, prog_total), device = COALESCE(?, device), installed = CASE WHEN ? = 1 THEN 1 ELSE COALESCE(installed, ?) END, garmin = COALESCE(?, garmin), sent = COALESCE(?, sent), acts = COALESCE(?, acts) WHERE id = ?')
         .bind(now, count(b.done), count(b.total), dev, inst, inst, flag(b.g), count(b.sent), count(b.acts), sub).run();
-      if (dev && prev && (!prev.last_seen || now - prev.last_seen > 30 * 60000)) {
+      // Une ligne par appareil (schema6.sql) : la fiche additionne les appareils, pour que l'ordinateur n'écrase pas les valeurs de l'iPhone.
+      if (dev) {
+        try {
+          await env.DB.prepare('INSERT INTO devices (user_id, device, installed, garmin, sent, acts, first, last) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, device) DO UPDATE SET installed = COALESCE(excluded.installed, installed), garmin = COALESCE(excluded.garmin, garmin), sent = COALESCE(excluded.sent, sent), acts = COALESCE(excluded.acts, acts), last = excluded.last')
+            .bind(sub, dev, inst, flag(b.g), count(b.sent), count(b.acts), now, now).run();
+          await env.DB.prepare('UPDATE users SET installed = (SELECT MAX(installed) FROM devices WHERE user_id = ?1), garmin = (SELECT MAX(garmin) FROM devices WHERE user_id = ?1), sent = (SELECT MAX(sent) FROM devices WHERE user_id = ?1), acts = (SELECT MAX(acts) FROM devices WHERE user_id = ?1) WHERE id = ?1').bind(sub).run();
+        } catch (e) { /* table devices absente (schema6.sql pas encore appliqué) : valeurs du dernier appareil */ }
+      }
+      // première visite suivie (visits encore vide) : comptée même si l'ancienne version de l'app venait de passer
+      if (dev && prev && (prev.visits == null || !prev.last_seen || now - prev.last_seen > 30 * 60000)) {
         await env.DB.prepare("INSERT INTO visits (user_id, t, kind, device, installed) VALUES (?, ?, 'visit', ?, ?)").bind(sub, now, dev, inst).run();
         await env.DB.prepare('UPDATE users SET visits = COALESCE(visits, 0) + 1 WHERE id = ?').bind(sub).run();
         await env.DB.prepare('DELETE FROM visits WHERE user_id = ? AND t < ?').bind(sub, now - 365 * 86400000).run();
@@ -301,6 +312,11 @@ async function adminUser(req, url, env) {
   try {
     visits = (await env.DB.prepare('SELECT t, kind, device, installed FROM visits WHERE user_id = ? ORDER BY t DESC LIMIT 100').bind(id).all()).results || [];
     devices = (await env.DB.prepare("SELECT device, MAX(installed) AS installed, COUNT(*) AS n, MAX(t) AS last FROM visits WHERE user_id = ? AND kind = 'visit' GROUP BY device ORDER BY last DESC").bind(id).all()).results || [];
+    try {
+      const per = (await env.DB.prepare('SELECT device, installed, garmin, sent, acts, last FROM devices WHERE user_id = ? ORDER BY last DESC').bind(id).all()).results || [];
+      const nv = {}; devices.forEach((x) => { nv[x.device] = x.n; });
+      if (per.length) devices = per.map((x) => ({ device: x.device, installed: x.installed, garmin: x.garmin, sent: x.sent, acts: x.acts, last: x.last, n: nv[x.device] || 0 }));
+    } catch (e) { /* table devices absente */ }
   } catch (e) { /* table absente */ }
   return json({
     ok: true,
