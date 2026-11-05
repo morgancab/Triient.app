@@ -771,6 +771,11 @@ h1{font-size:38px;line-height:1}
 .g-logo{box-shadow:0 10px 34px rgba(0,0,0,.6)}
 .btn.pri,a.btn.pri,.chip.hl,.now,.wkt.cur,.wd7.today .dn,.rng button[aria-pressed=true]{background:var(--brand);color:var(--ink)}
 .tab[aria-selected=true]{color:var(--brand)}
+#ptr{position:fixed;left:50%;top:calc(var(--sat) + 6px);z-index:40;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--card2);color:var(--t2);box-shadow:0 6px 20px rgba(0,0,0,.5);opacity:0;transform:translate(-50%,-44px);transition:transform .2s,opacity .2s;pointer-events:none}
+#ptr.ready{background:var(--brand);color:var(--ink)}
+#ptr.spin svg{animation:ptrspin .7s linear infinite}
+@keyframes ptrspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#ptr.spin svg{animation:none}}
 button:focus-visible{outline-color:var(--brand)}
 @media (min-width:700px){h1{font-size:42px}}
 @media (max-height:700px){.g-t{font-size:32px}}
@@ -3614,6 +3619,40 @@ document.addEventListener('input',function(e){
     wv=nw;render(false);
     var vw=document.getElementById('view');vw.className=dx<0?'slide-l':'slide-r';
   },{passive:true});
+})();
+/* Tirer vers le bas en haut de page pour actualiser (recharge l'app : données du compte, activités Garmin, nouvelle version).
+   Remplace le geste natif, absent de l'app installée et coupé ailleurs par overscroll-behavior. Pas dans une fenêtre ni pendant une saisie. */
+(function(){
+  var y0=null,x0=0,pull=0,on=false,busy=false,el=null,TH=64,MAX=96;
+  function ind(){
+    if(!el){el=document.createElement('div');el.id='ptr';el.setAttribute('aria-hidden','true');
+      el.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>';
+      document.body.appendChild(el);}
+    return el;
+  }
+  function show(p){var e=ind(),k=Math.min(p/TH,1);e.style.transition=on?'none':'';e.style.opacity=k;e.style.transform='translate(-50%,'+(p-44)+'px) rotate('+Math.round(p*3)+'deg)';e.classList.toggle('ready',p>=TH);}
+  function hide(){if(!el)return;el.style.transition='';el.style.opacity=0;el.style.transform='translate(-50%,-44px)';el.classList.remove('ready');}
+  document.addEventListener('touchstart',function(e){
+    var t=e.touches&&e.touches[0];
+    on=false;y0=null;
+    if(busy||!t||e.touches.length!==1||(window.scrollY||document.documentElement.scrollTop)>0||document.getElementById('sheetbg').classList.contains('on')||typing()||(e.target.closest&&e.target.closest('input,textarea,select,svg[data-ch]')))return;
+    y0=t.clientY;x0=t.clientX;pull=0;
+  },{passive:true});
+  document.addEventListener('touchmove',function(e){
+    if(y0==null)return;
+    var t=e.touches[0],dy=t.clientY-y0,dx=Math.abs(t.clientX-x0);
+    if(!on){if(dy<10)return;if(dx>dy||(window.scrollY||0)>0){y0=null;return;}on=true;}
+    pull=Math.min(MAX,Math.max(0,dy*0.5));show(pull);
+  },{passive:true});
+  function end(){
+    if(y0==null||!on){y0=null;on=false;return;}
+    y0=null;on=false;
+    if(pull<TH){hide();return;}
+    busy=true;var e=ind();e.style.transition='';e.style.transform='translate(-50%,'+(TH-44)+'px)';e.classList.add('spin');
+    setTimeout(function(){location.reload();},250);
+  }
+  document.addEventListener('touchend',end,{passive:true});
+  document.addEventListener('touchcancel',function(){y0=null;on=false;hide();},{passive:true});
 })();
 document.getElementById('sheetbg').addEventListener('click',function(e){if(e.target.id==='sheetbg'){if(state.ui.welcomed===undefined){state.ui.welcomed=true;save();}closeSheet();}});
 document.getElementById('sheet').addEventListener('toggle',function(e){var d=e.target;if(d&&d.getAttribute&&d.getAttribute('data-fold'))sheetFold[d.getAttribute('data-fold')]=d.open;},true);
