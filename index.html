@@ -791,6 +791,14 @@ h1{font-size:38px;line-height:1}
 .g-prev{margin:0 0 20px}
 .g-again{max-width:380px;margin:0 0 14px}
 .g-go{height:56px;font-size:17px;margin:0}
+.fmtc[aria-pressed=true]{box-shadow:inset 0 0 0 2px var(--brand)}
+.fstep{display:flex;align-items:center;gap:8px}
+.fstep i{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--brand);color:var(--ink);font-style:normal;font-size:11.5px;font-weight:800;letter-spacing:0}
+.fcard{padding:14px;border-radius:18px;background:var(--card)}
+.fbar{position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;align-items:center;gap:12px;max-width:640px;margin:0 auto;padding:12px 16px calc(12px + var(--sab));background:rgba(11,11,12,.92);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:.5px solid var(--sep)}
+.fbar-t{flex:1;min-width:0;font-size:13.5px;color:var(--t2);line-height:1.35}
+.fbar-t b{color:var(--t1)}
+.fbar .btn{width:auto;flex:none;margin:0;padding:0 20px}
 .g-or{display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--t3);font-size:12.5px}
 .g-or::before,.g-or::after{content:'';flex:1;height:.5px;background:var(--sep)}
 .lgs-sum{width:100%;max-width:380px;margin:0 0 16px;padding:4px 16px;border-radius:20px;background:var(--card);box-shadow:inset 0 0 0 1px var(--brd);text-align:left}
@@ -2790,27 +2798,29 @@ function newRaceDraft(){
   var t=addDays(today(),84);
   return {name:'',date:'',format:'olympic',level:1,peak:null,swimKm:'',bikeKm:'',runKm:'',bikeUp:'',runUp:'',cal:{y:t.getFullYear(),m:t.getMonth()},detail:false,startMode:'now',start:'',scal:{y:today().getFullYear(),m:today().getMonth()}};
 }
+function fstep(n,t){return '<div class="eyebrow fstep"><i>'+n+'</i>'+t+'</div>';}
 function raceFormHtml(d){
   var cls=raceCls(d),F=FORMATS[cls]||FORMATS.olympic,span=d.date?planSpan(d.date,cls,d):null,pk=peakOf(d),dn=function(x){return DAYS[(x.getDay()+6)%7].slice(0,3).toLowerCase()+' '+fmtDay(x);};
   var h='';
-  if(SETUP)h+='<header class="top"><div class="top-t"><div class="eyebrow">Bienvenue</div><h1>Ta course</h1></div></header><p class="muted" style="margin:-6px 0 22px;line-height:1.5">Dis-nous quelle course tu prépares : l’app construit un plan sur mesure, jour par jour, de la première séance jusqu’au jour J.</p>';
+  if(SETUP)h+='<header class="top"><div class="top-t"><div class="eyebrow">Bienvenue</div><h1>Ta course</h1></div></header><p class="muted" style="margin:-6px 0 22px;line-height:1.5">5 étapes pour un plan sur mesure, jour par jour, de la première séance jusqu’au jour J.</p>';
   // Un seul champ : on tape le nom (recherche dans le catalogue et World Triathlon) ; sans choix dans la liste, le texte tapé devient le nom de la course
-  h+='<div class="rsec"><div class="eyebrow">Ta course</div><input class="tinp" id="rf-q" maxlength="60" autocomplete="off" placeholder="Nom, ville ou pays (ex. Nice, Roth, Embrun)" value="'+esc(d.name||'')+'"><div id="rf-res">'+raceResultsHtml(d)+'</div>'+
+  h+='<div class="rsec">'+fstep(1,'Ta course')+'<input class="tinp" id="rf-q" maxlength="60" autocomplete="off" placeholder="Nom, ville ou pays (ex. Nice, Roth, Embrun)" value="'+esc(d.name||'')+'"><div id="rf-res">'+raceResultsHtml(d)+'</div>'+
     '<p class="small muted" style="margin:8px 0 0">'+(d.picked?ic('check',14).replace('class="ic"','class="ic" style="display:inline;vertical-align:-2px;color:var(--brand)"')+' Course trouvée : format et date sont remplis ci-dessous.':'Pas dans la liste ? Garde simplement le nom que tu as tapé : ça marche pour n’importe quelle course.')+'</p></div>';
-  // date
-  var mn=addDays(today(),28),mx=addDays(today(),800);
-  h+='<div class="rsec"><div class="eyebrow">Date de la course</div><div class="cal-s">'+(d.date?'<b>'+esc(fmtLong(parseISO(d.date)))+'</b>':'<span class="cal-hint" style="margin:0">Touche le jour de la course</span>')+'</div>'+(d.hint?'<p class="rhint" style="margin:0 0 8px">'+esc(d.hint)+'</p>':'')+(d.note?'<p class="small muted" style="margin:0 0 8px">'+esc(d.note)+'</p>':'')+calHtml('race',d.date,d.date,mn,mx,d.cal.y,d.cal.m)+'</div>';
-  h+=startHtml(d,span);
   // format
   var fcard=function(k){var f=FORMATS[k];return '<button class="fmtc" data-act="setfmt" data-v="'+k+'" aria-pressed="'+(d.format===k)+'"><b>'+f.n+'</b><small>'+(k==='custom'?'Distances libres':fk(f.swim)+' · '+fk(f.bike)+' · '+fk(f.run)+' km')+'</small></button>';};
-  h+='<div class="rsec"><div class="eyebrow">Format</div><div class="fmtgrid">'+['sprint','olympic','half','full','custom'].map(fcard).join('')+'</div>';
+  h+='<div class="rsec">'+fstep(2,'Format')+'<div class="fmtgrid">'+['sprint','olympic','half','full','custom'].map(fcard).join('')+'</div>';
   if(d.format==='custom')h+='<div style="margin-top:10px">'+[['swim','Natation','km (ex. 1,5)'],['bike','Vélo','km (ex. 40)'],['run','Course à pied','km (ex. 10)']].map(function(r){return '<label class="inp"><span>'+r[1]+'<small>'+r[2]+'</small></span><input id="rf-'+r[0]+'" inputmode="decimal" autocomplete="off" value="'+esc(d[r[0]+'Km'])+'"></label>';}).join('')+'</div>';
   h+='</div>';
+  // date
+  var mn=addDays(today(),28),mx=addDays(today(),800);
+  h+='<div class="rsec">'+fstep(3,'Date de la course')+'<div class="cal-s">'+(d.date?'<b>'+esc(fmtLong(parseISO(d.date)))+'</b>':'<span class="cal-hint" style="margin:0">Touche le jour de la course</span>')+'</div>'+(d.hint?'<p class="rhint" style="margin:0 0 8px">'+esc(d.hint)+'</p>':'')+(d.note?'<p class="small muted" style="margin:0 0 8px">'+esc(d.note)+'</p>':'')+calHtml('race',d.date,d.date,mn,mx,d.cal.y,d.cal.m)+'</div>';
+  h+=startHtml(d,span);
   // niveau + volume
-  h+='<div class="rsec"><div class="eyebrow">Ton niveau</div><div class="rng" role="group" aria-label="Niveau">'+['Débutant','Intermédiaire','Confirmé'].map(function(l,i){return '<button data-act="setlvl" data-v="'+i+'" aria-pressed="'+(d.level===i)+'">'+l+'</button>';}).join('')+'</div></div>';
+  h+='<div class="rsec">'+fstep(4,'Ton niveau')+'<div class="rng" role="group" aria-label="Niveau">'+['Débutant','Intermédiaire','Confirmé'].map(function(l,i){return '<button data-act="setlvl" data-v="'+i+'" aria-pressed="'+(d.level===i)+'">'+l+'</button>';}).join('')+'</div>'+
+    '<p class="small muted" style="margin:8px 0 0">'+['Premier triathlon ou reprise : une progression douce, pour arriver au départ en forme.','Tu t’entraînes régulièrement ou tu as déjà fait quelques courses.','Plusieurs saisons d’entraînement : tu vises un chrono.'][d.level]+'</p></div>';
   var ns=sessOf(d);
-  h+='<div class="rsec"><div class="eyebrow">Séances par semaine</div><div class="stp"><button class="iconbtn" data-act="setsess" data-v="-1" aria-label="Moins de séances">−</button><b>'+ns+'</b><button class="iconbtn" data-act="setsess" data-v="1" aria-label="Plus de séances">+</button><span class="small muted">en moyenne</span></div><p class="small muted" style="margin:8px 0 0">'+({3:'Natation, vélo long et sortie longue : l’essentiel.',4:'L’essentiel + une séance de course en semaine.',5:'Natation, vélo et course, avec un vélo en semaine.',6:'Deux natations, deux vélos, deux courses.',7:'Tout, avec un enchaînement vélo-course (ou du renforcement).',8:'Le plan complet, renforcement et enchaînements compris.',9:'Le plan complet + une 3e natation (endurance).',10:'+ 3e natation et un footing facile en plus.',11:'+ 3e natation, footing facile et vélo d’endurance.',12:'Prépa chargée : 3 natations, 3 vélos, 3 courses, 2 renforcements, enchaînements compris.'})[ns]+'</p></div>';
-  h+='<div class="rsec"><div class="eyebrow">Temps d’entraînement au plus fort</div><div class="stp"><button class="iconbtn" data-act="setpeak" data-v="-1" aria-label="Moins d’heures">−</button><b>'+fmtHrs(pk)+'</b><button class="iconbtn" data-act="setpeak" data-v="1" aria-label="Plus d’heures">+</button><span class="small muted">par semaine</span></div><p class="small muted" style="margin:8px 0 0">Le plan monte progressivement jusqu’à cette charge, avec une semaine plus légère toutes les 4 semaines.'+(pk>maxPeak(ns,cls)*1.02?' <span style="color:#ffd60a">Beaucoup d’heures pour '+ns+' séances : les sorties longues seront plafonnées.</span>':'')+'</p></div>';
+  h+='<div class="rsec">'+fstep(5,'Ton temps d’entraînement')+'<div class="fcard"><div class="eyebrow" style="margin:0 0 8px">Séances par semaine</div><div class="stp"><button class="iconbtn" data-act="setsess" data-v="-1" aria-label="Moins de séances">−</button><b>'+ns+'</b><button class="iconbtn" data-act="setsess" data-v="1" aria-label="Plus de séances">+</button><span class="small muted">en moyenne</span></div><p class="small muted" style="margin:8px 0 0">'+({3:'Natation, vélo long et sortie longue : l’essentiel.',4:'L’essentiel + une séance de course en semaine.',5:'Natation, vélo et course, avec un vélo en semaine.',6:'Deux natations, deux vélos, deux courses.',7:'Tout, avec un enchaînement vélo-course (ou du renforcement).',8:'Le plan complet, renforcement et enchaînements compris.',9:'Le plan complet + une 3e natation (endurance).',10:'+ 3e natation et un footing facile en plus.',11:'+ 3e natation, footing facile et vélo d’endurance.',12:'Prépa chargée : 3 natations, 3 vélos, 3 courses, 2 renforcements, enchaînements compris.'})[ns]+'</p>';
+  h+='<div class="eyebrow" style="margin:18px 0 8px">Au plus fort de la prépa</div><div class="stp"><button class="iconbtn" data-act="setpeak" data-v="-1" aria-label="Moins d’heures">−</button><b>'+fmtHrs(pk)+'</b><button class="iconbtn" data-act="setpeak" data-v="1" aria-label="Plus d’heures">+</button><span class="small muted">par semaine</span></div><p class="small muted" style="margin:8px 0 0">Le plan monte progressivement jusqu’à cette charge, avec une semaine plus légère toutes les 4 semaines.'+(pk>maxPeak(ns,cls)*1.02?' <span style="color:#ffd60a">Beaucoup d’heures pour '+ns+' séances : les sorties longues seront plafonnées.</span>':'')+'</p></div></div>';
   // détails du parcours
   h+='<details class="fold" style="margin:0 0 20px"'+(d.detail?' open':'')+' data-fold="rdetail"><summary><span>Détails du parcours<small>Dénivelé, pour une estimation plus juste (optionnel)</small></span></summary><div class="fbody"><label class="inp"><span>Dénivelé vélo<small>D+ total (m)</small></span><input id="rf-bup" inputmode="numeric" autocomplete="off" value="'+esc(d.bikeUp)+'" placeholder="ex. 800"></label><label class="inp"><span>Dénivelé course<small>D+ total (m)</small></span><input id="rf-rup" inputmode="numeric" autocomplete="off" value="'+esc(d.runUp)+'" placeholder="ex. 100"></label></div></details>';
   // aperçu
@@ -2824,11 +2834,14 @@ function raceFormHtml(d){
     if(span.avail>span.n)h+='<div class="rw">La course est dans '+span.avail+' semaines : le plan est limité à '+span.n+' semaines et démarre donc le '+dn(span.start)+'.</div>';
   }
   h+='</div></div>';
-  h+='<button class="btn pri" data-act="racesave"'+(ok?'':' disabled style="opacity:.4"')+'>'+(SETUP?'Créer mon plan':'Changer de course')+'</button>';
+  // création : bouton fixé en bas de l'écran avec le résumé ; changement de course (fenêtre) : bouton dans le formulaire
+  if(SETUP)h+='<div class="fbar"><div class="fbar-t">'+(ok?'<b>'+span.n+' semaines</b> · '+ns+' séances · '+fmtHrs(pk)+' max':(!d.date?'Choisis la date de ta course':'Vérifie la date de ta course'))+'</div><button class="btn pri" data-act="racesave"'+(ok?'':' disabled style="opacity:.4"')+'>Créer mon plan</button></div>';
+  else h+='<button class="btn pri" data-act="racesave"'+(ok?'':' disabled style="opacity:.4"')+'>Changer de course</button>';
   if(!SETUP)h+='<button class="btn" data-act="closesheet" style="margin-top:10px">Annuler</button><p class="small muted" style="margin:12px 2px 0">Changer de course remplace ton plan et réinitialise les séances cochées et les associations. Tes activités Garmin et tes réglages sont conservés.</p>';
   if(SETUP)h+=accountSetupHtml();
-  if(SETUP&&!acct())h+='<div class="rsec" style="margin-top:22px"><div class="eyebrow">Déjà un plan sur un autre appareil ?</div><label class="inp wide"><span>Code de récupération</span><input id="cloud-code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-X"></label><button class="btn" data-act="cloudget">Récupérer ma sauvegarde cloud</button></div>';
+  if(SETUP&&!acct())h+='<details class="fold" style="margin:22px 0 0" data-fold="rcode"><summary><span>Récupérer une sauvegarde par code<small>Pour les plans sauvegardés avec l’ancien code de récupération</small></span></summary><div class="fbody"><label class="inp wide"><span>Code de récupération</span><input id="cloud-code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-X"></label><button class="btn" data-act="cloudget">Récupérer ma sauvegarde</button></div></details>';
   if(SETUP)h+='<p class="small muted" style="margin:18px 2px 0;text-align:center;line-height:1.6">Plans indicatifs, sans avis médical.<br><button class="lnk" data-act="legal" style="margin:0">Mentions légales et confidentialité</button></p>';
+  if(SETUP)h+='<div style="height:88px"></div>';   // place de la barre « Créer mon plan »
   return h;
 }
 function renderSetup(){
