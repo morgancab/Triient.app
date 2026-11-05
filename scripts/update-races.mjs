@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /* Mise à jour du catalogue de triathlons (races.js), sans dépendance ni IA. Voir CATALOGUE.md.
    Usage : node scripts/update-races.mjs [--dry] [--report fichier.md]
    Lit des calendriers publics, compare au catalogue, ajoute les nouvelles courses et les dates manquantes.
@@ -6,7 +6,7 @@
    Code de sortie : 0 = tout va bien, 1 = au moins une source n'a rien renvoyé (sa mise en page a sans doute changé). */
 import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 
-const UA = 'Mozilla/5.0 (compatible; TriientCatalog/1.0; +https://github.com/morgancab/triient)';
+const UA = 'Mozilla/5.0 (compatible; TriientCatalog/1.0; +https://github.com/morgancab/Triient.app)';
 const FILE = new URL('../races.js', import.meta.url);
 const HEAD = '// Catalogue de triathlons : [nom, ville, pays, format, mois habituel (1-12, 0 = inconnu), options]. Mis à jour par scripts/update-races.mjs, voir CATALOGUE.md.\nwindow.RACE_CAT=[\n';
 // Au-delà, le lancement est jugé anormal (site modifié, mauvaise lecture) : il passe par une proposition au lieu d'être publié
