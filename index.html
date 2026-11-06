@@ -271,9 +271,17 @@ svg[data-ch]{touch-action:pan-y;cursor:crosshair}
 .adm-kv:last-child{border-bottom:0}
 .adm-kv span{color:var(--t2);flex:none}
 .adm-kv b{font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}
-.adm-hist{display:flex;align-items:flex-end;gap:3px;height:60px;padding:12px 14px 0}
-.adm-hist i{flex:1;min-height:2px;border-radius:2px;background:var(--brand,#D7FF3A)}
-.adm-hist i.z{background:var(--card3,#2a2a30)}
+.adm-hist{display:flex;align-items:stretch;gap:2px;height:72px;padding:12px 0 0;touch-action:pan-y;cursor:pointer;user-select:none;-webkit-user-select:none}
+.adm-hist i{flex:1;display:flex;align-items:flex-end;min-width:0}
+.adm-hist i em{display:block;width:100%;min-height:2px;border-radius:2px;background:var(--brand,#D7FF3A)}
+.adm-hist i.z em{background:var(--card3,#2a2a30)}
+/* Suivi : blocs dépliants */
+.adm-f{margin:0 0 12px}
+.adm-f>summary{font-size:16px}
+.adm-f .fbody{padding:0 16px 16px}
+.adm-f .scard{margin:0}
+.scard .adm-hw{padding:12px 16px 8px}
+.adm-f .plan-h{display:none}
 /* Ajuster mon entraînement : cartes par sport, compteur de séances, deux ronds + barre déplaçable (--a, --b : 0 à 1 ; --da, --db : par défaut) */
 .vt-intro{margin:0 0 14px;font-size:14.5px;line-height:1.45;color:var(--t2)}
 .vt-wk{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;flex-wrap:wrap}
@@ -348,14 +356,13 @@ svg[data-ch]{touch-action:pan-y;cursor:crosshair}
 .vt-bar .btn:disabled{background:var(--card3,#2a2a30);color:var(--t3)}
 .adm-ro{display:flex;justify-content:space-between;gap:10px;min-height:20px;margin:8px 0 0;font-size:12.5px;color:var(--t2)}
 .adm-ro b{color:var(--t1);font-weight:600}
-.adm-hist i{cursor:pointer}
-.adm-hist i.on{background:var(--t1)}
-.adm-hist i.z.on{background:var(--t2)}
+.adm-hist i.on em{background:var(--t1)}
+.adm-hist i.z.on em{background:var(--t2)}
 .adm-lex{margin:14px 0 0;font-size:13px;color:var(--t2)}
 .adm-lex summary{cursor:pointer;color:var(--t1);font-weight:600}
 .adm-lex p{margin:8px 0 0;line-height:1.45}
 .adm-lex b{color:var(--t1);font-weight:600}
-.adm-hl{display:flex;justify-content:space-between;padding:6px 14px 12px;font-size:11.5px;color:var(--t3)}
+.adm-hl{display:flex;justify-content:space-between;padding:8px 0 4px;font-size:11.5px;color:var(--t3)}
 .adm-v{display:flex;gap:12px;padding:10px 14px;border-bottom:.5px solid var(--sep);font-size:14px}
 .adm-v:last-child{border-bottom:0}
 .adm-st{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:.5px solid var(--sep);font-size:14.5px}
@@ -4017,16 +4024,16 @@ function openAdmUser(id){
 }
 function admDetail(j){
   var u=j.user,r=j.race,p=j.plan,vs=j.visits||[],kv=function(k,v){return '<div class="adm-kv"><span>'+k+'</span><b>'+v+'</b></div>';};
-  var yn=function(v,a,b){return v==null?'<span class="muted">Inconnu</span>':v?a:b;},grp2=function(t,rows){return '<div class="eyebrow sgl">'+t+'</div><div class="scard">'+rows+'</div>';};
+  var yn=function(v,a,b){return v==null?'<span class="muted">Inconnu</span>':v?a:b;},grp2=function(t,rows,def){var p=t.split(' · ');return admFoldHtml('adm-u-'+p[0].toLowerCase().replace(/[^a-z]+/g,'-'),t,'','<div class="scard">'+rows+'</div>',def);};
   var h=grp2('Profil',
     kv('E-mail',esc(u.email))+kv('Inscrit le',esc(admFull(u.created)))+kv('Dernière visite',esc(admFull(u.seen))+'<br><span class="small muted">'+esc(ago(u.seen))+'</span>')+kv('Connexion Google',esc(admFull(u.lastLogin)))+
-    kv('Visites',u.visits==null?'<span class="muted">Inconnu</span>':u.visits)+kv('Dernier appareil',u.device?esc(u.device):'<span class="muted">Inconnu</span>')+kv('App installée',yn(u.installed,'Oui','Pas encore vue')));
+    kv('Visites',u.visits==null?'<span class="muted">Inconnu</span>':u.visits)+kv('Dernier appareil',u.device?esc(u.device):'<span class="muted">Inconnu</span>')+kv('App installée',yn(u.installed,'Oui','Pas encore vue')),true);
   h+=grp2('Garmin',kv('Connexion',yn(u.garmin,'Connecté','Non connecté')+(u.garminKey?' · clé dans le compte':''))+kv('Séances envoyées vers la montre',u.sent==null?'<span class="muted">Inconnu</span>':u.sent)+kv('Activités Garmin reçues',u.acts==null?'<span class="muted">Inconnu</span>':u.acts));
   if(r){var rd=parseISO(r.date),pc=u.total?Math.round(u.done/u.total*100):0;
     h+=grp2('Plan',kv('Course',esc(r.name||'Sans nom'))+kv('Date',esc(rd?fmtDay(rd)+' '+rd.getFullYear():'–'))+kv('Format',esc(admFmt(r.format)||'–'))+(admDist(r)?kv('Distances',esc(admDist(r))+(r.bikeUp||r.runUp?'<br><span class="small muted">'+esc([r.bikeUp?'vélo D+ '+r.bikeUp+' m':'',r.runUp?'course D+ '+r.runUp+' m':''].filter(Boolean).join(' · '))+'</span>':'')):'')+kv('Durée',esc((r.weeks||'–')+' semaines'))+(r.sessions?kv('Séances par semaine',r.sessions):'')+
       (r.sc?kv('Séances par sport',esc([['swim','natation'],['bike','vélo'],['run','course'],['brick','enchaînement'],['str','renfo']].filter(function(k){return r.sc[k[0]];}).map(function(k){return r.sc[k[0]]+' '+k[1];}).join(' · '))):'')+
       (r.vt&&Object.keys(r.vt).length?kv('Volumes réglés',VT_UI.filter(function(x){return r.vt[x[0]];}).map(function(x){var v=r.vt[x[0]];return esc(x[1])+' : '+(v[0]===v[1]?fh(v[0]):fh(v[0])+' → '+fh(v[1]));}).join('<br>')):'')+
-      kv('Progression',u.total?u.done+' / '+u.total+' · '+pc+' %':'<span class="muted">Pas encore reçue</span>')+(p?kv('Séances cochées',p.checked)+kv('Associations manuelles',p.linked)+kv('Questionnaire de niveau',p.levelTest?'Rempli':'Non')+kv('Absences',p.away)+(p.injuries!=null?kv('Blessures déclarées',p.injuries+(p.paused?' · <span class="chip">en pause</span>':'')):'')+kv('Séances manquées traitées',p.missed):''));}
+      kv('Progression',u.total?u.done+' / '+u.total+' · '+pc+' %':'<span class="muted">Pas encore reçue</span>')+(p?kv('Séances cochées',p.checked)+kv('Associations manuelles',p.linked)+kv('Questionnaire de niveau',p.levelTest?'Rempli':'Non')+kv('Absences',p.away)+(p.injuries!=null?kv('Blessures déclarées',p.injuries+(p.paused?' · <span class="chip">en pause</span>':'')):'')+kv('Séances manquées traitées',p.missed):''),true);}
   else h+=grp2('Plan',kv('Course','<span class="muted">Aucun plan créé</span>'));
   var sts=(j.steps||[]).slice().sort(function(x,y){return x.date>y.date?1:-1;});
   if(r)h+=grp2('Courses intermédiaires'+(sts.length?' · '+sts.length:''),sts.length?sts.map(function(st){
@@ -4040,7 +4047,8 @@ function admDetail(j){
   for(i=0;i<30;i++)days.push(0);
   vs.forEach(function(v){if(v.kind!=='visit'||v.t<d0)return;var k=Math.floor((v.t-d0)/864e5);if(k>=0&&k<30){days[k]++;n30++;}});
   var mx=Math.max.apply(null,days)||1;
-  h+=grp2('Visites sur 30 jours · '+n30,'<div class="adm-hist" aria-hidden="true">'+days.map(function(c){return '<i'+(c?'':' class="z"')+' style="height:'+(c?Math.max(8,Math.round(c/mx*100)):4)+'%"></i>';}).join('')+'</div><div class="adm-hl"><span>'+esc(fmtDay(new Date(d0)))+'</span><span>Aujourd’hui</span></div>');
+  var dd30=days.map(function(_,k){return isoDate(new Date(d0+k*864e5+43200000));});
+  h+=grp2('Visites sur 30 jours · '+n30,admHist(days,[fmtDay(new Date(d0)),'Aujourd’hui'],dd30,['visite','visites']),true);
   // Appareils : chacun avec ses propres valeurs (Garmin et envois vers la montre sont enregistrés sur chaque appareil)
   if((j.devices||[]).length)h+=grp2('Appareils · '+j.devices.length,j.devices.map(function(x){
     var t=[x.n?x.n+' visite'+(x.n>1?'s':''):'',x.garmin===1?'Garmin':x.garmin===0?'sans Garmin':'',x.sent?x.sent+' envoi'+(x.sent>1?'s':'')+' montre':'','vu '+admWhen(x.last)].filter(Boolean);
@@ -4057,19 +4065,38 @@ var adminEv=null,admDays=30;
 function admPct(a,b){return b?Math.round(a/b*100):0;}
 function admCount(list,key){var o={};list.forEach(function(x){var k=key(x);if(k)o[k]=(o[k]||0)+1;});return Object.keys(o).map(function(k){return [k,o[k]];}).sort(function(a,b){return b[1]-a[1];});}
 function admRows(list,total,col){var mx=Math.max.apply(null,list.map(function(x){return x[1];}).concat([1]));return list.map(function(x){return prRow(esc(x[0]),x[1]+(total?' · '+admPct(x[1],total)+' %':''),Math.round(x[1]/mx*100),col);}).join('');}
-// Histogramme jour par jour : touche ou survole une barre pour lire sa valeur (dates : AAAA-MM-JJ, unit : [singulier, pluriel])
+// Histogramme jour par jour : touche, glisse le doigt ou survole pour lire la valeur d'un jour (dates : AAAA-MM-JJ, unit : [singulier, pluriel]).
+// Chaque jour est une colonne pleine hauteur (<i>), la barre visible est dedans (<em>) : même un jour à 0 se touche facilement.
 function admHist(vals,lbl,dates,unit){
   var mx=Math.max.apply(null,vals.concat([1])),tot=vals.reduce(function(p,c){return p+c;},0),u=function(n){return n+' '+(unit?(n>1?unit[1]:unit[0]):'');};
-  return '<div class="adm-hw"><div class="adm-ro"><span>Total '+u(tot)+'</span><span>max '+Math.max.apply(null,vals.concat([0]))+'</span></div><div class="adm-hist">'+vals.map(function(c,i){var d=dates&&parseISO(dates[i]),t=(d?DAYS[(d.getDay()+6)%7].slice(0,3).toLowerCase()+'. '+fmtDay(d):'')+' : '+u(c);return '<i'+(c?'':' class="z"')+' data-t="'+esc(t)+'" title="'+esc(t)+'" style="height:'+(c?Math.max(8,Math.round(c/mx*100)):4)+'%"></i>';}).join('')+'</div><div class="adm-hl"><span>'+esc(lbl[0])+'</span><span>'+esc(lbl[1])+'</span></div></div>';
+  return '<div class="adm-hw"><div class="adm-ro"><span>Total '+u(tot)+'</span><span>max '+Math.max.apply(null,vals.concat([0]))+'</span></div><div class="adm-hist">'+vals.map(function(c,i){var d=dates&&parseISO(dates[i]),t=(d?DAYS[(d.getDay()+6)%7].slice(0,3).toLowerCase()+'. '+fmtDay(d):'')+' : '+u(c);return '<i'+(c?'':' class="z"')+' data-t="'+esc(t)+'" title="'+esc(t)+'"><em style="height:'+(c?Math.max(8,Math.round(c/mx*100)):4)+'%"></em></i>';}).join('')+'</div><div class="adm-hl"><span>'+esc(lbl[0])+'</span><span>'+esc(lbl[1])+'</span></div></div>';
 }
-function admHistPick(e){var b=e.target&&e.target.closest&&e.target.closest('.adm-hist i');if(!b)return;var w=b.closest('.adm-hw'),ro=w&&w.querySelector('.adm-ro');if(!ro)return;Array.prototype.forEach.call(w.querySelectorAll('.adm-hist i.on'),function(x){x.classList.remove('on');});b.classList.add('on');ro.innerHTML='<b>'+esc(b.getAttribute('data-t'))+'</b>';}
-document.addEventListener('pointerdown',admHistPick);document.addEventListener('pointerover',admHistPick);
+// le jour se déduit de la position horizontale : pas besoin de viser une barre fine
+function admHistAt(h,x){
+  var bars=h.querySelectorAll('i'),r=h.getBoundingClientRect();if(!bars.length||!r.width)return;
+  var b=bars[Math.max(0,Math.min(bars.length-1,Math.floor((x-r.left)/r.width*bars.length)))],w=h.closest('.adm-hw'),ro=w&&w.querySelector('.adm-ro');
+  if(!ro||b.classList.contains('on'))return;
+  Array.prototype.forEach.call(h.querySelectorAll('i.on'),function(x){x.classList.remove('on');});
+  b.classList.add('on');ro.innerHTML='<b>'+esc(b.getAttribute('data-t'))+'</b>';
+}
+var admScrub=null;
+document.addEventListener('pointerdown',function(e){var h=e.target&&e.target.closest&&e.target.closest('.adm-hist');if(!h)return;admScrub=h;admHistAt(h,e.clientX);});
+document.addEventListener('pointermove',function(e){var h=admScrub||(e.pointerType==='mouse'&&e.target&&e.target.closest&&e.target.closest('.adm-hist'));if(h)admHistAt(h,e.clientX);});
+document.addEventListener('pointerup',function(){admScrub=null;});
+document.addEventListener('pointercancel',function(){admScrub=null;});
+// Blocs dépliants du suivi : ouverts ou fermés comme on les a laissés (la page se recharge à chaque actualisation)
+var admFold={};
+function admFoldHtml(id,title,sub,body,def){
+  var o=admFold[id]!==undefined?admFold[id]:!!def;
+  return '<details class="fold adm-f" data-fold="'+id+'"'+(o?' open':'')+'><summary><span>'+title+(sub?'<small>'+sub+'</small>':'')+'</span></summary><div class="fbody">'+body+'</div></details>';
+}
+document.addEventListener('toggle',function(e){var d=e.target,k=d&&d.getAttribute&&d.getAttribute('data-fold');if(k&&/^adm-/.test(k))admFold[k]=d.open;},true);
 function admPlanLbl(p){var x=String(p).split('|'),f=FORMATS[x[0]];return (f?f.n:x[0])+(x[1]?' · '+x[1].replace('s',' séances'):'')+(x[2]?' · '+(['Débutant','Intermédiaire','Confirmé'][+x[2].slice(1)]||x[2]):'');}
 function admAnalytics(D,E,days,now){
   now=now||Date.now();
   var DAY=864e5,U=(D.users||[]).filter(function(u){return !u.owner;}),n=U.length,T=(E&&E.totals)||{},t=function(k){return T[k]||0;},since=Date.parse(new Date(now-(days-1)*DAY).toISOString().slice(0,10)+'T00:00:00Z');   // début du 1er jour UTC affiché
   var tile=function(v,l,sub){return '<div class="adm-c"><b>'+v+'</b><span>'+l+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</div>';},h='';
-  var card=function(title,sub,body){return '<h2 class="plan-h">'+title+(sub?'<span>'+sub+'</span>':'')+'</h2><section class="card">'+body+'</section>';};
+  var card=function(title,sub,body){return admFoldHtml('adm-'+title.toLowerCase().replace(/[^a-z]+/g,'-'),title,sub,body,/^Activit/.test(title));};
   var newN=U.filter(function(u){return u.created>=since;}).length;
   // 1. Entonnoir d'inscription
   if(E){
@@ -4150,13 +4177,14 @@ function vAdmin(){
   if(adminErr&&!adminD)return h+emptyState('info','Suivi indisponible',esc(adminErr),'','<button class="btn" data-act="admreload">Réessayer</button>');
   if(!adminD)return h+'<section class="card"><div class="skel" aria-label="Chargement"><i></i><i></i></div></section>';
   var t=adminD.totals,c=function(v,l){return '<div class="adm-c"><b>'+v+'</b><span>'+l+'</span></div>';};
-  h+='<section class="card"><div class="row"><h2 style="margin:0">Vue d’ensemble</h2><span class="sp"></span><button class="chip" style="border:0;min-height:32px;padding:0 12px" data-act="admreload">'+(adminBusy?'Mise à jour…':'Actualiser')+'</button></div>'+
-    '<div class="adm-g">'+c(t.users,'Comptes')+c(t.withPlan,'Avec un plan')+c(t.active7,'Actifs 7 jours')+c(t.active30,'Actifs 30 jours')+c(t.new7,'Nouveaux 7 jours')+c(t.new30,'Nouveaux 30 jours')+
+  h+='<div class="row" style="margin:0 0 12px"><span class="small muted">Ton compte est exclu des chiffres</span><span class="sp"></span><button class="chip" style="border:0;min-height:32px;padding:0 12px" data-act="admreload">'+(adminBusy?'Mise à jour…':'Actualiser')+'</button></div>';
+  h+=admFoldHtml('adm-vue','Vue d’ensemble','',
+    '<div class="adm-g" style="margin-top:0">'+c(t.users,'Comptes')+c(t.withPlan,'Avec un plan')+c(t.active7,'Actifs 7 jours')+c(t.active30,'Actifs 30 jours')+c(t.new7,'Nouveaux 7 jours')+c(t.new30,'Nouveaux 30 jours')+
     (t.installed!=null?c(t.installed,'App installée')+c(t.garmin,'Garmin connecté')+c(t.sent,'Séances envoyées vers la montre'):'')+'</div>'+
-    '<p class="small muted" style="margin:12px 0 0">Ton compte est listé mais exclu de ces chiffres.'+(adminErr?' Dernière mise à jour impossible : '+esc(adminErr):'')+'</p></section>';
-  h+='<div class="rng" role="group" aria-label="Période" style="margin:4px 0 0">'+[7,30,90].map(function(x){return '<button data-act="admdays" data-v="'+x+'" aria-pressed="'+(admDays===x)+'">'+x+' jours</button>';}).join('')+'</div>';
+    (adminErr?'<p class="small muted" style="margin:12px 0 0">Dernière mise à jour impossible : '+esc(adminErr)+'</p>':''),true);
+  h+='<div class="rng" role="group" aria-label="Période" style="margin:0 0 12px">'+[7,30,90].map(function(x){return '<button data-act="admdays" data-v="'+x+'" aria-pressed="'+(admDays===x)+'">'+x+' jours</button>';}).join('')+'</div>';
   h+=admAnalytics(adminD,adminEv,admDays);
-  h+='<h2 class="plan-h">Utilisateurs<span>'+adminD.users.length+'</span></h2><section class="card" style="padding:0 16px">'+adminD.users.map(admUser).join('')+'</section>';
+  h+=admFoldHtml('adm-users','Utilisateurs',adminD.users.length+' compte'+(adminD.users.length>1?'s':''),adminD.users.map(admUser).join(''),true);
   return h;
 }
 
