@@ -8,6 +8,23 @@
 
 Ce guide est aussi l'onglet **Guide** du mode test (`dev.html#guide`). Il affiche le fichier `DEV.md`.
 
+## Modifier le code : `src/`, puis assembler
+
+`index.html` est **généré**. On ne le modifie pas à la main : on modifie les sources, puis on l'assemble.
+
+| Source | Contenu |
+|---|---|
+| `src/page.html` | La page : en-tête, balises, scripts externes, avec les repères `@@CSS@@` et `@@JS@@` |
+| `src/style.css` | Tout le CSS |
+| `src/js/01-outils.js` … `13-pwa.js` | Le script de l'app, en morceaux lus dans l'ordre de leur nom : outils, photo d'accueil, moteur du plan, état et Garmin, vues, compte et accueil des visiteurs, statistiques et formulaire, catalogue, ajuster l'entraînement, semaine et plan, suivi, rendu et événements, données, PWA |
+
+1. Modifie un fichier de `src/`.
+2. Lance `node scripts/build.mjs` : il reconstruit `index.html`.
+3. Lance les tests : `node --test --test-concurrency=1 "tests/*.test.mjs"`. Le test `build.test.mjs` échoue si `index.html` n'a pas été reconstruit.
+4. Pousse `src/` **et** `index.html` : Vercel publie `index.html` tel quel, sans étape de construction.
+
+Les morceaux de `src/js/` forment une seule fonction englobante, comme avant le découpage : ils partagent leurs variables. Un nouveau morceau se glisse dans l'ordre grâce à son numéro (par exemple `08b-…js`). Le premier ouvre la fonction et le dernier la referme : ne les déplace pas.
+
 ## Référence des paramètres
 
 Forme d'une adresse : les paramètres `?…` d'abord, la page `#…` ensuite.

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!-- Fichier généré par scripts/build.mjs : modifier les sources dans src/ (page.html, style.css, js/), puis lancer node scripts/build.mjs -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Triient">
+<meta name="theme-color" content="#0B0B0C">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no">
+<meta name="description" content="Plan d’entraînement triathlon sur mesure : choisis ta course, suis tes séances, synchronise Garmin.">
+<title>Triient</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
+<script>if(/[?&](appareil|profil)=/.test(location.search)&&(/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)||location.protocol==='file:'))document.write('<script src="dev-appareil.js"><\/script>');</script>
+<style>
+@@CSS@@</style>
+</head>
+<body>
+<div id="statusbg"></div>
+<main id="view" aria-live="polite"></main>
+<nav class="tabbar" aria-label="Navigation principale"><div class="tabbar-in" id="tabs" role="tablist"></div></nav>
+<div class="sheet-bg" id="sheetbg"><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Réglages"></div></div>
+<div id="toast" role="status"></div>
+<div id="tip" role="tooltip"></div>
+
+<script src="races.js"></script>
+<script>
+@@JS@@</script>
+</body>
+</html>
