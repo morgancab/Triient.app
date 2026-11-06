@@ -417,7 +417,8 @@ async function pubEvent(req, env) {
 async function adminStats(url, env) {
   if (!env.DB) return json({ error: 'base de statistiques non configurée' }, 501);
   const days = Math.max(1, Math.min(365, Number(url.searchParams.get('days')) || 30));
-  const since = ymd(new Date(Date.now() - days * 86400000));
+  // « days » jours UTC, aujourd'hui compris : les mêmes que les graphiques de l'app (avant : un jour de plus dans les totaux)
+  const since = ymd(new Date(Date.now() - (days - 1) * 86400000));
   const rows = (await env.DB.prepare('SELECT day, name, prop, n FROM ev WHERE day >= ? ORDER BY day').bind(since).all()).results || [];
   const tot = {}, daily = {}, top = {};
   for (const r of rows) {
@@ -433,7 +434,7 @@ async function adminStats(url, env) {
   try {
     const own = String(env.ADMIN_EMAILS || '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
     const q = "SELECT date(v.t / 1000, 'unixepoch') AS day, COUNT(DISTINCT v.user_id) AS n FROM visits v JOIN users u ON u.id = v.user_id WHERE v.t >= ?" + (own.length ? ' AND lower(u.email) NOT IN (' + own.map(() => '?').join(',') + ')' : '') + ' GROUP BY day';
-    for (const r of (await env.DB.prepare(q).bind(Date.now() - days * 86400000, ...own).all()).results || []) acc[r.day] = r.n;
+    for (const r of (await env.DB.prepare(q).bind(Date.parse(since + 'T00:00:00Z'), ...own).all()).results || []) acc[r.day] = r.n;
   } catch (e) { /* table visits absente */ }
   return json({ ok: true, days, since, totals: tot, daily, top: ranked, acc });
 }

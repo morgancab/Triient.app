@@ -3909,7 +3909,7 @@ function admDetail(j){
   if(r){var rd=parseISO(r.date),pc=u.total?Math.round(u.done/u.total*100):0;
     h+=grp2('Plan',kv('Course',esc(r.name||'Sans nom'))+kv('Date',esc(rd?fmtDay(rd)+' '+rd.getFullYear():'–'))+kv('Format',esc(admFmt(r.format)||'–'))+(admDist(r)?kv('Distances',esc(admDist(r))+(r.bikeUp||r.runUp?'<br><span class="small muted">'+esc([r.bikeUp?'vélo D+ '+r.bikeUp+' m':'',r.runUp?'course D+ '+r.runUp+' m':''].filter(Boolean).join(' · '))+'</span>':'')):'')+kv('Durée',esc((r.weeks||'–')+' semaines'))+(r.sessions?kv('Séances par semaine',r.sessions):'')+
       (r.sc?kv('Séances par sport',esc([['swim','natation'],['bike','vélo'],['run','course'],['brick','enchaînement'],['str','renfo']].filter(function(k){return r.sc[k[0]];}).map(function(k){return r.sc[k[0]]+' '+k[1];}).join(' · '))):'')+
-      (r.vt&&Object.keys(r.vt).length?kv('Volumes réglés',VT_UI.filter(function(x){return r.vt[x[0]];}).map(function(x){return esc(x[1])+' : '+vtLbl(r.vt[x[0]]);}).join('<br>')):'')+
+      (r.vt&&Object.keys(r.vt).length?kv('Volumes réglés',VT_UI.filter(function(x){return r.vt[x[0]];}).map(function(x){var v=r.vt[x[0]];return esc(x[1])+' : '+(v[0]===v[1]?fh(v[0]):fh(v[0])+' → '+fh(v[1]));}).join('<br>')):'')+
       kv('Progression',u.total?u.done+' / '+u.total+' · '+pc+' %':'<span class="muted">Pas encore reçue</span>')+(p?kv('Séances cochées',p.checked)+kv('Associations manuelles',p.linked)+kv('Questionnaire de niveau',p.levelTest?'Rempli':'Non')+kv('Absences',p.away)+(p.injuries!=null?kv('Blessures déclarées',p.injuries+(p.paused?' · <span class="chip">en pause</span>':'')):'')+kv('Séances manquées traitées',p.missed):''));}
   else h+=grp2('Plan',kv('Course','<span class="muted">Aucun plan créé</span>'));
   var sts=(j.steps||[]).slice().sort(function(x,y){return x.date>y.date?1:-1;});
@@ -3951,7 +3951,7 @@ document.addEventListener('pointerdown',admHistPick);document.addEventListener('
 function admPlanLbl(p){var x=String(p).split('|'),f=FORMATS[x[0]];return (f?f.n:x[0])+(x[1]?' · '+x[1].replace('s',' séances'):'')+(x[2]?' · '+(['Débutant','Intermédiaire','Confirmé'][+x[2].slice(1)]||x[2]):'');}
 function admAnalytics(D,E,days,now){
   now=now||Date.now();
-  var DAY=864e5,U=(D.users||[]).filter(function(u){return !u.owner;}),n=U.length,T=(E&&E.totals)||{},t=function(k){return T[k]||0;},since=now-days*DAY;
+  var DAY=864e5,U=(D.users||[]).filter(function(u){return !u.owner;}),n=U.length,T=(E&&E.totals)||{},t=function(k){return T[k]||0;},since=Date.parse(new Date(now-(days-1)*DAY).toISOString().slice(0,10)+'T00:00:00Z');   // début du 1er jour UTC affiché
   var tile=function(v,l,sub){return '<div class="adm-c"><b>'+v+'</b><span>'+l+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</div>';},h='';
   var card=function(title,sub,body){return '<h2 class="plan-h">'+title+(sub?'<span>'+sub+'</span>':'')+'</h2><section class="card">'+body+'</section>';};
   var newN=U.filter(function(u){return u.created>=since;}).length;
@@ -3966,9 +3966,11 @@ function admAnalytics(D,E,days,now){
   // 2. Activité jour par jour
   if(E){
     var dd=[],opens=[],plans=[],accs=[],i;
-    for(i=days-1;i>=0;i--){var dt=new Date(now-i*DAY);dd.push(isoDate(dt));}
+    // jours en heure universelle, comme les compteurs du serveur (sinon, entre minuit et 1 h ou 2 h, tout glisse d'un jour)
+    var utcDay=function(t){return new Date(t).toISOString().slice(0,10);};
+    for(i=days-1;i>=0;i--)dd.push(utcDay(now-i*DAY));
     var people=[];
-    dd.forEach(function(d){var x=(E.daily||{})[d]||{};opens.push(x.open||0);plans.push(x.plan_created||0);people.push((E.acc||{})[d]||0);accs.push(U.filter(function(u){return isoDate(new Date(u.created))===d;}).length);});
+    dd.forEach(function(d){var x=(E.daily||{})[d]||{};opens.push(x.open||0);plans.push(x.plan_created||0);people.push((E.acc||{})[d]||0);accs.push(U.filter(function(u){return utcDay(u.created)===d;}).length);});
     var sum=function(a){return a.reduce(function(p,c){return p+c;},0);},lbl=[fmtDay(parseISO(dd[0])),'Aujourd’hui'];
     var avg=function(a){return String(Math.round(sum(a)/days*10)/10).replace('.',',');};
     h+=card('Activité',days+' jours','<div class="adm-g" style="margin-top:0">'+tile(avg(people),'Personnes actives par jour','en moyenne, comptes distincts')+tile(avg(opens),'Appareils actifs par jour','en moyenne')+tile(sum(accs),'Nouveaux comptes')+tile(t('install'),'Premiers lancements','navigateurs ou appareils neufs')+'</div>'+

@@ -226,3 +226,36 @@ test('distances personnalisées : visibles dans la liste et dans la fiche', asyn
   assert.match(html, /Distances<\/span><b>2 · 60 · 15 km/);
   assert.match(html, /vélo D\+ 800 m/);
 });
+
+test('activité jour par jour : jours en heure universelle, comme les compteurs du serveur (pas de décalage après minuit)', () => {
+  const tz = process.env.TZ; process.env.TZ = 'Europe/Paris';
+  try {
+    const a = loadApp({ race: raceConfig({ format: 'half', weeks: 12 }) });
+    const now = Date.UTC(2027, 1, 10, 23, 45);                                   // 0 h 45 le 11 février à Paris, encore le 10 en UTC
+    const data = { users: [{ id: 'a', created: Date.UTC(2027, 1, 10, 23, 30), seen: now }] };
+    const ev = { totals: { open: 3 }, daily: { '2027-02-10': { open: 3 } }, top: {}, acc: { '2027-02-10': 2 } };
+    const h = a.IM.admAnalytics(data, ev, 7, now);
+    assert.match(h, /10 févr\. : 3 appareils/);
+    assert.match(h, /10 févr\. : 2 personnes/);
+    assert.match(h, /10 févr\. : 1 compte"/);
+  } finally { if (tz === undefined) delete process.env.TZ; else process.env.TZ = tz; }
+});
+
+test('statistiques sur 7 jours : exactement les 7 jours affichés, aujourd’hui compris', async () => {
+  const { db, env } = setup();
+  db.exec(schema('schema.sql'));
+  const day = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+  const ev = (d, n) => db.prepare("INSERT INTO ev (day, name, prop, n) VALUES (?, 'open', '', ?)").run(d, n);
+  ev(day(0), 2); ev(day(6), 3); ev(day(7), 50);                                  // il y a 7 jours : hors de la fenêtre
+  const j = await call(env, 'admin', 'GET', '/pub/admin/stats?days=7');
+  assert.equal(j.totals.open, 5);
+  assert.equal(j.since, day(6));
+});
+
+test('la fiche d’un utilisateur qui a réglé séances et heures s’affiche', () => {
+  const a = loadApp({ race: raceConfig({ format: 'half', weeks: 12 }) });
+  const html = a.IM.admDetail({ user: { email: 'a@b.c', created: 1, seen: 2 }, race: { name: 'Omois', date: '2027-06-27', format: 'olympic', weeks: 16, sc: { swim: 2, bike: 2, run: 4, brick: 1, str: 0 }, vt: { run: [150, 255], swim: [60, 60] } }, plan: null, visits: [], devices: [], steps: [] });
+  assert.match(html, /Course à pied : 2h30 → 4h15/);
+  assert.match(html, /Natation : 1h00</);
+  assert.match(html, /4 course/);
+});
