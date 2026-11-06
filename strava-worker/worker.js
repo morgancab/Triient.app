@@ -324,7 +324,11 @@ async function adminUser(req, url, env) {
     user: { id, email: u.email, name: u.name, created: u.created, lastLogin: u.last_login, seen: u.last_seen || u.last_login, done: u.prog_done, total: u.prog_total,
       device: u.device || null, installed: u.installed, garmin: u.garmin, garminKey: !!(d && d.gks), sent: u.sent, acts: u.acts, visits: u.visits, owner: isAdmin(env, u.email), dataUpdated: u.data_updated || null },
     race: r ? { name: r.name, city: r.city, date: r.date, format: r.format, weeks: r.weeks, level: r.level, sessions: r.sessions,
-      swimM: Number(r.swimM) || 0, bikeM: Number(r.bikeM) || 0, runM: Number(r.runM) || 0, bikeUp: Number(r.bikeUp) || 0, runUp: Number(r.runUp) || 0 } : null,
+      swimM: Number(r.swimM) || 0, bikeM: Number(r.bikeM) || 0, runM: Number(r.runM) || 0, bikeUp: Number(r.bikeUp) || 0, runUp: Number(r.runUp) || 0,
+      // volumes par sport réglés par l'athlète (minutes par semaine : début de prépa, pic)
+      vt: r.vt && typeof r.vt === 'object' ? Object.fromEntries(['swim', 'bike', 'run'].filter((k) => Array.isArray(r.vt[k])).map((k) => [k, [Number(r.vt[k][0]) || 0, Number(r.vt[k][1]) || 0]])) : null,
+      // séances par semaine réglées sport par sport
+      sc: r.sc && typeof r.sc === 'object' ? Object.fromEntries(['swim', 'bike', 'run', 'brick', 'str'].map((k) => [k, Math.max(0, Math.min(5, Number(r.sc[k]) || 0))])) : null } : null,
     plan: d ? { checked: n(d.done), linked: n(d.links), levelTest: n(d.lv) > 0, races: Array.isArray(d.st) ? d.st.length : 0, away: Array.isArray(d.away) ? d.away.length : 0, injuries: Array.isArray(d.away) ? d.away.filter((x) => x && x.type === 'injury').length : 0, paused: Array.isArray(d.away) && d.away.some((x) => x && x.type === 'injury' && x.open), missed: n(d.ms) } : null,
     // Courses intermédiaires, champs utiles seulement
     steps: (Array.isArray(d && d.st) ? d.st : []).slice(0, 50).map((x) => ({ name: String(x.name || '').slice(0, 120), city: String(x.city || '').slice(0, 80), kind: x.kind, format: x.format, distM: Number(x.distM) || 0, date: x.date, prio: x.prio, added: x.added })),
@@ -399,7 +403,7 @@ async function pubSync(req, url, env) {
 /* ---------- Statistiques d'usage anonymes ----------
    Compteurs agrégés par jour dans D1 (table ev : jour, nom d'événement, propriété, total). Aucun identifiant, aucune adresse IP, aucun cookie :
    on ne peut pas retrouver une personne. Événements acceptés : liste blanche ci-dessous ; propriétés tronquées. Lecture : GET /api/admin/stats (clé propriétaire). */
-const EVENTS = new Set(['wiz_start', 'wiz_error', 'gate_view', 'guest_start', 'login_step', 'login', 'account_deleted', 'cloud_enabled', 'cloud_restore', 'open', 'install', 'setup_view', 'plan_created', 'plan_changed', 'race_pick', 'search_miss', 'garmin_connected']);
+const EVENTS = new Set(['wiz_start', 'wiz_error', 'gate_view', 'guest_start', 'login_step', 'login', 'account_deleted', 'cloud_enabled', 'cloud_restore', 'open', 'install', 'setup_view', 'plan_created', 'plan_changed', 'race_pick', 'search_miss', 'garmin_connected', 'vol_adjust']);
 async function pubEvent(req, env) {
   if (!env.DB) return json({ ok: false }, 200);
   let b = null;

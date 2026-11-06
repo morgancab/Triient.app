@@ -274,6 +274,78 @@ svg[data-ch]{touch-action:pan-y;cursor:crosshair}
 .adm-hist{display:flex;align-items:flex-end;gap:3px;height:60px;padding:12px 14px 0}
 .adm-hist i{flex:1;min-height:2px;border-radius:2px;background:var(--brand,#D7FF3A)}
 .adm-hist i.z{background:var(--card3,#2a2a30)}
+/* Ajuster mon entraînement : cartes par sport, compteur de séances, deux ronds + barre déplaçable (--a, --b : 0 à 1 ; --da, --db : par défaut) */
+.vt-intro{margin:0 0 14px;font-size:14.5px;line-height:1.45;color:var(--t2)}
+.vt-wk{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;flex-wrap:wrap}
+.vt-wk .eyebrow{margin:0}
+.vt-ps{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.vt-p{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border-radius:999px;background:var(--cb);color:var(--c)}
+.vt-p b{color:var(--t1);font-size:13.5px;font-variant-numeric:tabular-nums}
+.vt-tot{font-size:13px;color:var(--t2);margin-left:2px}
+.vt-c{background:var(--card2);border-radius:20px;padding:14px 14px 12px;margin:0 0 12px}
+.vt-h{display:flex;align-items:center;min-height:36px;margin:0 0 6px}
+.vt-h .ad-ic{width:36px;height:36px;border-radius:11px}
+.vt-h b{font-size:17px}
+.vt-def{margin-left:auto;font-size:12.5px;color:var(--t3)}
+.vt-mod{margin-left:auto;display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:0;border-radius:999px;background:var(--card3,#2a2a30);color:var(--t1);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.vt-mod i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.vt-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--sep)}
+.vt-row>span{font-size:14.5px;color:var(--t1)}
+.vt-row small{display:block;font-size:12px;color:var(--t3);margin-top:1px}
+.vt-step{display:flex;align-items:center;gap:2px;flex:none;background:var(--card3,#2a2a30);border-radius:999px;padding:3px}
+.vt-step button{width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:var(--t1);font-size:21px;line-height:1;cursor:pointer}
+.vt-step button:active{background:rgba(255,255,255,.08)}
+.vt-step button:disabled{opacity:.28;cursor:default}
+.vt-step b{min-width:24px;text-align:center;font-size:17px;font-variant-numeric:tabular-nums}
+.vt-nums{display:flex;align-items:flex-end;gap:8px;padding:12px 0 0;border-top:1px solid var(--sep)}
+.vt-n{flex:1;min-width:0}
+.vt-n.r{text-align:right}
+.vt-n small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--t3)}
+.vt-n b{display:block;font-family:var(--title);font-style:italic;font-weight:800;font-size:36px;line-height:1.05;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.vt-n span{display:block;min-height:17px;font-size:12.5px;color:var(--t2)}
+.vt-arw{color:var(--t3);padding:0 0 26px}
+.dual{position:relative;height:64px;margin:4px 0 0;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+.dual::before{content:'';position:absolute;left:13px;right:13px;top:19px;height:6px;border-radius:3px;background:var(--card3,#2a2a30)}
+.dual-d{position:absolute;top:19px;height:6px;border-radius:3px;background:rgba(255,255,255,.16);left:calc(13px + (100% - 26px) * var(--da));width:calc((100% - 26px) * (var(--db) - var(--da)))}
+.dual-f{position:absolute;top:19px;height:6px;border-radius:3px;background:var(--c);left:calc(13px + (100% - 26px) * var(--a));width:calc((100% - 26px) * (var(--b) - var(--a)))}
+/* poignée sous la barre : décale toute la fourchette (toujours saisissable, même quand les deux ronds se touchent) */
+.dual-h{position:absolute;top:42px;height:18px;left:calc(13px + (100% - 26px) * (var(--a) + var(--b)) / 2);width:max(52px,calc((100% - 26px) * (var(--b) - var(--a))));transform:translateX(-50%);border-radius:9px;background:var(--cb);display:flex;align-items:center;justify-content:center;gap:3px;cursor:grab;touch-action:pan-y}
+.dual-h::before{content:'';position:absolute;inset:-8px -4px}
+.dual-h i{width:2px;height:8px;border-radius:1px;background:var(--c)}
+.dual-h:active{cursor:grabbing;filter:brightness(1.3)}
+.dual input{position:absolute;left:0;top:0;width:100%;height:44px;margin:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+.dual input:focus{outline:none}
+.dual input::-webkit-slider-runnable-track{background:none;border:0}
+.dual input::-moz-range-track{background:none;border:0}
+.dual input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid var(--c);box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:grab;transition:transform .12s}
+.dual input::-moz-range-thumb{pointer-events:auto;width:18px;height:18px;border-radius:50%;background:#fff;border:4px solid var(--c);box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:grab}
+.dual input:active::-webkit-slider-thumb,.dual input:focus-visible::-webkit-slider-thumb{transform:scale(1.18)}
+.vt-tk{position:relative;height:16px;margin:2px 0 0;white-space:nowrap;font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums}
+.vt-tk span{position:absolute;top:0;left:calc(13px + (100% - 26px) * var(--p));transform:translateX(-50%)}
+.vt-ch{display:flex;align-items:flex-end;gap:2px;height:44px;margin:12px 0 0}
+.vt-ch i{flex:1;position:relative;height:100%;cursor:pointer}
+.vt-ch em{position:absolute;left:0;right:0;bottom:0;border-radius:2px 2px 0 0;transition:height .15s}
+.vt-ch em.f{background:var(--c)}
+.vt-ch i.k em.f{opacity:.5}
+.vt-ch em.g{border:1px solid rgba(255,255,255,.45);border-bottom:0;background:transparent}
+.vt-ch i.on em.f{background:var(--t1);opacity:1}
+.vt-ro{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:18px;margin:6px 0 0;font-size:12px;color:var(--t2)}
+.vt-ro b{color:var(--t1);font-weight:600}
+.vt-lg{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.vt-lg i{width:10px;height:10px;border-radius:2px;margin-left:6px}
+.vt-lg i.f{background:var(--c)}
+.vt-lg i.g{border:1px solid rgba(255,255,255,.55)}
+.vt-w{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;padding:10px 12px;border-radius:14px;background:rgba(255,214,10,.1);color:#ffd60a;font-size:13px;line-height:1.4}
+.vt-w .ic{flex:none;margin-top:1px}
+.vt-w.i{background:rgba(255,255,255,.06);color:var(--t2)}
+.vt-w b{color:inherit}
+.vt-note{margin:4px 2px 0;font-size:12.5px;line-height:1.45;color:var(--t3)}
+.vt-reset{display:block;margin:10px auto 0}
+.vt-bar{position:sticky;bottom:calc(-24px - var(--sab));z-index:4;display:flex;align-items:center;gap:12px;margin:16px -16px calc(-24px - var(--sab));padding:12px 16px calc(12px + var(--sab));background:rgba(20,20,22,.94);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:.5px solid var(--sep)}
+.vt-bt{flex:1;min-width:0;font-size:14px;line-height:1.35}
+.vt-bt small{display:block;font-size:12px;color:var(--t3)}
+.vt-bar .btn{width:auto;flex:none;margin:0;padding:0 22px}
+.vt-bar .btn:disabled{background:var(--card3,#2a2a30);color:var(--t3)}
 .adm-ro{display:flex;justify-content:space-between;gap:10px;min-height:20px;margin:8px 0 0;font-size:12.5px;color:var(--t2)}
 .adm-ro b{color:var(--t1);font-weight:600}
 .adm-hist i{cursor:pointer}
@@ -1062,7 +1134,7 @@ function refPlan(kinds){
 }
 // Colonnes de VOL : 0 natation A, 1 natation B, 2 vélo semaine, 3 course semaine, 4 vélo long, 5 brick, 6 sortie longue, 7 renfo
 // Moins de séances : on garde d'abord natation A, vélo long et sortie longue, puis la course et le vélo de semaine, la 2e natation, enfin brick / renfo.
-var SESS_MAX=12;
+var SESS_MAX=12,ALLM=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];   // ALLM : toutes les colonnes de VOL
 function colMask(n,r){
   var x=[n>=9?1:0,n>=10?1:0,n>=11?1:0,n>=12?1:0];
   if(n>=8)return [1,1,1,1,1,1,1,1].concat(x);
@@ -1070,23 +1142,26 @@ function colMask(n,r){
   return ({6:[1,1,1,1,1,0,1,0],5:[1,0,1,1,1,0,1,0],4:[1,0,0,1,1,0,1,0],3:[1,0,0,0,1,0,1,0]}[n]||[1,1,1,1,1,1,1,1]).concat(x);
 }
 function rowMinM(r,m){return (m[0]?R5(r[0]*22/1000):0)+(m[1]?R5(r[1]*22/1000):0)+(m[2]?r[2]:0)+(m[3]?r[3]:0)+(m[4]?r[4]:0)+(m[5]?r[5]:0)+(m[6]?r[6]:0)+(m[7]?r[7]:0)+
-  (m[8]&&r[8]?R5(r[8]*22/1000):0)+(m[9]&&r[9]||0)+(m[10]&&r[10]||0)+(m[11]&&r[11]||0);}
+  (m[8]&&r[8]?R5(r[8]*22/1000):0)+(m[9]&&r[9]||0)+(m[10]&&r[10]||0)+(m[11]&&r[11]||0)+
+  (m[12]&&r[12]||0)+(m[13]&&r[13]||0)+(m[14]&&r[14]||0)+(m[15]&&r[15]?R5(r[15]*22/1000):0)+(m[16]&&r[16]?R5(r[16]*22/1000):0)+(m[17]&&r[17]||0);}
 /* Au-delà de 8 séances, 4 colonnes s'ajoutent, déduites de la semaine : 8 natation C (m, endurance), 9 footing facile (min),
-   10 vélo d'endurance (min), 11 renforcement prévention (min). Ordre d'ajout : 9e, 10e, 11e, 12e séance. */
+   10 vélo d'endurance (min), 11 renforcement prévention (min). Ordre d'ajout : 9e, 10e, 11e, 12e séance.
+   Puis, seulement par le réglage sport par sport (CFG.sc) : 12 footing du mardi, 13 footing du vendredi, 14 vélo facile du mardi,
+   15 natation du mercredi (m), 16 natation du dimanche (m), 17 vélo facile du jeudi. Un sport n'a jamais deux séances le même jour. */
 function extRow(r){
-  return r.slice(0,8).concat([r[0]?Math.max(1000,Math.round(Math.min(r[0],r[1]||r[0])*0.8/100)*100):0,r[3]?Math.max(30,R5(r[3]*0.8)):0,r[2]?Math.max(45,R5(r[2]*0.9)):0,r[7]?Math.max(15,R5(r[7]*0.75)):0]);
+  return r.slice(0,8).concat([r[0]?Math.max(1000,Math.round(Math.min(r[0],r[1]||r[0])*0.8/100)*100):0,r[3]?Math.max(30,R5(r[3]*0.8)):0,r[2]?Math.max(45,R5(r[2]*0.9)):0,r[7]?Math.max(15,R5(r[7]*0.75)):0,
+    r[3]?Math.max(30,R5(r[3]*0.75)):0,r[3]?Math.max(30,R5(r[3]*0.7)):0,r[2]?Math.max(45,R5(r[2]*0.8)):0,r[0]?Math.max(1000,Math.round(Math.min(r[0],r[1]||r[0])*0.7/100)*100):0,
+    r[0]?Math.max(1000,Math.round(Math.min(r[0],r[1]||r[0])*0.6/100)*100):0,r[2]?Math.max(45,R5(r[2]*0.75)):0]);
 }
 function scaleRow(r,f,cap,mask){
   mask=mask||[1,1,1,1,1,1,1,1];
   if(r.length>8){   // colonnes 8 à 11 : mises à l'échelle à part, les 8 premières restent calculées comme avant
-    var x=r.slice(8),ex=f===1&&!cap?x.slice():[x[0]?Math.max(800,Math.round(x[0]*f/100)*100):0,x[1]?Math.max(25,R5(x[1]*f)):0,x[2]?Math.max(40,R5(x[2]*f)):0,x[3]?Math.max(10,R5(x[3]*f)):0];
-    if(cap&&cap[2]&&ex[0])ex[0]=Math.min(ex[0],cap[2]);
-    if(cap&&cap[4]&&ex[1])ex[1]=Math.min(ex[1],cap[4]);
-    if(cap&&cap[5]&&ex[2])ex[2]=Math.min(ex[2],cap[5]);
+    // sport de chaque colonne 8 à 17 : s natation (m), r course, b vélo, t renfo ; plafonds : natation cap[2], footing cap[4], vélo cap[5], renfo cap[8]
+    var XT='srbtrrbssb',x=r.slice(8),ex=f===1&&!cap?x.slice():x.map(function(v,i){var t=XT[i];return !v?0:t==='s'?Math.max(800,Math.round(v*f/100)*100):t==='r'?Math.max(25,R5(v*f)):t==='b'?Math.max(40,R5(v*f)):Math.max(10,R5(v*f));});
+    if(cap)ex=ex.map(function(v,i){var c=cap[{s:2,r:4,b:5,t:8}[XT[i]]];return c&&v?Math.min(v,c):v;});
     var o8=scaleRow(r.slice(0,8),f,cap,mask.slice(0,8));
     if(cap&&cap[6]&&o8[3])o8[3]=Math.min(o8[3],cap[6]);
     if(cap&&cap[8]&&o8[7])o8[7]=Math.min(o8[7],cap[8]);
-    if(cap&&cap[8]&&ex[3])ex[3]=Math.min(ex[3],cap[8]);
     if(cap&&cap[7]&&o8[2])o8[2]=Math.min(o8[2],cap[7]);
     return o8.concat(ex.map(function(v,i){return mask[8+i]?v:0;}));
   }
@@ -1102,34 +1177,101 @@ function scaleRow(r,f,cap,mask){
 var SHORT=FCLS==='sprint'||FCLS==='olympic';
 var RPX={sprint:{bm:[6,3,5],bl:10,bt:5,rm:[3,5],rt:2,rl:4},olympic:{bm:[12,4,3],bl:20,bt:10,rm:[5,4],rt:3,rl:8},half:{bm:[15,5,3],bl:40,bt:15,rm:[8,4],rt:4,rl:15},full:{bm:[20,5,3],bl:75,bt:20,rm:[10,4],rt:4,rl:40}}[FCLS]||null;
 var T_TAPER=FMT.taper||1,KINDS=genKinds(NW,T_TAPER),REFP=refPlan(KINDS),REFW=REFP.map(function(p){return p.ref;});
-var NSESS=Math.max(3,Math.min(SESS_MAX,CFG.sessions||8));
-var REF_SUB=Math.max.apply(null,REF_VOL.slice(0,24).map(function(r){r=extRow(r);return rowMinM(r,colMask(NSESS,r));}));   // heures du pic de référence avec ces séances (= REF_PEAK pour 8 séances)
-var PK=CFG.peak?CFG.peak*60/REF_SUB:1,PF=Math.abs(PK-1)<0.003?1:PK;
-// Au-delà de 8 séances (prépa chargée) : vélo long plafonné à 7 h, et le pic demandé est atteint en répartissant le reste sur les autres séances.
-// [vélo long, sortie longue (min), natation (m), course après le vélo, footing facile, vélo d'endurance, course de qualité, vélo de qualité, renfo] :
-// en semaine, les séances restent plus courtes que les sorties longues du week-end
-var XCAP=NSESS>8?({full:[420,150,5000,75,110,180,120,210,60],half:[CAPS.half[0],CAPS.half[1],4000,CAPS.half[3],85,150,90,150,50],olympic:CAPS.olympic.concat([60,100,70,100,45]),sprint:CAPS.sprint.concat([45,70,50,70,30])})[FCLS]:null;
-function mkVol(f){return KINDS.map(function(k,i){var r=extRow(REFP[i].row);return k==='race'?[0,0,0,0,0,0,0,0,0,0,0,0]:scaleRow(r,f,XCAP||(f===1&&FCLS==='full'?null:CAPS[FCLS]),colMask(NSESS,r));});}
-var VOL=mkVol(PF);
-if(XCAP&&CFG.peak)for(var vi=0;vi<5;vi++){
-  var vtop=Math.max.apply(null,VOL.map(function(v,i){return KINDS[i]==='taper'||KINDS[i]==='race'?0:rowMinM(v,[1,1,1,1,1,1,1,1,1,1,1,1]);}));
-  if(!vtop||Math.abs(CFG.peak*60/vtop-1)<0.01)break;
-  PF*=CFG.peak*60/vtop;VOL=mkVol(PF);
+/* Séances sport par sport (Plus → Ajuster mon entraînement) : CFG.sc = {swim, bike, run, brick, str}, nombre par semaine.
+   Chaque sport prend ses colonnes dans l'ordre d'ajout : natation A, B, C ; vélo long, de semaine, d'endurance ; sortie longue, course de semaine,
+   footing ; enchaînement (dès que le plan en prévoit) ; renfo A, B. Sans CFG.sc, le total du formulaire de course décide (colMask). */
+var SC_COLS={swim:[0,1,8,15,16],bike:[4,2,10,14,17],run:[6,3,9,12,13],brick:[5],str:[7,11]},SC_MAX={swim:5,bike:5,run:5,brick:1,str:2},SC_MIN={swim:1,bike:1,run:1,brick:0,str:0};
+function scMask(sc){var m=ALLM.map(function(){return 0;});Object.keys(SC_COLS).forEach(function(k){SC_COLS[k].slice(0,sc[k]||0).forEach(function(j){m[j]=1;});});return m;}
+function scTotal(sc){return Object.keys(SC_COLS).reduce(function(t,k){return t+(sc[k]||0);},0);}
+// répartition par défaut d'un total (celle de colMask, enchaînement compris)
+function scDefault(n){var m=colMask(n,[1,1,1,1,1,1,1,1]),o={};Object.keys(SC_COLS).forEach(function(k){o[k]=SC_COLS[k].filter(function(j){return m[j];}).length;});return o;}
+var NSESS0=Math.max(3,Math.min(SESS_MAX,CFG.sessions||8)),SC=CFG.sc||null,NSESS=SC?scTotal(SC):NSESS0;
+// Volumes semaine par semaine. Le plan de base vient du total du formulaire (NSESS0) : au-delà de 8 séances (prépa chargée), plafonds XCAP,
+// et le pic demandé est atteint en répartissant le reste sur les autres séances.
+// XCAP : [vélo long, sortie longue (min), natation (m), course après le vélo, footing facile, vélo d'endurance, course de qualité, vélo de qualité, renfo] :
+// en semaine, les séances restent plus courtes que les sorties longues du week-end.
+// sc (réglage sport par sport) : mêmes durées de séance que le plan de base (même échelle, mêmes plafonds), seules les séances présentes
+// changent. Ajouter une course ajoute ses minutes sans rien retirer aux autres sports ; en retirer une retire les siennes.
+function volPlan(sc){
+  var n=NSESS0,mask=function(r){return colMask(n,r);};
+  var sub=Math.max.apply(null,REF_VOL.slice(0,24).map(function(r){r=extRow(r);return rowMinM(r,mask(r));}));   // heures du pic de référence avec ces séances (= REF_PEAK pour 8 séances)
+  var pk=CFG.peak?CFG.peak*60/sub:1,pf=Math.abs(pk-1)<0.003?1:pk;
+  var xcap=n>8?({full:[420,150,5000,75,110,180,120,210,60],half:[CAPS.half[0],CAPS.half[1],4000,CAPS.half[3],85,150,90,150,50],olympic:CAPS.olympic.concat([60,100,70,100,45]),sprint:CAPS.sprint.concat([45,70,50,70,30])})[FCLS]:null;
+  var mk=function(f){return KINDS.map(function(k,i){var r=extRow(REFP[i].row);return k==='race'?ALLM.map(function(){return 0;}):scaleRow(r,f,xcap||(f===1&&FCLS==='full'?null:CAPS[FCLS]),mask(r));});};
+  var V=mk(pf);
+  if(xcap&&CFG.peak)for(var vi=0;vi<5;vi++){
+    var vtop=Math.max.apply(null,V.map(function(v,i){return KINDS[i]==='taper'||KINDS[i]==='race'?0:rowMinM(v,ALLM);}));
+    if(!vtop||Math.abs(CFG.peak*60/vtop-1)<0.01)break;
+    pf*=CFG.peak*60/vtop;V=mk(pf);
+  }
+  if(sc){mask=function(){return scMask(sc);};V=mk(pf);}
+  return V;
+}
+/* ---------- Volume par sport (Plus → Ajuster mon entraînement) ----------
+   CFG.vt = {swim:[a,b], bike:[a,b], run:[a,b]} en minutes par semaine : la semaine de charge la plus légère du sport passe à a, la plus
+   chargée à b, les autres suivent la même courbe (mise à l'échelle entre les deux). Décharges et affûtage gardent leur baisse : même facteur
+   que la semaine de charge qui précède (affûtage : celui du pic). Chaque séance a un minimum et un plafond ; au plafond, le reste va aux
+   autres séances du sport, et si toutes y sont, la cible n'est pas atteinte (l'écran du réglage le signale). Sans CFG.vt, rien ne change. */
+var VT_SP={swim:[0,1,8,15,16],bike:[2,4,10,14,17],run:[3,5,6,9,12,13]},VT_MIN={0:800,1:800,8:800,15:800,16:800,2:40,4:60,10:40,14:40,17:40,3:25,5:10,6:35,9:25,12:25,13:25};
+function vtCap(j){return ({0:5000,1:5000,8:4000,15:4000,16:4000,2:180,10:180,14:180,17:180,3:90,9:75,12:75,13:75,4:{sprint:180,olympic:240,half:330}[FCLS]||420,5:{sprint:30,olympic:45,half:60}[FCLS]||75,6:{sprint:90,olympic:120,half:150}[FCLS]||180})[j];}
+function vtSwim(j){return j===0||j===1||j===8||j===15||j===16;}
+function spMin(v,sp){return VT_SP[sp].reduce(function(t,j){return t+(v[j]?(vtSwim(j)?v[j]*22/1000:v[j]):0);},0);}
+function isLoad(k){return k==='c1'||k==='c2'||k==='c3';}
+// [semaine de charge la plus légère, la plus chargée] du sport, en minutes
+function spRange(V,sp){var a=1e9,b=0;V.forEach(function(v,i){if(!isLoad(KINDS[i]))return;var m=spMin(v,sp);if(!m)return;a=Math.min(a,m);b=Math.max(b,m);});return b?[a,b]:null;}
+// met les séances du sport à `target` minutes dans la semaine v (modifiée sur place)
+function fitSp(v,sp,target){
+  var cols=VT_SP[sp].filter(function(j){return v[j]>0;}),fixed={},k;
+  var toM=function(j,x){return vtSwim(j)?x*22/1000:x;},fromM=function(j,m){return vtSwim(j)?Math.round(m*1000/22/100)*100:R5(m);};
+  for(k=0;k<6;k++){
+    var fx=0,fr=0,hit=false;
+    cols.forEach(function(j){if(fixed[j])fx+=toM(j,v[j]);else fr+=toM(j,v[j]);});
+    if(!fr)break;
+    var f=Math.max(0,target-fx)/fr;
+    if(Math.abs(f-1)<0.01)break;
+    cols.forEach(function(j){
+      if(fixed[j])return;
+      var x=fromM(j,toM(j,v[j])*f),lo=Math.min(VT_MIN[j],v[j]),hi=Math.max(vtCap(j),v[j]);
+      if(f>1&&x>=hi){x=hi;fixed[j]=1;hit=true;}else if(f<1&&x<=lo){x=lo;fixed[j]=1;hit=true;}
+      v[j]=x;
+    });
+    if(!hit)break;
+  }
+  return v;
+}
+function adjVol(V0,vt){
+  var V=V0.map(function(v){return v.slice();});
+  Object.keys(VT_SP).forEach(function(sp){
+    var t=vt&&vt[sp],r=spRange(V0,sp);if(!t||!r)return;
+    var last=1,top=1,mx=0;
+    V0.forEach(function(v0,i){
+      var k=KINDS[i],m=spMin(v0,sp),tg;if(k==='race'||!m)return;
+      if(isLoad(k)){tg=r[1]-r[0]<5?(t[0]+t[1])/2:t[0]+(m-r[0])/(r[1]-r[0])*(t[1]-t[0]);last=tg/m;if(m>=mx){mx=m;top=last;}}
+      else tg=m*(k==='taper'?top:last);
+      fitSp(V[i],sp,tg);
+    });
+  });
+  return V;
 }
 // Une décharge reste sous 80 % de la semaine précédente et l'affûtage sous 75 % du pic, même sur un petit volume où les durées minimales gênent
-(function(){
-  var all=[1,1,1,1,1,1,1,1,1,1,1,1],peak=0,top=0;
-  var shrink=function(v,f){return v.map(function(x,j){return !x?0:j<2||j===8?Math.max(600,Math.round(x*f/100)*100):Math.max(j===5||j===11?5:15,R5(x*f));});};
-  VOL.forEach(function(v,i){
+function normVol(V){
+  var all=ALLM,peak=0,top=0;
+  var shrink=function(v,f){return v.map(function(x,j){return !x?0:j<2||j===8||j===15||j===16?Math.max(600,Math.round(x*f/100)*100):Math.max(j===5||j===11?5:15,R5(x*f));});};
+  V.forEach(function(v,i){
     if(KINDS[i]!=='rec'||!i)return;
-    var prev=rowMinM(VOL[i-1],all),cur=rowMinM(v,all);
-    if(cur>prev*0.8)VOL[i]=shrink(v,prev*0.8/cur);
+    var prev=rowMinM(V[i-1],all),cur=rowMinM(v,all);
+    if(cur>prev*0.8)V[i]=shrink(v,prev*0.8/cur);
   });
-  VOL.forEach(function(v,i){var m=rowMinM(v,all);if(KINDS[i]==='taper')top=Math.max(top,m);else if(KINDS[i]!=='race')peak=Math.max(peak,m);});
-  if(!peak||top<=peak*0.75)return;
+  V.forEach(function(v,i){var m=rowMinM(v,all);if(KINDS[i]==='taper')top=Math.max(top,m);else if(KINDS[i]!=='race')peak=Math.max(peak,m);});
+  if(!peak||top<=peak*0.75)return V;
   var f=peak*0.75/top;
-  VOL.forEach(function(v,i){if(KINDS[i]==='taper')VOL[i]=shrink(v,f);});
-})();
+  V.forEach(function(v,i){if(KINDS[i]==='taper')V[i]=shrink(v,f);});
+  return V;
+}
+// plan complet pour un réglage {sc, vt} : séances par sport, puis heures par sport, puis décharges et affûtage
+function volFor(sc,vt){var V0=volPlan(sc);return normVol(vt?adjVol(V0,vt):V0);}
+var VOL0=volPlan(SC);                                  // volumes avant le réglage des heures (bornes « par défaut » des curseurs)
+var VOL=normVol(CFG.vt?adjVol(VOL0,CFG.vt):VOL0.map(function(v){return v.slice();}));
 var META=KINDS.map(function(k,i){return k==='race'?['race','Semaine de course : '+RNAME]:[k,k==='taper'&&T_TAPER===1?'Affûtage : on garde l’intensité, on baisse le volume':gx(REF_META[REFW[i]-1][1])];});
 var BUILD=NW-1-T_TAPER,PH_E1=Math.max(1,Math.round(BUILD*8/22)),PH_E2=Math.min(BUILD-1,Math.max(PH_E1+1,Math.round(BUILD*16/22)));
 var PHASES=REF_PHASES.map(function(p,i){
@@ -1437,8 +1579,9 @@ function raceDays(){
   return days;
 }
 
-// Séances ajoutées au-delà de 8 : s.ex = colonne de VOL (8 à 11), pour les adapter (vacances) avec le bon constructeur.
+// Séances ajoutées au-delà de 8 : s.ex = colonne de VOL (8 à 17), pour les adapter (vacances) avec le bon constructeur.
 // Placement : mer. vélo + footing, jeu. course + natation C + renfo B, ven. natation + vélo d'endurance (un seul sport par jour et par type).
+// Réglage sport par sport : footings mar. et ven., vélo facile mar. puis jeu., natation mer. puis dim. Le lundi reste au repos.
 function ex(s,c){s.ex=c;return s;}
 function buildPlan(){
   var weeks=[],w,d,i;
@@ -1448,12 +1591,12 @@ function buildPlan(){
     else{
       days=[
         [restDay(w)],
-        (v[0]>0?[swimA(rw,kind,ph,v[0])]:[]).concat(v[7]>0?[strength(rw,kind,ph,v[7])]:[]),
-        (v[2]>0?[bikeMid(rw,kind,ph,v[2])]:[]).concat(v[9]>0?[ex(runEasy(rw,kind,ph,v[9]),9)]:[]),
-        (v[3]>0?[runMid(rw,kind,ph,v[3])]:[]).concat(v[8]>0?[ex(swimC(rw,kind,ph,v[8]),8)]:[],v[11]>0?[ex(strengthB(rw,kind,ph,v[11]),11)]:[]),
-        (v[1]>0?[swimB(rw,kind,ph,v[1])]:[]).concat(v[10]>0?[ex(bikeEasy(rw,kind,ph,v[10]),10)]:[]),
+        (v[0]>0?[swimA(rw,kind,ph,v[0])]:[]).concat(v[7]>0?[strength(rw,kind,ph,v[7])]:[],v[12]>0?[ex(runEasy(rw,kind,ph,v[12]),12)]:[],v[14]>0?[ex(bikeEasy(rw,kind,ph,v[14]),14)]:[]),
+        (v[2]>0?[bikeMid(rw,kind,ph,v[2])]:[]).concat(v[9]>0?[ex(runEasy(rw,kind,ph,v[9]),9)]:[],v[15]>0?[ex(swimC(rw,kind,ph,v[15]),15)]:[]),
+        (v[3]>0?[runMid(rw,kind,ph,v[3])]:[]).concat(v[8]>0?[ex(swimC(rw,kind,ph,v[8]),8)]:[],v[11]>0?[ex(strengthB(rw,kind,ph,v[11]),11)]:[],v[17]>0?[ex(bikeEasy(rw,kind,ph,v[17]),17)]:[]),
+        (v[1]>0?[swimB(rw,kind,ph,v[1])]:[]).concat(v[10]>0?[ex(bikeEasy(rw,kind,ph,v[10]),10)]:[],v[13]>0?[ex(runEasy(rw,kind,ph,v[13]),13)]:[]),
         (v[4]>0?[bikeLong(rw,kind,ph,v[4])]:[]).concat(v[5]>0?[brick(rw,kind,ph,v[5])]:[]),
-        v[6]>0?[runLong(rw,kind,ph,v[6])]:[]
+        (v[6]>0?[runLong(rw,kind,ph,v[6])]:[]).concat(v[16]>0?[ex(swimC(rw,kind,ph,v[16]),16)]:[])
       ];
       days.forEach(function(l,di){if(!l.length){var rs=restDay(w);rs.fr=1;days[di]=[rs];}});     // jour sans séance : repos (disponible pour recevoir une séance déplacée)
     }
@@ -1712,6 +1855,7 @@ function openSheetByKey(k){
   if(n==='settings')openSheet();
   else if(n==='legal')openLegal();
   else if(n==='away')openAwayList();
+  else if(n==='vt')openVt();
   else if(n==='acts')openAllActs();
   else if(n==='level')openLevel();
   else if(n==='steps')openSteps();
@@ -1830,7 +1974,7 @@ function vMore(){
     '<button class="mhero" data-act="tab" data-tab="plan"><span class="mh-top"><span class="eyebrow">Ma course</span>'+(rd>=0?'<span class="mh-j">J-'+rd+'</span>':'')+'</span><b class="mh-n">'+esc(RNAME)+'</b>'+
       '<span class="mh-s">'+esc(fmtLong(RACE_DATE))+' · '+FMT.n+'</span>'+bar(pct(t.d,t.n))+
       '<span class="mh-f"><span>'+t.d+' / '+t.n+' séances</span><span class="mh-l">Voir mon plan de '+NW+' semaines'+ic('right',16)+'</span></span></button>'+
-    grp('Mon entraînement',mrow('race','Mes courses',stepList().length?stepList().length+' course'+(stepList().length>1?'s':'')+' intermédiaire'+(stepList().length>1?'s':''):'Ajouter une course intermédiaire','steps','','red')+mrow('week','Vacances & blessures',injNow()?esc(injNow().label+' · '+awayDesc(injNow())):aw?aw+' période'+(aw>1?'s':'')+' enregistrée'+(aw>1?'s':''):'Vacances, week-end ou blessure : le plan s’adapte','awaylist','','green')+(lvOffered()?mrow('chart','Mon niveau',lvAny()?'Modifier mes temps de référence':'Estimer mes allures en 3 questions','level','','orange'):''))+
+    grp('Mon entraînement',mrow('race','Mes courses',stepList().length?stepList().length+' course'+(stepList().length>1?'s':'')+' intermédiaire'+(stepList().length>1?'s':''):'Ajouter une course intermédiaire','steps','','red')+mrow('week','Vacances & blessures',injNow()?esc(injNow().label+' · '+awayDesc(injNow())):aw?aw+' période'+(aw>1?'s':'')+' enregistrée'+(aw>1?'s':''):'Vacances, week-end ou blessure : le plan s’adapte','awaylist','','green')+mrow('plan','Ajuster mon entraînement',CFG.vt||CFG.sc?'Réglage personnalisé · '+NSESS+' séances par semaine':'Séances et heures, sport par sport','vtopen','','blue')+(lvOffered()?mrow('chart','Mon niveau',lvAny()?'Modifier mes temps de référence':'Estimer mes allures en 3 questions','level','','orange'):''))+
     grp('L’app',mrow('gear','Réglages','Garmin, compte, sauvegarde','settings','','blue')+mrow('share','Partager l’app','Envoyer le lien à un ami','shareapp','','purple'))+
     (acct()&&acct().admin?grp('Propriétaire',mrow('chart','Suivi de l’app','Utilisateurs, courses, progression','tab','data-tab="admin"','grey')):'')+
     '<div style="text-align:center;margin:6px 0 4px"><button class="lnk" data-act="legal" style="margin:0;color:var(--t3)">Mentions légales et confidentialité</button></div>';
@@ -1906,7 +2050,7 @@ function adaptFields(o,p){
   if(o.ex){   // séances ajoutées au-delà de 8 : même logique, avec leur constructeur
     if((o.sp==='swim'&&!p.pool)||(o.sp==='bike'&&!p.bike))return awayRun(w,ph,o.min,f);
     var xm=v[o.ex]||o.min||30;
-    return o.ex===8?swimC(w,'rec',ph,Math.max(800,Math.round(xm*f/100)*100)):o.ex===9?runEasy(w,'rec',ph,Math.max(20,r5(xm*f))):o.ex===10?bikeEasy(w,'rec',ph,Math.max(30,r5(xm*f))):strengthB(w,'rec',ph,Math.max(10,r5(xm*f)));
+    return o.ex===8||o.ex===15||o.ex===16?swimC(w,'rec',ph,Math.max(800,Math.round(xm*f/100)*100)):o.ex===9||o.ex===12||o.ex===13?runEasy(w,'rec',ph,Math.max(20,r5(xm*f))):o.ex===10||o.ex===14||o.ex===17?bikeEasy(w,'rec',ph,Math.max(30,r5(xm*f))):strengthB(w,'rec',ph,Math.max(10,r5(xm*f)));
   }
   if(o.sp==='swim'){
     if(!p.pool)return awayRun(w,ph,o.min,f);
@@ -2878,7 +3022,8 @@ function raceFormHtml(d){
     '<p class="small muted" style="margin:8px 0 0">'+['Premier triathlon ou reprise : une progression douce, pour arriver au départ en forme.','Tu t’entraînes régulièrement ou tu as déjà fait quelques courses.','Plusieurs saisons d’entraînement : tu vises un chrono.'][d.level]+'</p></div>';
   var ns=sessOf(d);
   h+='<div class="rsec">'+fstep(5,'Ton temps d’entraînement')+'<div class="fcard"><div class="eyebrow" style="margin:0 0 8px">Séances par semaine</div><div class="stp"><button class="iconbtn" data-act="setsess" data-v="-1" aria-label="Moins de séances">−</button><b>'+ns+'</b><button class="iconbtn" data-act="setsess" data-v="1" aria-label="Plus de séances">+</button><span class="small muted">en moyenne</span></div><p class="small muted" style="margin:8px 0 0">'+({3:'Natation, vélo long et sortie longue : l’essentiel.',4:'L’essentiel + une séance de course en semaine.',5:'Natation, vélo et course, avec un vélo en semaine.',6:'Deux natations, deux vélos, deux courses.',7:'Tout, avec un enchaînement vélo-course (ou du renforcement).',8:'Le plan complet, renforcement et enchaînements compris.',9:'Le plan complet + une 3e natation (endurance).',10:'+ 3e natation et un footing facile en plus.',11:'+ 3e natation, footing facile et vélo d’endurance.',12:'Prépa chargée : 3 natations, 3 vélos, 3 courses, 2 renforcements, enchaînements compris.'})[ns]+'</p>';
-  h+='<div class="eyebrow" style="margin:18px 0 8px">Au plus fort de la prépa</div><div class="stp"><button class="iconbtn" data-act="setpeak" data-v="-1" aria-label="Moins d’heures">−</button><b>'+fmtHrs(pk)+'</b><button class="iconbtn" data-act="setpeak" data-v="1" aria-label="Plus d’heures">+</button><span class="small muted">par semaine</span></div><p class="small muted" style="margin:8px 0 0">Le plan monte progressivement jusqu’à cette charge, avec une semaine plus légère toutes les 4 semaines.'+(pk>maxPeak(ns,cls)*1.02?' <span style="color:#ffd60a">Beaucoup d’heures pour '+ns+' séances : les sorties longues seront plafonnées.</span>':'')+'</p></div></div>';
+  h+='<div class="eyebrow" style="margin:18px 0 8px">Au plus fort de la prépa</div><div class="stp"><button class="iconbtn" data-act="setpeak" data-v="-1" aria-label="Moins d’heures">−</button><b>'+fmtHrs(pk)+'</b><button class="iconbtn" data-act="setpeak" data-v="1" aria-label="Plus d’heures">+</button><span class="small muted">par semaine</span></div><p class="small muted" style="margin:8px 0 0">Le plan monte progressivement jusqu’à cette charge, avec une semaine plus légère toutes les 4 semaines.'+(pk>maxPeak(ns,cls)*1.02?' <span style="color:#ffd60a">Beaucoup d’heures pour '+ns+' séances : les sorties longues seront plafonnées.</span>':'')+'</p>'+
+    (!SETUP&&(CFG.vt||CFG.sc)&&cls===FCLS?'<p class="small muted" style="margin:8px 0 0">Ton réglage sport par sport (« Ajuster mon entraînement »'+(CFG.sc?', '+NSESS+' séances':'')+') est conservé'+(CFG.sc?' si tu gardes '+NSESS0+' séances ici':'')+'.</p>':'')+'</div></div>';
   // détails du parcours
   h+='<details class="fold" style="margin:0 0 20px"'+(d.detail?' open':'')+' data-fold="rdetail"><summary><span>Détails du parcours<small>Dénivelé, pour une estimation plus juste (optionnel)</small></span></summary><div class="fbody"><label class="inp"><span>Dénivelé vélo<small>D+ total (m)</small></span><input id="rf-bup" inputmode="numeric" autocomplete="off" value="'+esc(d.bikeUp)+'" placeholder="ex. 800"></label><label class="inp"><span>Dénivelé course<small>D+ total (m)</small></span><input id="rf-rup" inputmode="numeric" autocomplete="off" value="'+esc(d.runUp)+'" placeholder="ex. 100"></label></div></details>';
   // aperçu
@@ -2916,6 +3061,7 @@ function saveRace(){
   else{var f0=FORMATS[d.format];sw=f0.swim;bk=f0.bike;rn=f0.run;}
   var pk=peakOf(d),yr=parseISO(d.date).getFullYear(),nsess=sessOf(d);
   var cfg={sessions:nsess,id:'c'+Date.now().toString(36),name:d.name.trim()||(FORMATS[d.format].n+' '+yr),city:d.city||'',date:d.date,format:d.format,swimM:sw,bikeM:bk,runM:rn,bikeUp:num(d.bikeUp),runUp:num(d.runUp),start:isoDate(span.start),weeks:span.n,level:d.level,peak:(cls==='full'&&nsess===8&&Math.abs(pk-REF_PEAK/60)<0.05)?0:pk};
+  if(!SETUP&&cls===FCLS){if(CFG.vt)cfg.vt=CFG.vt;if(CFG.sc&&nsess===NSESS0)cfg.sc=CFG.sc;}   // même format : le réglage par sport suit (séances : si le total n'a pas changé)
   if(!SETUP){
     if(!confirm('Remplacer ton plan actuel par un nouveau plan pour « '+cfg.name+' » ? Les séances cochées et les associations seront réinitialisées.'))return;
     state.done={};state.links={};state.ui.missed={};state.ui.away=[];state.ui.sent={};state.ui.race={};state.ui.welcomed=undefined;
@@ -3139,6 +3285,164 @@ function awayNote(s){
   else t+='<b>Séance déplacée · '+esc(lab)+'</b>';
   if(s.moved){var o=addDays(PLAN_START,s.moved.from);t+='Prévue à l’origine le '+DAYS[(o.getDay()+6)%7].toLowerCase()+' '+fmtDay(o)+'.<br>';}
   return '<div class="goal adp-n">'+t+'<button class="chip" style="border:0;min-height:28px;margin-top:8px" data-act="'+(s.adapt&&s.adapt.step?'stepedit':'awayedit')+'" data-id="'+esc(pid)+'">'+(s.adapt&&s.adapt.step?'Modifier la course':'Modifier la période')+'</button></div>';
+}
+/* ---------- Ajuster mon entraînement : séances et heures, sport par sport ----------
+   Par sport : séances par semaine (CFG.sc) et fourchette d'heures (CFG.vt) du début de prépa au pic, par pas de 15 min.
+   Les deux ronds règlent chaque borne ; la barre entre eux décale toute la fourchette ; un appui sur la piste y amène le rond le plus proche.
+   vtDraft = {sc, vt, v0, g} : v0 = volumes de ces séances avant réglage des heures (bornes « par défaut »), g = plan par défaut complet
+   (contour du graphique). Appliquer enregistre la course (sauvegardée et synchronisée) et recharge le plan ; les séances gardent leurs
+   identifiants (semaine.jour.sport), les coches restent. Rien ne touche le plan affiché avant. */
+var VT_UI=[['swim','Natation',30,360],['bike','Vélo',30,900],['run','Course à pied',30,480]],vtDraft=null,vtDrag=null;   // [sport, nom, min, max du curseur en minutes]
+var VT_XS=[['brick','Enchaînement vélo-course','dès que le plan en prévoit'],['str','Renforcement','gainage et prévention']];
+var VT_K={c1:'charge',c2:'charge',c3:'charge',rec:'décharge',taper:'affûtage'};
+function vtX(sp){return VT_UI.filter(function(y){return y[0]===sp;})[0];}
+// séances du brouillon, ou null si c'est la répartition par défaut du total choisi dans le formulaire de course
+function vtScOut(){var d=scDefault(NSESS0),sc=vtDraft.sc;return Object.keys(SC_COLS).every(function(k){return (sc[k]||0)===d[k];})?null:Object.assign({},sc);}
+function vtCur(){var o=null;VT_UI.forEach(function(x){if(vtDraft.vt[x[0]])(o=o||{})[x[0]]=vtDraft.vt[x[0]].slice();});return o;}
+function vtPrep(){vtDraft.v0=volPlan(vtScOut());vtDraft.g=normVol(vtDraft.v0.map(function(v){return v.slice();}));}
+function vtDef(sp){var r=spRange(vtDraft.v0,sp);return r?[Math.round(r[0]/15)*15,Math.round(r[1]/15)*15]:null;}
+function vtVal(sp){return vtDraft.vt[sp]||vtDef(sp);}
+function vtPlan(){return volFor(vtScOut(),vtCur());}
+function vtPeak(V){var all=ALLM;return Math.max.apply(null,V.map(function(v,i){return isLoad(KINDS[i])?rowMinM(v,all):0;}));}
+function vtChanged(){return JSON.stringify(vtScOut())!==JSON.stringify(CFG.sc||null)||JSON.stringify(vtCur())!==JSON.stringify(CFG.vt||null);}
+function vtMod(sp){return !!vtDraft.vt[sp]||(vtDraft.sc[sp]||0)!==scDefault(NSESS0)[sp];}
+// repère concret sous chaque borne : km à allure d'endurance (natation : 22 min au km)
+function vtKm(sp,m){var k=sp==='swim'?60/22:tokKmh(sp==='run'?'R':'B','z2'),x=m/60*k;return k?'≈ '+(x<10?String(Math.round(x*10)/10).replace('.',','):Math.round(x))+' km':'';}
+function vtP(x,m){return Math.max(0,Math.min(1,(m-x[2])/(x[3]-x[2]))).toFixed(4);}
+// mini-graphique : minutes du sport semaine par semaine (barres pleines : ton réglage ; contour : par défaut, seulement si différent)
+function vtChart(sp,V){
+  var g=vtDraft.g,n=KINDS.length-1,mx=1,i,mod=vtMod(sp),h='',ht=function(m){return m>0?Math.max(4,Math.round(m/mx*100)):0;};
+  for(i=0;i<n;i++)mx=Math.max(mx,spMin(V[i],sp),mod?spMin(g[i],sp):0);
+  for(i=0;i<n;i++){
+    var a=spMin(V[i],sp),b=spMin(g[i],sp),k=KINDS[i];
+    h+='<i class="'+(isLoad(k)?'':'k')+'" data-sp="'+sp+'" data-t="'+esc('Semaine '+(i+1)+' · '+VT_K[k]+' · '+fh(a)+(mod&&Math.abs(a-b)>=5?' (par défaut '+fh(b)+')':''))+'">'+
+      '<em class="f" style="height:'+ht(a)+'%"></em>'+(mod?'<em class="g" style="height:'+ht(b)+'%"></em>':'')+'</i>';
+  }
+  return h;
+}
+function vtRo(sp){return vtMod(sp)?'<span>Semaine par semaine</span><span class="vt-lg"><i class="f"></i>ton réglage<i class="g"></i>par défaut</span>':'<span>Ta progression semaine par semaine</span><span>touche une barre</span>';}
+function vtStep(k,label,n,sub){
+  return '<div class="vt-row"><span>'+label+(sub?'<small>'+sub+'</small>':'')+'</span><div class="vt-step">'+
+    '<button data-act="vtsc" data-k="'+k+'" data-v="-1" aria-label="Une séance de moins"'+(n<=SC_MIN[k]?' disabled':'')+'>−</button><b>'+n+'</b>'+
+    '<button data-act="vtsc" data-k="'+k+'" data-v="1" aria-label="Une séance de plus"'+(n>=SC_MAX[k]?' disabled':'')+'>+</button></div></div>';
+}
+function vtCard(x,V){
+  var sp=x[0],d=vtDef(sp);if(!d)return '';
+  var v=vtVal(sp),n=vtDraft.sc[sp],a=vtDraft.vt[sp]?spRange(V,sp):null,span=x[3]-x[2],st=span<=360?60:span<=600?120:180,tk='',t;
+  for(t=st;t<=x[3];t+=st)if(t>x[2])tk+='<span style="--p:'+vtP(x,t)+'">'+(t/60)+'h</span>';
+  var h='<section class="vt-c sp-'+sp+'"><div class="vt-h"><span class="ad-ic sp-'+sp+'">'+ic(sp,20)+'</span><b>'+x[1]+'</b>'+
+    (vtMod(sp)?'<button class="vt-mod" data-act="vtdef" data-v="'+sp+'"><i></i>Laisser par défaut</button>':'<span class="vt-def">Par défaut</span>')+'</div>'+
+    vtStep(sp,'Séances par semaine',n)+
+    '<div class="vt-nums"><div class="vt-n"><small>Début de prépa</small><b id="vt-la-'+sp+'">'+fh(v[0])+'</b><span id="vt-ka-'+sp+'">'+vtKm(sp,v[0])+'</span></div>'+
+      '<span class="vt-arw">'+ic('right',18)+'</span><div class="vt-n r"><small>Pic</small><b id="vt-lb-'+sp+'">'+fh(v[1])+'</b><span id="vt-kb-'+sp+'">'+vtKm(sp,v[1])+'</span></div></div>'+
+    '<div class="dual" id="vt-d-'+sp+'" data-sp="'+sp+'" style="--a:'+vtP(x,v[0])+';--b:'+vtP(x,v[1])+';--da:'+vtP(x,d[0])+';--db:'+vtP(x,d[1])+'">'+
+      '<div class="dual-d"></div><div class="dual-f"></div><div class="dual-h" title="Glisse pour décaler toute la fourchette"><i></i><i></i><i></i></div>'+
+      '<input type="range" id="vt-a-'+sp+'" min="'+x[2]+'" max="'+x[3]+'" step="15" value="'+v[0]+'" aria-label="'+x[1]+' : heures en début de prépa">'+
+      '<input type="range" id="vt-b-'+sp+'" min="'+x[2]+'" max="'+x[3]+'" step="15" value="'+v[1]+'" aria-label="'+x[1]+' : heures au pic"></div>'+
+    '<div class="vt-tk" aria-hidden="true">'+tk+'</div>'+
+    '<div class="vt-ch" id="vt-ch-'+sp+'" aria-hidden="true">'+vtChart(sp,V)+'</div><div class="vt-ro" id="vt-ro-'+sp+'">'+vtRo(sp)+'</div>';
+  if(a&&a[1]<v[1]-10)h+='<div class="vt-w">'+ic('alert',16)+'<span>'+(n<SC_MAX[sp]?'Avec '+n+' séance'+(n>1?'s':'')+', ton pic plafonne à <b>'+fh(a[1])+'</b> : ajoute une séance pour aller plus haut.':'Ton pic plafonne à <b>'+fh(a[1])+'</b> : chaque séance a une durée maximale.')+'</span></div>';
+  else if(a&&a[0]>v[0]+10)h+='<div class="vt-w i">'+ic('info',16)+'<span>Chaque séance a une durée minimale : ton début de prépa reste à <b>'+fh(a[0])+'</b>.</span></div>';
+  return h+'</section>';
+}
+function vtWeek(){
+  var sc=vtDraft.sc,p=function(k){return sc[k]?'<span class="vt-p sp-'+k+'">'+ic(k,15)+'<b>'+sc[k]+'</b></span>':'';};
+  return '<div class="vt-wk"><span class="eyebrow">Ta semaine type</span><div class="vt-ps">'+p('swim')+p('bike')+p('run')+p('brick')+p('str')+'<span class="vt-tot">'+scTotal(sc)+' séances</span></div></div>';
+}
+function vtBarIn(V){
+  var ch=vtChanged();
+  return '<div class="vt-bt"><span><b>'+scTotal(vtDraft.sc)+' séances</b> · pic <b>'+fh(vtPeak(V))+'</b></span><small>'+(ch?'Actuellement '+NSESS+' séances · pic '+fh(vtPeak(VOL)):'C’est ton plan actuel')+'</small></div>'+
+    '<button class="btn pri" data-act="vtapply"'+(ch?'':' disabled')+'>Appliquer</button>';
+}
+function openVt(){
+  vtDraft={sc:Object.assign({},scDefault(NSESS0),CFG.sc||{}),vt:{}};
+  VT_UI.forEach(function(x){var c=CFG.vt&&CFG.vt[x[0]];vtDraft.vt[x[0]]=c?c.slice():null;});
+  vtPrep();renderVt();sheetRoute('vt');
+}
+function renderVt(){
+  var sh=document.getElementById('sheet'),st=sh.scrollTop,V=vtPlan(),any=!!vtScOut()||!!vtCur();
+  var b='<p class="vt-intro">Choisis tes séances et tes heures dans chaque sport. Glisse les ronds pour ton début de prépa et ton pic. Pour tout décaler d’un coup, glisse la poignée sous la barre.</p>'+
+    vtWeek()+VT_UI.map(function(x){return vtCard(x,V);}).join('')+
+    '<section class="vt-c sp-str"><div class="vt-h"><span class="ad-ic sp-str">'+ic('str',20)+'</span><b>Autres séances</b></div>'+VT_XS.map(function(x){return vtStep(x[0],x[1],vtDraft.sc[x[0]]||0,x[2]);}).join('')+'</section>'+
+    '<p class="vt-note">Ton plan garde sa progression, ses semaines de décharge et son affûtage. Monte progressivement : une hausse brutale du volume est la première cause de blessure. Tes coches restent ; une séance retirée perd la sienne.</p>'+
+    (any?'<button class="lnk vt-reset" data-act="vtreset">Tout remettre par défaut</button>':'')+
+    '<div class="vt-bar" id="vt-bar">'+vtBarIn(V)+'</div>';
+  showSheet('Ajuster mon entraînement','Séances et heures, sport par sport',b);
+  sh.scrollTop=st;
+}
+// pendant un glissement : chiffres, barre, graphique et total suivent ; le reste (alertes, boutons) au relâchement
+function vtLive(sp,setInputs){
+  var x=vtX(sp),v=vtVal(sp),V=vtPlan(),q=function(id){return document.getElementById(id);},set=function(id,t){var e=q(id);if(e)e.textContent=t;};
+  set('vt-la-'+sp,fh(v[0]));set('vt-lb-'+sp,fh(v[1]));set('vt-ka-'+sp,vtKm(sp,v[0]));set('vt-kb-'+sp,vtKm(sp,v[1]));
+  var dl=q('vt-d-'+sp);if(dl&&dl.style&&dl.style.setProperty){dl.style.setProperty('--a',vtP(x,v[0]));dl.style.setProperty('--b',vtP(x,v[1]));}
+  if(setInputs){var ia=q('vt-a-'+sp),ib=q('vt-b-'+sp);if(ia)ia.value=v[0];if(ib)ib.value=v[1];}
+  var ch=q('vt-ch-'+sp);if(ch)ch.innerHTML=vtChart(sp,V);
+  var br=q('vt-bar');if(br)br.innerHTML=vtBarIn(V);
+}
+// rond natif (doigt, souris, clavier). Un rond peut passer de l'autre côté : la fourchette est simplement triée.
+function vtSlide(t){
+  var m=/^vt-([ab])-(swim|bike|run)$/.exec(t.id||'');if(!m||!vtDraft)return false;
+  var sp=m[2],old=vtVal(sp),o=document.getElementById('vt-'+(m[1]==='a'?'b':'a')+'-'+sp);
+  var val=+t.value,ov=o&&o.value!==''&&o.value!=null?+o.value:old[m[1]==='a'?1:0];
+  vtDraft.vt[sp]=[Math.min(val,ov),Math.max(val,ov)];
+  vtLive(sp,false);
+  return true;
+}
+// barre du milieu (décale toute la fourchette) et piste (appui : le rond le plus proche y va ; glissé : il suit)
+function vtAt(g,cx){var x=g.x,m=x[2]+Math.max(0,Math.min(1,(cx-g.r.left-13)/(g.r.width-26)))*(x[3]-x[2]);return Math.max(x[2],Math.min(x[3],Math.round(m/15)*15));}
+function vtNear(v,m){return v[0]===v[1]?(m<v[0]?0:1):Math.abs(m-v[0])<=Math.abs(m-v[1])?0:1;}
+function vtMove(g,cx){
+  var x=g.x,v=g.v0.slice();
+  if(g.both){var sh=Math.round((cx-g.x0)/(g.r.width-26)*(x[3]-x[2])/15)*15;sh=Math.max(x[2]-v[0],Math.min(x[3]-v[1],sh));v=[v[0]+sh,v[1]+sh];}
+  else{v[g.i]=vtAt(g,cx);v=[Math.min(v[0],v[1]),Math.max(v[0],v[1])];}
+  var o=vtVal(g.sp);if(o[0]===v[0]&&o[1]===v[1])return;
+  vtDraft.vt[g.sp]=v;vtLive(g.sp,true);
+}
+document.addEventListener('pointerdown',function(e){
+  var t=e.target,d=t&&t.closest&&t.closest('.dual');
+  if(!d||!vtDraft||t.tagName==='INPUT'||e.button>0)return;
+  var sp=d.getAttribute('data-sp');
+  var g=vtDrag={sp:sp,x:vtX(sp),r:d.getBoundingClientRect(),id:e.pointerId,x0:e.clientX,y0:e.clientY,v0:vtVal(sp).slice(),both:!!t.closest('.dual-h'),go:false,i:0,el:d};
+  if(!g.both){   // saisie sur la piste entre les deux ronds (hors des ronds) : toute la fourchette suit
+    var px=function(m){return g.r.left+13+(g.r.width-26)*vtP(g.x,m);};
+    g.both=e.clientX>px(g.v0[0])+14&&e.clientX<px(g.v0[1])-14;
+  }
+});
+document.addEventListener('pointermove',function(e){
+  var g=vtDrag;if(!g||e.pointerId!==g.id)return;
+  if(!g.go){
+    var dx=Math.abs(e.clientX-g.x0),dy=Math.abs(e.clientY-g.y0);
+    if(dx<6&&dy<6)return;
+    if(dy>dx){vtDrag=null;return;}                                 // geste vertical : on laisse défiler
+    g.go=true;g.i=vtNear(g.v0,vtAt(g,g.x0));
+    try{g.el.setPointerCapture(g.id);}catch(_){}
+  }
+  vtMove(g,e.clientX);
+});
+document.addEventListener('pointerup',function(e){
+  var g=vtDrag;if(!g||e.pointerId!==g.id)return;vtDrag=null;
+  if(!g.go){if(g.both)return;g.i=vtNear(g.v0,vtAt(g,e.clientX));vtMove(g,e.clientX);}   // simple appui sur la piste
+  if(vtDraft)renderVt();
+});
+document.addEventListener('pointercancel',function(e){var g=vtDrag;if(!g||e.pointerId!==g.id)return;vtDrag=null;if(g.go&&vtDraft)renderVt();});
+// graphique : touche ou survole une semaine pour lire sa valeur
+function vtPick(e){
+  var b=e.target&&e.target.closest&&e.target.closest('.vt-ch i');if(!b)return;
+  var ro=document.getElementById('vt-ro-'+b.getAttribute('data-sp'));
+  Array.prototype.forEach.call(b.parentNode.querySelectorAll('i.on'),function(x){x.classList.remove('on');});
+  b.classList.add('on');if(ro)ro.innerHTML='<b>'+esc(b.getAttribute('data-t'))+'</b>';
+}
+document.addEventListener('pointerdown',vtPick);document.addEventListener('pointerover',vtPick);
+function vtApply(){
+  if(!vtChanged()){closeSheet();return;}
+  var r=Object.assign({},state.race||CFG),sc=vtScOut(),vt=vtCur();
+  if(sc)r.sc=sc;else delete r.sc;
+  if(vt)r.vt=vt;else delete r.vt;
+  state.race=r;state.ui.flash='Plan mis à jour';save();
+  track('vol_adjust',[sc?'seances':'',vt?Object.keys(vt).join('+'):''].filter(Boolean).join('|')||'reset');
+  // fenêtre fermée et retirée de l'adresse avant de recharger : le plan recalculé s'affiche, sans rouvrir le réglage
+  document.getElementById('sheetbg').classList.remove('on');sheetKey=null;sheetDepth=0;syncUrl(false);
+  location.reload();
 }
 /* ---------- Distance estimée des séances vélo / course : durée de chaque bloc × vitesse cible ----------
    Vitesses : celles calculées depuis tes activités Garmin (autoProf) ; à défaut, repères par défaut (ou seuil saisi pour la course). */
@@ -3604,6 +3908,8 @@ function admDetail(j){
   h+=grp2('Garmin',kv('Connexion',yn(u.garmin,'Connecté','Non connecté')+(u.garminKey?' · clé dans le compte':''))+kv('Séances envoyées vers la montre',u.sent==null?'<span class="muted">Inconnu</span>':u.sent)+kv('Activités Garmin reçues',u.acts==null?'<span class="muted">Inconnu</span>':u.acts));
   if(r){var rd=parseISO(r.date),pc=u.total?Math.round(u.done/u.total*100):0;
     h+=grp2('Plan',kv('Course',esc(r.name||'Sans nom'))+kv('Date',esc(rd?fmtDay(rd)+' '+rd.getFullYear():'–'))+kv('Format',esc(admFmt(r.format)||'–'))+(admDist(r)?kv('Distances',esc(admDist(r))+(r.bikeUp||r.runUp?'<br><span class="small muted">'+esc([r.bikeUp?'vélo D+ '+r.bikeUp+' m':'',r.runUp?'course D+ '+r.runUp+' m':''].filter(Boolean).join(' · '))+'</span>':'')):'')+kv('Durée',esc((r.weeks||'–')+' semaines'))+(r.sessions?kv('Séances par semaine',r.sessions):'')+
+      (r.sc?kv('Séances par sport',esc([['swim','natation'],['bike','vélo'],['run','course'],['brick','enchaînement'],['str','renfo']].filter(function(k){return r.sc[k[0]];}).map(function(k){return r.sc[k[0]]+' '+k[1];}).join(' · '))):'')+
+      (r.vt&&Object.keys(r.vt).length?kv('Volumes réglés',VT_UI.filter(function(x){return r.vt[x[0]];}).map(function(x){return esc(x[1])+' : '+vtLbl(r.vt[x[0]]);}).join('<br>')):'')+
       kv('Progression',u.total?u.done+' / '+u.total+' · '+pc+' %':'<span class="muted">Pas encore reçue</span>')+(p?kv('Séances cochées',p.checked)+kv('Associations manuelles',p.linked)+kv('Questionnaire de niveau',p.levelTest?'Rempli':'Non')+kv('Absences',p.away)+(p.injuries!=null?kv('Blessures déclarées',p.injuries+(p.paused?' · <span class="chip">en pause</span>':'')):'')+kv('Séances manquées traitées',p.missed):''));}
   else h+=grp2('Plan',kv('Course','<span class="muted">Aucun plan créé</span>'));
   var sts=(j.steps||[]).slice().sort(function(x,y){return x.date>y.date?1:-1;});
@@ -3847,6 +4153,11 @@ document.addEventListener('click',function(e){
   else if(a==='awayopen'){awayDraft=awayCalInit(newAwayDraft(+d.w||wv,d.t||'weekend'));renderAway();}
   else if(a==='awayedit'){var ap=awayList().filter(function(x){return x.id===d.id;})[0];if(ap){awayDraft=awayCalInit(Object.assign({},ap));renderAway();}}
   else if(a==='awaylist')openAwayList();
+  else if(a==='vtopen')openVt();
+  else if(a==='vtdef'&&vtDraft){vtDraft.vt[d.v]=null;vtDraft.sc[d.v]=scDefault(NSESS0)[d.v];vtPrep();renderVt();}
+  else if(a==='vtreset'&&vtDraft){VT_UI.forEach(function(x){vtDraft.vt[x[0]]=null;});vtDraft.sc=scDefault(NSESS0);vtPrep();renderVt();}
+  else if(a==='vtsc'&&vtDraft){var sk=d.k;vtDraft.sc[sk]=Math.max(SC_MIN[sk],Math.min(SC_MAX[sk],(vtDraft.sc[sk]||0)+(+d.v)));vtPrep();renderVt();}
+  else if(a==='vtapply'&&vtDraft)vtApply();
   else if(a==='awaytype'&&awayDraft&&(d.v==='injury')!==isInj(awayDraft)){   // vers ou depuis la blessure : nouveau brouillon (mêmes dates si déjà choisies)
     var wasInj=isInj(awayDraft),nd2=newAwayDraft(Math.max(1,Math.min(NW,Math.floor(idxOfDate(parseYmd(awayDraft.from))/7)+1)),d.v);
     nd2.id=awayDraft.id;if(awayDraft.touched){nd2.from=awayDraft.from;if(!wasInj||!awayDraft.open)nd2.to=awayDraft.to;if(d.v==='injury'&&!wasInj)nd2.open=false;nd2.touched=true;}
@@ -3929,6 +4240,7 @@ document.addEventListener('change',function(e){
     else{var nv=parseFloat(v.replace(',','.'));if(isFinite(nv)&&nv>=0)rp[k]=nv;else delete rp[k];}
     save();render(true);return;
   }
+  if(t&&/^vt-[ab]-/.test(t.id||'')&&vtDraft){vtSlide(t);renderVt();return;}   // curseur relâché : aperçu et alertes à jour
   if(t&&(t.id==='away-from'||t.id==='away-to')&&awayDraft){awayDraft[t.id==='away-from'?'from':'to']=t.value;awayDraft.touched=true;if(awayDraft.to<awayDraft.from)awayDraft.to=awayDraft.from;renderAway();return;}
   if(t&&(t.id==='dfrom'||t.id==='dto')){
     var f=state.ui.dflt=state.ui.dflt||{m:'custom'};
@@ -3943,6 +4255,7 @@ document.addEventListener('keydown',function(e){
   if(wl&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();wl.scrollTop+=e.key==='ArrowUp'?-40:40;}
 });
 document.addEventListener('input',function(e){
+  if(e.target&&vtSlide(e.target))return;
   if(e.target&&e.target.id==='wz-key'){var prev=wz.key||'';wz.key=e.target.value;if(!wz.busy&&wz.key.trim().length>=20&&prev.length<5){setTimeout(function(){if(wz.step===3&&!wz.busy&&!wz.res)wzVerify();},250);}return;}
   if(e.target&&e.target.id==='st-dist'&&stepDraft){stepDraft.distKm=e.target.value;var spv=document.getElementById('st-pv');if(spv)spv.innerHTML=stepPvHtml(stepDraft);return;}
   if(e.target&&e.target.id==='st-q'&&stepDraft){
@@ -5111,7 +5424,7 @@ if(DEV){
   window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 }
 
-window.IM={fm:fm,fh:fh,hms:hms,PHASES:PHASES,BLOCKS:BLOCKS,KINDS:KINDS,T_TAPER:T_TAPER,stepOps:stepOps,VIEWS:VIEWS,missedList:missedList,missAdvice:missAdvice,missDo:missDo,missUndo:missUndo,missAll:missAll,isMissed:isMissed,openWiz:openWiz,cloudPayload:cloudPayload,cloudApply:cloudApply,devInfo:devInfo,admAnalytics:admAnalytics,admDetail:admDetail,gatePreview:function(c){pubCfg=c;renderGate();},gateNeeded:gateNeeded,acctLogin:acctLogin,catSearch:catSearch,wtResults:wtResults,wtFormat:wtFormat,pickRace:pickRace,NSESS:NSESS,planSpan:planSpan,newRaceDraft:newRaceDraft,raceFormHtml:raceFormHtml,saveRace:saveRace,applyAway:applyAway,awayDesc:awayDesc,awayTo:awayTo,injBack:injBack,injCard:injCard,newAwayDraft:newAwayDraft,adaptFields:adaptFields,estKm:estKm,detailBody:detailBody,wkBlocks:wkBlocks,pushSession:pushSession,pushPreview:pushPreview,clearPreview:clearPreview,wkText:wkText,evOf:evOf,ALLS:ALLS,tx:tx,autoProf:autoProf,estRace:estRace,estAll:estAll,raceParams:raceParams,PLAN:PLAN,stats:stats,status:status,computeLinks:computeLinks,links:function(){return LK;},state:state,actSport:actSport};
+window.IM={fm:fm,fh:fh,hms:hms,PHASES:PHASES,BLOCKS:BLOCKS,KINDS:KINDS,T_TAPER:T_TAPER,stepOps:stepOps,VIEWS:VIEWS,missedList:missedList,missAdvice:missAdvice,missDo:missDo,missUndo:missUndo,missAll:missAll,isMissed:isMissed,openWiz:openWiz,cloudPayload:cloudPayload,cloudApply:cloudApply,devInfo:devInfo,admAnalytics:admAnalytics,admDetail:admDetail,gatePreview:function(c){pubCfg=c;renderGate();},gateNeeded:gateNeeded,acctLogin:acctLogin,catSearch:catSearch,wtResults:wtResults,wtFormat:wtFormat,pickRace:pickRace,NSESS:NSESS,planSpan:planSpan,newRaceDraft:newRaceDraft,raceFormHtml:raceFormHtml,saveRace:saveRace,applyAway:applyAway,VOL:VOL,VOL0:VOL0,volPlan:volPlan,scDefault:scDefault,scTotal:scTotal,vtMove:vtMove,vtScOut:vtScOut,spMin:spMin,spRange:spRange,adjVol:adjVol,openVt:openVt,vtSlide:vtSlide,vtApply:vtApply,awayDesc:awayDesc,awayTo:awayTo,injBack:injBack,injCard:injCard,newAwayDraft:newAwayDraft,adaptFields:adaptFields,estKm:estKm,detailBody:detailBody,wkBlocks:wkBlocks,pushSession:pushSession,pushPreview:pushPreview,clearPreview:clearPreview,wkText:wkText,evOf:evOf,ALLS:ALLS,tx:tx,autoProf:autoProf,estRace:estRace,estAll:estAll,raceParams:raceParams,PLAN:PLAN,stats:stats,status:status,computeLinks:computeLinks,links:function(){return LK;},state:state,actSport:actSport};
 applyAway();
 try{
   if(RCFG.migrate&&!state.ui.seen){state.ui.seen=1;save();}
@@ -5125,6 +5438,7 @@ var r0=parseRoute();   // à lire avant le premier rendu, qui réécrit l'adress
 render(false);
 if(!SETUP){
   if(r0.p.s&&!gateNeeded()){routing=true;try{openSheetByKey(r0.p.s);}finally{routing=false;}syncUrl(false);}
+  if(state.ui.flash){var fl=state.ui.flash;delete state.ui.flash;save0();setTimeout(function(){toast(fl);},300);}   // message laissé avant un rechargement
   if(state.ui.welcomed===undefined){
     if(state.sv.url||Object.keys(state.done).length)state.ui.welcomed=true;
     else setTimeout(openWelcome,350);
