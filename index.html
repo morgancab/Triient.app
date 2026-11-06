@@ -777,20 +777,72 @@ details.mf>div{padding-top:10px}
 details.mf .card{background:var(--card2);box-shadow:none}
 /* écran d'entrée */
 .gate{margin:calc(-10px - var(--sat)) -16px -20px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:#000}
-.g-hero{position:relative;height:clamp(190px,28vh,260px);overflow:hidden;flex:none}
-.g-hero img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%;filter:saturate(1.05)}
-.g-hero::after{content:'';position:absolute;left:0;right:0;top:0;bottom:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.05) 40%,#000 100%)}
 .g-body{position:relative;margin-top:-62px;padding:0 22px calc(26px + var(--sab));display:flex;flex-direction:column;align-items:center;text-align:center;flex:1}
-.g-logo{width:84px;height:84px;border-radius:24px;box-shadow:0 10px 34px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.14);display:block}
 .g-t{font-size:31px;line-height:1.12;font-weight:800;letter-spacing:-.035em;margin:18px 0 10px}
-.g-s{color:var(--t2);font-size:15.5px;line-height:1.5;margin:0 6px 16px;max-width:30em}
-.g-prev{width:100%;max-width:380px;display:flex;flex-direction:column;gap:8px;margin:0 0 22px;text-align:left}
-.g-row{display:flex;align-items:center;gap:12px;padding:11px 14px 11px 12px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1px var(--brd);position:relative;overflow:hidden}
-.g-row::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3.5px;border-radius:0 3px 3px 0;background:var(--c)}
-.g-row .gi{width:36px;height:36px;border-radius:11px;background:var(--cb);color:var(--c);display:grid;place-items:center;flex:none;margin-left:4px}
-.g-row b{display:block;font-size:14.5px;font-weight:700}
-.g-row small{display:block;color:var(--t2);font-size:12.5px;margin-top:2px;line-height:1.4}
-.g-row .gd{margin-left:auto;font-size:12px;font-weight:700;color:var(--c);background:var(--cb);padding:3px 9px;border-radius:999px;white-space:nowrap}
+/* Page d'accueil des visiteurs (unslop) : grille de 4 px, trois rôles de texte, le vert de la marque en accent seulement */
+.land{background:var(--bg)}
+.ld-band{position:relative;height:clamp(192px,28vh,256px);flex:none;background:var(--hero) 50% 42%/cover no-repeat}
+.ld-band::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,12,.32) 0%,rgba(11,11,12,0) 40%,var(--bg) 100%)}
+.ld-in{position:relative;flex:1;margin-top:-64px;padding:0 20px calc(32px + var(--sab));display:flex;flex-direction:column;align-items:center}
+.ld-main{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center}
+.ld-copy{width:100%;display:flex;flex-direction:column;align-items:center;text-align:center}
+.ld-brand{display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 4px 20px rgba(0,0,0,.6))}
+.ld-word{font-family:var(--title);font-style:italic;font-weight:800;font-size:56px;line-height:.9;letter-spacing:.01em;color:var(--t1)}
+.ld-word i{font-style:inherit;color:var(--brand)}
+.ld-wave{width:148px;height:12px;margin-top:8px;fill:none;stroke:var(--brand);stroke-width:3.4;stroke-linecap:round}
+.ld-t{margin:28px 0 12px;font-family:var(--title);font-style:italic;font-weight:800;font-size:40px;line-height:1.02;letter-spacing:0;text-transform:uppercase;color:var(--t1)}
+.ld-nw{white-space:nowrap}
+.ld-s{margin:0 0 24px;max-width:34em;font-size:16px;line-height:24px;color:var(--t2)}
+.ld-cta{width:100%;max-width:340px;display:flex;flex-direction:column}   /* largeur du bouton Google */
+.ld-go{height:52px;margin:0;font-size:17px}
+.ld-fine{margin:12px 0 0;font-size:13px;line-height:20px;color:var(--t3)}
+.ld-or{display:flex;align-items:center;gap:12px;margin:20px 0 12px;font-size:13px;color:var(--t3)}
+.ld-or::before,.ld-or::after{content:'';flex:1;height:1px;background:var(--brd)}
+.ld-show{width:100%;margin:32px 0 0}
+.ld-photo{display:none}
+.ld-demo{padding:0 16px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1px var(--brd);text-align:left}
+.ld-dh{display:flex;align-items:baseline;gap:8px;padding:16px 0 12px;font-size:13px;color:var(--t2)}
+.ld-dh b{font-size:15px;font-weight:600;color:var(--t1)}
+.ld-dh em{margin-left:auto;font-style:normal;font-size:12px;color:var(--t3)}
+.ld-dr{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--brd)}
+.ld-di{width:36px;height:36px;border-radius:10px;flex:none;display:grid;place-items:center;background:var(--cb);color:var(--c)}
+.ld-dt{flex:1;min-width:0}
+.ld-dt small{display:block;font-size:12px;line-height:16px;color:var(--t3)}
+.ld-dt b{display:block;font-size:15px;line-height:20px;font-weight:500;color:var(--t1)}
+.ld-dt small:last-child{color:var(--t2);font-variant-numeric:tabular-nums}
+.ld-st{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--t3);white-space:nowrap}
+.ld-st.ok{color:var(--brand);font-weight:500}
+.ld-ok{width:20px;height:8px;fill:none;stroke:var(--brand);stroke-width:3;stroke-linecap:round}
+.ld-dn{margin:0;padding:12px 0 16px;border-top:1px solid var(--brd);font-size:13px;line-height:20px;color:var(--t2)}
+.ld-feat{width:100%;max-width:400px;margin:32px 0 0;padding:0;list-style:none;text-align:left}
+.ld-feat li{display:flex;gap:12px;padding:16px 0;border-top:1px solid var(--brd)}
+.ld-feat li:first-child{border-top:0;padding-top:0}
+.ld-fi{flex:none;width:20px;padding-top:2px;color:var(--t3)}
+.ld-feat b{display:block;font-size:15px;line-height:20px;font-weight:500;color:var(--t1)}
+.ld-feat p{margin:4px 0 0;font-size:14px;line-height:20px;color:var(--t2)}
+.ld-end{width:100%;max-width:400px;margin:24px 0 0;display:flex;flex-direction:column;align-items:center;gap:12px}
+.ld-end .ld-go{width:100%}
+.ld-end .lnk{margin:0;color:var(--t3)}
+@media (max-height:700px){.ld-band{height:176px}.ld-word{font-size:48px}.ld-t{font-size:36px}}
+/* Ordinateur : texte et bouton à gauche, la photo (760 px, trop petite pour toute la largeur) à droite, la semaine type par-dessus */
+@media (min-width:960px){
+  body.gating #view{max-width:none;padding-left:0;padding-right:0}
+  .gate.land{margin-left:0;margin-right:0}
+  .ld-band{display:none}
+  .ld-in{margin-top:0;padding:96px 48px 64px}
+  .ld-main{max-width:1120px;flex-direction:row;align-items:center;gap:64px}
+  .ld-copy{flex:1 1 0;align-items:flex-start;text-align:left}
+  .ld-brand{align-items:flex-start;filter:none}
+  .ld-t{margin-top:40px;font-size:64px}
+  .ld-s{max-width:30em;font-size:18px;line-height:28px}
+  .ld-show{flex:1 1 0;position:relative;margin:0;padding:0 0 128px}
+  .ld-photo{display:block;aspect-ratio:760/543;border-radius:20px;background:var(--hero) 50% 50%/cover no-repeat;box-shadow:inset 0 0 0 1px var(--brd)}
+  .ld-demo{position:absolute;left:-48px;bottom:0;width:384px;box-shadow:inset 0 0 0 1px var(--brd),0 24px 48px rgba(0,0,0,.5)}
+  .ld-feat{max-width:1120px;margin:96px 0 0;padding:32px 0 0;border-top:1px solid var(--brd);display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+  .ld-feat li,.ld-feat li:first-child{padding:0;border-top:0}
+  .ld-end{max-width:1120px;margin:64px 0 0;flex-direction:row;justify-content:space-between}
+  .ld-end .ld-go{width:auto;padding:0 32px}
+}
 .g-cta{width:100%;max-width:380px;margin:4px 0 22px;padding:16px 16px 12px;border-radius:24px;background:linear-gradient(160deg,rgba(215,255,58,.13),rgba(215,255,58,.04));box-shadow:inset 0 0 0 1.5px rgba(215,255,58,.55),0 14px 40px rgba(215,255,58,.08)}
 .g-ctal{margin:0 0 12px;font-family:var(--title);font-style:italic;font-weight:800;font-size:21px;text-transform:uppercase;color:var(--brand)}
 .g-cta .g-fine{margin:10px 0 0}
@@ -802,7 +854,7 @@ details.mf .card{background:var(--card2);box-shadow:none}
 @keyframes gpulse{0%,100%{opacity:.45}50%{opacity:1}}
 .g-fine{color:var(--t3);font-size:12.5px;line-height:1.7;margin:2px 0 0}
 .g-fine .lnk{margin:0;color:var(--t2);padding:2px 0}
-@media (max-height:700px){.g-hero{height:170px}.g-t{font-size:27px}}
+@media (max-height:700px){.g-t{font-size:27px}}
 @media (prefers-reduced-motion:reduce){.g-wait{animation:none}}
 /* choix de la course */
 body.setup .tabbar{display:none}
@@ -849,30 +901,8 @@ body{font-family:'Barlow',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Hel
 h1,.g-t,.hero .big,.hero2 .big,.rhero .big,.tot b{font-family:var(--title);font-style:italic;font-weight:800;letter-spacing:0;text-transform:uppercase}
 h1{font-size:38px;line-height:1}
 .g-t{font-size:38px;line-height:1.02}
-.g-hero::after{background:linear-gradient(180deg,rgba(11,11,12,.35) 0%,rgba(11,11,12,.05) 40%,#0B0B0C 100%)}
-.g-brand{display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 6px 22px rgba(0,0,0,.7))}
-.g-word{font-family:var(--title);font-style:italic;font-weight:800;font-size:58px;line-height:.9;letter-spacing:.01em;color:#fff}
-.g-word i{font-style:inherit;color:var(--brand)}
-.g-wave{width:150px;height:14px;margin-top:6px;fill:none;stroke:var(--brand);stroke-width:3.4;stroke-linecap:round}
 .g-slogan{margin:10px 0 0;font-size:12px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:var(--t2)}
 .g-t{margin-top:22px}
-.g-demo{width:100%;max-width:380px;margin:0 0 12px;padding:14px 14px 12px;border-radius:20px;background:var(--card);box-shadow:inset 0 0 0 1px var(--brd);text-align:left}
-.g-dh{display:flex;align-items:baseline;gap:8px;margin:0 0 8px;font-size:13px;color:var(--t2)}
-.g-dh b{font-family:var(--title);font-style:italic;font-weight:800;font-size:17px;text-transform:uppercase;color:var(--t1)}
-.g-dh em{font-style:normal;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
-.g-dr{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:.5px solid var(--sep)}
-.g-dr .gi{width:34px;height:34px;border-radius:10px;background:var(--cb);color:var(--c);display:grid;place-items:center;flex:none}
-.g-dt{flex:1;min-width:0}
-.g-dt b{display:block;font-size:14.5px;font-weight:700}
-.g-dt small{display:block;font-size:12px;color:var(--t2);line-height:1.35}
-.g-dt small:first-child{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--t3)}
-.g-st{display:inline-flex;align-items:center;gap:4px;flex:none;padding:4px 9px;border-radius:999px;background:var(--card2);color:var(--t2);font-size:11.5px;font-weight:700;white-space:nowrap}
-.g-st.ok{background:rgba(215,255,58,.14);color:var(--brand)}
-.g-st .ic{display:inline-block}
-.g-demo p{margin:8px 0 0;padding-top:10px;border-top:.5px solid var(--sep);font-size:12.5px;color:var(--t2)}
-.g-prev{margin:0 0 20px}
-.g-again{max-width:380px;margin:0 0 14px}
-.g-go{height:56px;font-size:17px;margin:0}
 .fmtc[aria-pressed=true]{box-shadow:inset 0 0 0 2px var(--brand)}
 .gtip{padding:14px 16px}
 .gtip .gi{width:34px;height:34px;border-radius:10px;background:rgba(215,255,58,.14);color:var(--brand);display:grid;place-items:center;flex:none}
@@ -884,14 +914,11 @@ h1{font-size:38px;line-height:1}
 .fbar-t{flex:1;min-width:0;font-size:13.5px;color:var(--t2);line-height:1.35}
 .fbar-t b{color:var(--t1)}
 .fbar .btn{width:auto;flex:none;margin:0;padding:0 20px}
-.g-or{display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--t3);font-size:12.5px}
-.g-or::before,.g-or::after{content:'';flex:1;height:.5px;background:var(--sep)}
 .lgs-sum{width:100%;max-width:380px;margin:0 0 16px;padding:4px 16px;border-radius:20px;background:var(--card);box-shadow:inset 0 0 0 1px var(--brd);text-align:left}
 .lgs-sum div{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-top:.5px solid var(--sep);font-size:14.5px}
 .lgs-sum div:first-child{border-top:0}
 .lgs-sum span{color:var(--t2)}
 .lgs-sum b{font-weight:600;text-align:right}
-@media (max-height:700px){.g-word{font-size:48px}}
 .btn.pri,a.btn.pri,.chip.hl,.now,.wkt.cur,.wd7.today .dn,.rng button[aria-pressed=true]{background:var(--brand);color:var(--ink)}
 .tab[aria-selected=true]{color:var(--brand)}
 #ptr{position:fixed;left:50%;top:calc(var(--sat) + 6px);z-index:40;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--card2);color:var(--t2);box-shadow:0 6px 20px rgba(0,0,0,.5);opacity:0;transform:translate(-50%,-44px);transition:transform .2s,opacity .2s;pointer-events:none}
@@ -2727,31 +2754,39 @@ function gateNeeded(){
 }
 function renderGate(){
   var vw=document.getElementById('view'),cfg=pubCfg,ready=cfg&&!cfg.err&&cfg.googleClientId,body;
-  try{document.body.classList.add('setup');}catch(e){}
+  try{document.body.classList.add('setup','gating');}catch(e){}
   vw.className='';gateShown=true;
   if(!gateTracked&&ready){gateTracked=true;trackOnce('gate_view','');}
   body=!cfg?'<div class="g-gbox w"><span class="g-wait">Connexion au serveur…</span></div>':cfg.err?'<p class="small muted" style="margin:0 0 8px">Connexion impossible pour l’instant.</p><button class="btn" data-act="gateretry">Réessayer</button>':'<div class="g-gbox"><div id="g-btn" data-theme="filled_black" style="display:flex;justify-content:center;width:100%"></div></div>';
-  var grow=function(sp,icn,t,s){return '<div class="g-row sp-'+sp+'"><span class="gi">'+ic(icn,19)+'</span><span><b>'+t+'</b><small>'+s+'</small></span></div>';};
+  /* Page d'accueil (passe « unslop ») : chrome sobre sur le noir de la marque. Le vert ne vit que dans le bouton principal, « TRI »
+     et la séance faite, que la vague du logo (la ligne d'eau) marque aussi. La police condensée italique de la charte est réservée au
+     logo et au titre. Téléphone : une colonne sous la photo. Ordinateur : texte à gauche, photo et semaine type à droite. */
+  var wave=function(c){return '<svg class="'+c+'" viewBox="0 0 120 12" aria-hidden="true"><path d="M2 8c9-6 17-6 26 0s17 6 26 0 17-6 26 0 17 6 26 0 11-4 12-4"/></svg>';};
+  var feat=function(icn,t,s){return '<li><span class="ld-fi">'+ic(icn,18)+'</span><div><b>'+t+'</b><p>'+s+'</p></div></li>';};
   // Aperçu d'une semaine type : montre le produit (séances détaillées, cochées par Garmin, envoyées sur la montre)
-  var demo=function(sp,icn,day,t,d,st){return '<div class="g-dr sp-'+sp+'"><span class="gi">'+ic(icn,17)+'</span><span class="g-dt"><small>'+day+'</small><b>'+t+'</b><small>'+d+'</small></span>'+st+'</div>';};
-  vw.innerHTML='<div class="gate"><div class="g-hero"><img src="'+HERO_IMG+'" alt=""></div><div class="g-body">'+
-    '<div class="g-brand" role="img" aria-label="Triient"><span class="g-word"><i>TRI</i>IENT</span><svg class="g-wave" viewBox="0 0 120 12" aria-hidden="true"><path d="M2 8c9-6 17-6 26 0s17 6 26 0 17-6 26 0 17 6 26 0 11-4 12-4"/></svg></div>'+
-    '<div class="g-slogan">Personnalise ta prépa</div>'+
-    '<h1 class="g-t">Ton plan triathlon,<br>fait pour toi.</h1>'+
-    '<p class="g-s">Choisis ta course, ton niveau et tes jours d’entraînement : Triient prépare chaque séance jusqu’au jour J. Du sprint à l’Ironman.</p>'+
-    '<div class="g-cta" id="g-cta"><div class="g-ctal">Crée ton plan, c’est gratuit</div><button class="btn pri g-go" data-act="gateguest">Créer mon plan</button>'+
-      '<p class="g-fine">Choisis ta course, puis crée ton compte en un clic · sans pub</p><div class="g-or"><span>Déjà un compte ?</span></div>'+body+'</div>'+
-    '<div class="g-demo" aria-label="Exemple de semaine"><div class="g-dh"><b>Semaine 6</b><span>Développement</span><span class="sp"></span><em>Exemple</em></div>'+
-      demo('swim','swim','Mardi','Natation · Technique','45 min · 2,1 km','<span class="g-st ok">'+ic('check',14)+'Fait</span>')+
-      demo('bike','bike','Mercredi','Vélo · Blocs allure course','1h30 · 3 × 12 min','<span class="g-st">'+ic('watch',14)+'Sur ta montre</span>')+
-      demo('run','run','Samedi','Course · Sortie longue','1h05 · facile','<span class="g-st">À venir</span>')+
-    '<p>Faite avec ta montre Garmin, la séance se coche toute seule.</p></div>'+
-    '<div class="g-prev">'+grow('swim','race','Toutes les distances','Du sprint à l’Ironman, préparé sur 4 à 52 semaines : un premier triathlon comme un nouveau record.')+
-      grow('bike','watch','Sur ta montre Garmin','Tes séances arrivent sur ta montre avec leurs allures, et se cochent dès que tu les as faites.')+
-      grow('run','week','Au rythme de ta vie','Tu choisis tes séances par semaine ; vacances, week-ends chargés, blessures et courses de préparation sont pris en compte.')+'</div>'+
-    '<button class="btn pri g-again" data-act="gateguest">Créer mon plan gratuit</button>'+
-    '<button class="lnk" data-act="legal" style="margin:4px 0 0;color:var(--t3)">Mentions légales et confidentialité</button>'+
-    '</div></div>';
+  var demo=function(sp,icn,day,t,d,st){return '<div class="ld-dr sp-'+sp+'"><span class="ld-di">'+ic(icn,18)+'</span><span class="ld-dt"><small>'+day+'</small><b>'+t+'</b><small>'+d+'</small></span>'+st+'</div>';};
+  var photo='Départ d’un triathlon : des dizaines de nageurs s’élancent dans l’eau';
+  vw.innerHTML='<div class="gate land" style="--hero:url('+HERO_IMG+')"><div class="ld-band" role="img" aria-label="'+photo+'"></div><div class="ld-in">'+
+    '<div class="ld-main"><div class="ld-copy">'+
+      '<div class="ld-brand" role="img" aria-label="Triient"><span class="ld-word"><i>TRI</i>IENT</span>'+wave('ld-wave')+'</div>'+
+      '<h1 class="ld-t">Ta prépa, <span class="ld-nw">séance par séance</span></h1>'+
+      '<p class="ld-s">Choisis ta course de triathlon, ton niveau et tes jours d’entraînement : Triient prépare chaque séance jusqu’au jour J, du sprint à l’Ironman</p>'+
+      '<div class="ld-cta" id="g-cta"><button class="btn pri ld-go" data-act="gateguest">Créer mon plan</button>'+
+        '<p class="ld-fine">Gratuit et sans pub · ton compte se crée en un clic, une fois ta course choisie</p>'+
+        '<div class="ld-or">Déjà un compte ?</div>'+body+'</div>'+
+    '</div><div class="ld-show"><div class="ld-photo" role="img" aria-label="'+photo+'"></div>'+
+      '<div class="ld-demo" aria-label="Exemple de semaine"><div class="ld-dh"><b>Semaine 6</b><span>Développement</span><em>Exemple</em></div>'+
+        demo('swim','swim','Mardi','Natation · Technique','45 min · 2,1 km','<span class="ld-st ok">'+wave('ld-ok')+'Fait</span>')+
+        demo('bike','bike','Mercredi','Vélo · Blocs allure course','1h30 · 3 × 12 min','<span class="ld-st">'+ic('watch',16)+'Sur ta montre</span>')+
+        demo('run','run','Samedi','Course · Sortie longue','1h05 · facile','<span class="ld-st">À venir</span>')+
+        '<p class="ld-dn">Faite avec ta montre Garmin, la séance se coche toute seule</p></div>'+
+    '</div></div>'+
+    '<ul class="ld-feat">'+feat('race','Toutes les distances','Du sprint à l’Ironman, préparé sur 4 à 52 semaines')+
+      feat('watch','Sur ta montre Garmin','Tes séances arrivent sur ta montre avec leurs allures et se cochent une fois faites')+
+      feat('week','Au rythme de ta vie','Tu choisis tes séances par semaine ; vacances, week-ends chargés, blessures et courses de préparation sont pris en compte')+'</ul>'+
+    '<div class="ld-end"><button class="btn pri ld-go" data-act="gateguest">Créer mon plan</button>'+
+      '<button class="lnk" data-act="legal">Mentions légales et confidentialité</button></div>'+
+  '</div></div>';
   if(ready)setTimeout(acctRenderBtn,60);
 }
 function acct(){return state.ui&&state.ui.acct;}
@@ -4055,6 +4090,7 @@ function renderTabs(){
 }
 function render(keep){
   if(gateNeeded()){renderGate();return;}
+  try{document.body.classList.remove('gating');}catch(e){}
   if(loginStepNeeded()){renderLoginStep();return;}
   acctPingSoon();
   gateShown=false;
