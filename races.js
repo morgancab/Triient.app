@@ -262,7 +262,7 @@ window.RACE_CAT=[
 ["Triathlon de Carqueiranne","Carqueiranne (Var)","FR","olympic",10,{}],
 ["Festrival","Basse-Ham (Moselle)","FR","olympic",10,{}],
 ["Sardines Triathlon Cassis","Cassis (Bouches-du-Rhône)","FR","olympic",10,{}],
-["Challenge Xiamen","Xiamen","CN","half",11,{"date":"2026-11-07","note":"Date du site officiel de l’organisateur : à reconfirmer à l’inscription.","src":"Challenge Family","rank":3}],
+["Challenge Xiamen","Xiamen","CN","half",11,{"note":"Date du site officiel de l’organisateur : à reconfirmer à l’inscription.","date":"2027-11-06","src":"Challenge Family","rank":3}],
 ["Challenge Canberra","Canberra","AU","half",11,{"date":"2026-11-22","note":"Date du site officiel de l’organisateur : à reconfirmer à l’inscription.","src":"Challenge Family","rank":3}],
 ["Triathlon du Domino","Suèvres (41)","FR","olympic",5,{"note":"Mois relevé dans un calendrier : date à confirmer sur le site officiel.","src":"Finishers (France, M)"}],
 ["Triathlon de Bairon","Bairon et ses environs (08)","FR","olympic",5,{"note":"Mois relevé dans un calendrier : date à confirmer sur le site officiel.","src":"Finishers (France, M)"}],
@@ -332,5 +332,6 @@ window.RACE_CAT=[
 ["T24 Xtreme Triathlon - Bormes-les-Mimosas","Bormes-les-Mimosas (83)","FR","sprint",10,{"date":"2027-10-09","note":"Date annoncée comme confirmée par un calendrier : à reconfirmer à l’inscription.","src":"Finishers (France, S)","rank":2}],
 ["Fuse Triathlon","Versailles (78)","FR","sprint",10,{"note":"Mois relevé dans un calendrier : date à confirmer sur le site officiel.","src":"Finishers (France, S)"}],
 ["IRONMAN 70.3 Mamaia Constanta","Mamaia","RO","half",9,{"date":"2027-09-26","note":"Date relevée dans un calendrier : à confirmer sur le site officiel.","src":"SportsPal (70.3 Europe)","rank":1}],
-["2027 World Triathlon Multisport Championships Zofingen","Zofingen","CH","full",9,{"date":"2027-09-04","note":"Date relevée dans un calendrier : à confirmer sur le site officiel.","src":"SportsPal (distance complète Europe)","rank":1}]
+["2027 World Triathlon Multisport Championships Zofingen","Zofingen","CH","full",9,{"date":"2027-09-04","note":"Date relevée dans un calendrier : à confirmer sur le site officiel.","src":"SportsPal (distance complète Europe)","rank":1}],
+["2027 World Triathlon Powerman Long Distance Duathlon Championships Zofingen","Powerman Zofingen","CH","full",9,{"date":"2027-09-04","note":"Date relevée dans un calendrier : à confirmer sur le site officiel.","src":"SportsPal (distance complète Europe)","rank":1}]
 ];
