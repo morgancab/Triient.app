@@ -3,7 +3,7 @@
    année) : l'utilisateur choisit le jour exact après vérification sur le site officiel. Les épreuves de la fédération internationale (dates exactes)
    viennent en plus de l'API World Triathlon, via le Worker (route /pub/races). Course absente : saisie libre. */
 var RACE_CAT=window.RACE_CAT||[];   // fichier races.js, mis à jour automatiquement (voir CATALOGUE.md)
-var CC_NAMES={RO:'Roumanie',IL:'Israël',AE:'Émirats arabes unis',TW:'Taïwan',KR:'Corée du Sud',PL:'Pologne',SK:'Slovaquie',UZ:'Ouzbékistan',OM:'Oman',CZ:'Tchéquie',RS:'Serbie',HR:'Croatie',GR:'Grèce',NO:'Norvège',FR:'France',DE:'Allemagne',AT:'Autriche',CH:'Suisse',ES:'Espagne',IT:'Italie',GB:'Royaume-Uni',NL:'Pays-Bas',DK:'Danemark',SE:'Suède',EE:'Estonie',US:'États-Unis',CA:'Canada',AU:'Australie',NZ:'Nouvelle-Zélande',ZA:'Afrique du Sud',BR:'Brésil',MX:'Mexique',BE:'Belgique',PT:'Portugal',LU:'Luxembourg',JP:'Japon',CN:'Chine'};
+var CC_NAMES={MY:'Malaisie',CL:'Chili',VN:'Viêt Nam',PH:'Philippines',IE:'Irlande',TR:'Turquie',RO:'Roumanie',IL:'Israël',AE:'Émirats arabes unis',TW:'Taïwan',KR:'Corée du Sud',PL:'Pologne',SK:'Slovaquie',UZ:'Ouzbékistan',OM:'Oman',CZ:'Tchéquie',RS:'Serbie',HR:'Croatie',GR:'Grèce',NO:'Norvège',FR:'France',DE:'Allemagne',AT:'Autriche',CH:'Suisse',ES:'Espagne',IT:'Italie',GB:'Royaume-Uni',NL:'Pays-Bas',DK:'Danemark',SE:'Suède',EE:'Estonie',US:'États-Unis',CA:'Canada',AU:'Australie',NZ:'Nouvelle-Zélande',ZA:'Afrique du Sud',BR:'Brésil',MX:'Mexique',BE:'Belgique',PT:'Portugal',LU:'Luxembourg',JP:'Japon',CN:'Chine'};
 function normS(s){return String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();}
 function catSearch(q){
   var n=normS(q),tk=n.split(' ').filter(Boolean),out=[];
