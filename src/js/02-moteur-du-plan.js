@@ -283,10 +283,80 @@ var STRIDES='3 accélérations de 15 s progressives jusqu’à ~90 % de ta vites
 // wk = séance structurée (syntaxe d'intervals.icu) : les cibles {S:..} {B:..} {R:..} sont remplacées à l'envoi (voir wkTgt)
 function WK(a){return a.join('\n');}
 function repW(n,work,rest){return n>1?(n-1)+'x\n'+work+'\n'+rest+'\n\n'+work:work;}
-function swimSession(title,tag,goal,segs,sum,extra,wk){
-  var tot=0,lines=[];segs.forEach(function(s){lines.push(s[0]);tot+=s[1];});
-  return S('swim',title,tag,Math.max(15,R5(tot*22/1000)),lines.concat(extra||[]),{m:tot,sum:sum,goal:goal,wk:wk});
+/* Matériel de natation (Plus → Mon entraînement) : state.ui.prof.gear = {pull, pads, board, fins, snorkel}, lu ici dès le démarrage
+   car le plan est construit avant l'état. Sans réglage (null), les séances restent telles quelles ; un réglage vide ({}) veut dire
+   « aucun accessoire ». Le matériel change le texte des séances (éducatifs, séries de bras, conseils), jamais les distances :
+   totaux, séance envoyée à la montre et associations Garmin restent identiques. */
+var GEAR=(function(){try{var s=JSON.parse(localStorage.getItem(KEY)),g=s&&s.ui&&s.ui.prof&&s.ui.prof.gear;return g&&typeof g==='object'?g:null;}catch(e){return null;}})();
+// éducatifs de l'échauffement : ceux que le matériel rend possibles d'abord, complétés par les classiques sans matériel
+function gearDrillList(){
+  var g=GEAR,d=[];
+  if(g.snorkel)d.push('rattrapé avec tuba frontal');
+  if(g.fins)d.push('6 temps sur le côté avec palmes');
+  if(g.board)d.push('jambes avec planche');
+  ['rattrapé','poings fermés','6 temps'].forEach(function(x){if(d.length<4&&!d.some(function(y){return y.indexOf(x)===0;}))d.push(x);});
+  return d;
 }
+function gearDrills(){return gearDrillList().join(', ');}
+function gearize(t){
+  var g=GEAR;if(!g)return t;
+  t=t.replace(/4 × 50 m éducatifs( \([^)]*\))?/,function(){return '4 × 50 m éducatifs ('+gearDrills()+')';});
+  t=t.replace('2 × 200 m en pull-buoy {s:end}',g.pull&&g.pads?'2 × 200 m en pull-buoy + plaquettes {s:end}':g.pull?'2 × 200 m en pull-buoy {s:end}':g.pads?'2 × 200 m avec plaquettes {s:end}':'2 × 200 m en travaillant les bras, battements de jambes réduits {s:end}');
+  // la dernière série avec matériel figure désormais dans le déroulé
+  t=t.replace('Dernière série en pull-buoy si tu veux travailler le gainage',g.pull||g.pads?'':'Dernière série : battements de jambes légers, corps gainé et bien aligné');
+  if(!g.pull){
+    t=t.replace(', pull-buoy optionnel','');
+    t=t.replace('Un 300 m sur deux avec pull-buoy','Un 300 m sur deux avec des battements de jambes réduits');
+  }
+  return t;
+}
+// conseils d'usage : sur les séances de technique, et dès que des plaquettes sont prévues
+function gearNotes(title,lines){
+  var g=GEAR,out=[],t=[];if(!g)return out;
+  if(/Technique/.test(title)){
+    if(g.snorkel)t.push('tuba frontal pour sentir la traction et l’alignement sans penser à respirer');
+    if(g.fins)t.push('palmes pour les éducatifs seulement, pas pour le corps de séance : elles faussent l’allure');
+    if(t.length)out.push('Ton matériel : '+t.join(' ; '));
+  }
+  if(lines.some(function(l){return /plaquettes/.test(l);}))out.push('Plaquettes : pas plus d’un quart de la séance, et retire-les à la moindre gêne à l’épaule');
+  return out;
+}
+function swimSession(title,tag,goal,segs,sum,extra,wk){
+  var tot=0,lines=[];segs.forEach(function(s){lines.push(gearize(s[0]));tot+=s[1];});
+  if(GEAR&&!GEAR.pull){title=title.replace('Endurance & pull','Endurance & bras');if(sum)sum=sum.replace(' pull',' bras');}
+  return S('swim',title,tag,Math.max(15,R5(tot*22/1000)),lines.concat((extra||[]).map(gearize).filter(Boolean),gearNotes(title,lines)),{m:tot,sum:sum,goal:goal,wk:wk});
+}
+/* Le matériel dans le déroulé : un pas peut porter une étiquette avant sa distance (« - Pull-buoy 200mtr {S:end} »). Elle s'affiche
+   sous le pas dans l'app et part vers la montre comme consigne. Étiquettes sans chiffre, pour ne pas se confondre avec la distance.
+   Sans réglage (GEAR null), aucune étiquette : la séance structurée reste exactement celle d'origine. */
+var CAP=function(x){return x.charAt(0).toUpperCase()+x.slice(1);};
+function gearArms(){var g=GEAR;return g.pull&&g.pads?'Pull-buoy + plaquettes':g.pull?'Pull-buoy':g.pads?'Plaquettes':'Bras, jambes légères';}
+// échauffement : easy m souples, puis 4 × 50 m d'éducatifs, chacun avec son matériel
+function wuDrills(easy){
+  if(!GEAR)return '- '+(easy+200)+'mtr {S:easy}';
+  var d=gearDrillList();if(d.length<4)d.push('godille');
+  return ['- '+easy+'mtr {S:easy}'].concat([].concat.apply([],d.map(function(x,i){var l='- '+CAP(x.replace('6 temps','six temps'))+' 50mtr {S:easy}';return i<3?[l,'- 15s rest']:[l];}))).join('\n');
+}
+// série de répétitions de dist m, chacune avec son étiquette ('' = sans matériel). Toutes sans étiquette : même texte que repW.
+function gearReps(labs,dist,key,rest){
+  var w=function(l){return '- '+(l?l+' ':'')+dist+'mtr {S:'+key+'}';},r='- '+rest+' rest',n=labs.length,out=[],i=0;
+  if(n>=4&&labs[0]!==labs[1]&&labs.every(function(l,j){return l===labs[j%2];})){   // alternance sur toute la série
+    var k=Math.floor(n/2),o=n%2;   // impair : une répétition seule d'abord, puis k × [b, a]
+    if(o)out.push(w(labs[0]),r,'');
+    out.push(k+'x',w(labs[o]),r,w(labs[1-o]),r);
+    return out.join('\n');
+  }
+  while(i<n){
+    var j=i;while(j<n&&labs[j]===labs[i])j++;
+    var c=j-i;
+    if(j===n)out.push(repW(c,w(labs[i]),r));
+    else out.push(c>1?c+'x\n'+w(labs[i])+'\n'+r+'\n':w(labs[i])+'\n'+r);
+    i=j;
+  }
+  return out.join('\n');
+}
+// étiquettes par répétition : f(i) renvoie l'étiquette de la i-ème, seulement si un matériel est réglé
+function gLabs(n,f){var a=[];for(var i=0;i<n;i++)a.push(GEAR?f(i,GEAR)||'':'');return a;}
 function swimA(w,kind,ph,t){
   var n;
   if(kind==='rec'){
@@ -295,7 +365,7 @@ function swimA(w,kind,ph,t){
       ['Échauffement 500 m : 300 m souple {s:easy} + 4 × 50 m éducatifs (rattrapé, poings fermés), récup 15 s',500],
       ['Corps de séance : '+n+' × 100 m crawl très aisé {s:easy}, récup 15 s. Compte tes mouvements de bras par longueur et garde-le stable',n*100],
       ['Retour au calme 100 m : dos ou nage libre souple',100]],n+' × 100 m très aisé',undefined,
-      WK(['Warmup','- 500mtr {S:easy}','','Main',repW(n,'- 100mtr {S:easy}','- 15s rest'),'','Cooldown','- 100mtr {S:easy}']));
+      WK(['Warmup',wuDrills(300),'','Main',gearReps(gLabs(n,function(i,g){return g.snorkel&&i<Math.ceil(n/2)?'Tuba frontal':'';}),100,'easy','15s'),'','Cooldown','- 100mtr {S:easy}']));
   }
   if(kind==='taper'){
     n=Math.max(2,Math.round((t-900)/400));
@@ -313,7 +383,7 @@ function swimA(w,kind,ph,t){
       ['Corps de séance : '+n+' × 200 m crawl aisé {s:end}, récup 20 s. Objectif : même temps sur chaque 200 m',n*200],
       ['Retour au calme 100 m souple',100]],n+' × 200 m aisé',
       ['Points techniques : entrée de main dans l’alignement de l’épaule, expiration complète dans l’eau, rotation des hanches'],
-      WK(['Warmup','- 500mtr {S:easy}','','Main',repW(n,'- 200mtr {S:end}','- 20s rest'),'','Cooldown','- 100mtr {S:easy}']));
+      WK(['Warmup',wuDrills(300),'','Main',gearReps(gLabs(n,function(i,g){return g.snorkel&&i<Math.ceil(n/2)?'Tuba frontal':(g.pull||g.pads)&&i===n-1?gearArms():'';}),200,'end','20s'),'','Cooldown','- 100mtr {S:easy}']));
   }
   if(ph==='dev'){
     n=Math.max(2,Math.round((t-1200)/200));
@@ -340,7 +410,7 @@ function swimB(w,kind,ph,t){
       ['Échauffement 300 m souple {s:easy}',300],
       ['Corps de séance : '+n+' × 200 m aisé {s:easy}, récup 15 s, pull-buoy optionnel',n*200],
       ['Retour au calme 100 m souple',100]],n+' × 200 m aisé',undefined,
-      WK(['Warmup','- 300mtr {S:easy}','','Main',repW(n,'- 200mtr {S:easy}','- 15s rest'),'','Cooldown','- 100mtr {S:easy}']));
+      WK(['Warmup','- 300mtr {S:easy}','','Main',gearReps(gLabs(n,function(i,g){return g.pull&&i%2?'Pull-buoy':'';}),200,'easy','15s'),'','Cooldown','- 100mtr {S:easy}']));
   }
   if(kind==='taper'){
     n=Math.max(2,Math.round((t-500)/500));
@@ -358,7 +428,7 @@ function swimB(w,kind,ph,t){
       ['Corps de séance : '+n+' × 300 m crawl continu {s:end}, récup 30 s',n*300],
       ['Retour au calme 100 m souple',100]],n+' × 300 m continu',
       ['Dernière série en pull-buoy si tu veux travailler le gainage'],
-      WK(['Warmup','- 300mtr {S:easy}','','Main',repW(n,'- 300mtr {S:end}','- 30s rest'),'','Cooldown','- 100mtr {S:easy}']));
+      WK(['Warmup','- 300mtr {S:easy}','','Main',gearReps(gLabs(n,function(i,g){return g.snorkel&&i===0?'Tuba frontal':(g.pull||g.pads)&&i===n-1?gearArms():'';}),300,'end','30s'),'','Cooldown','- 100mtr {S:easy}']));
   }
   if(ph==='dev'){
     n=Math.max(2,Math.round((t-1000)/400));
@@ -367,7 +437,7 @@ function swimB(w,kind,ph,t){
       ['Série 1 : '+n+' × 400 m crawl {s:end}, récup 30 s. Chaque 400 m un peu plus vite que le précédent si tu le sens',n*400],
       ['Série 2 : 2 × 200 m en pull-buoy {s:end}, récup 20 s',400],
       ['Retour au calme 200 m souple',200]],n+' × 400 m + 2 × 200 pull',undefined,
-      WK(['Warmup','- 400mtr {S:easy}','','Série 1',repW(n,'- 400mtr {S:end}','- 30s rest'),'','Série 2',repW(2,'- 200mtr {S:end}','- 20s rest'),'','Cooldown','- 200mtr {S:easy}']));
+      WK(['Warmup','- 400mtr {S:easy}','','Série 1',repW(n,'- 400mtr {S:end}','- 30s rest'),'','Série 2',gearReps(gLabs(2,gearArms),200,'end','20s'),'','Cooldown','- 200mtr {S:easy}']));
   }
   n=Math.max(2,Math.round((t-500)/600));
   return swimSession('Natation · Eau libre / chenal','Spécifique','Reproduire la natation du jour J : repérage, houle, groupe, combinaison.',[
@@ -394,7 +464,7 @@ function swimC(w,kind,ph,t){
     ['Échauffement 400 m : 200 m souple {s:easy} + 4 × 50 m éducatifs, récup 15 s',400],
     ['Corps de séance : '+n+' × 300 m aisé {s:end}, récup 20 s. Un 300 m sur deux avec pull-buoy, respiration tous les 3 mouvements',n*300],
     ['Retour au calme 200 m souple {s:easy}',200]],n+' × 300 m aisé',['Garde la même allure du premier au dernier 300 m : c’est une séance d’endurance, pas de vitesse'],
-    WK(['Warmup','- 400mtr {S:easy}','','Main',repW(n,'- 300mtr {S:end}','- 20s rest'),'','Cooldown','- 200mtr {S:easy}']));
+    WK(['Warmup',wuDrills(200),'','Main',gearReps(gLabs(n,function(i,g){return g.pull&&i%2?'Pull-buoy':'';}),300,'end','20s'),'','Cooldown','- 200mtr {S:easy}']));
 }
 /* 2e course (à partir de 10 séances) : footing facile, en plus de la séance de qualité et de la sortie longue */
 function runEasy(w,kind,ph,t){

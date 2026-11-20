@@ -156,3 +156,30 @@ function vtApply(){
   document.getElementById('sheetbg').classList.remove('on');sheetKey=null;sheetDepth=0;syncUrl(false);
   location.reload();
 }
+/* ---------- Matériel de natation (Plus → Mon entraînement) ----------
+   Le matériel coché adapte le texte des séances de natation (voir gearize), jamais les distances. Il est rangé dans le profil
+   (state.ui.prof.gear, sauvegardé avec le compte) et le plan est reconstruit au rechargement, comme pour « Ajuster mon entraînement ». */
+var GEAR_UI=[['pull','Pull-buoy','Séries de bras : traction et gainage, jambes au repos'],['pads','Plaquettes','Force de traction, sur de courtes séries'],
+  ['board','Planche','Jambes seules : battements et position du corps'],['fins','Palmes','Éducatifs plus faciles : glisse et rotation'],
+  ['snorkel','Tuba frontal','Traction et alignement, sans penser à respirer']],gearDraft=null;
+function gearSummary(){if(!GEAR)return 'Pull-buoy, plaquettes, planche… : adapte tes séances';var l=GEAR_UI.filter(function(x){return GEAR[x[0]];}).map(function(x){return x[1].toLowerCase();});return l.length?l.join(', ').replace(/^./,function(c){return c.toUpperCase();}):'Sans accessoire';}
+function openGear(){gearDraft=Object.assign({},GEAR||{});renderGear();sheetRoute('gear');}
+function renderGear(){
+  var sh=document.getElementById('sheet'),st=sh.scrollTop;
+  var b='<p class="small muted" style="margin:0 0 12px">Coche ce que tu emportes à la piscine : les éducatifs et les séries de bras de tes séances s’adaptent. Les distances ne changent pas.</p><div class="gear-l">'+
+    GEAR_UI.map(function(x){var on=!!gearDraft[x[0]];return '<button class="gear-i" data-act="geartog" data-v="'+x[0]+'" aria-pressed="'+on+'"><span><b>'+x[1]+'</b><small>'+x[2]+'</small></span><i>'+(on?ic('check',16):'')+'</i></button>';}).join('')+'</div>'+
+    '<button class="btn pri" data-act="gearsave" style="margin:16px 0 8px">Adapter mes séances</button>'+
+    (GEAR?'<button class="btn" data-act="gearclear" style="margin:0 0 8px">Revenir aux séances d’origine</button>':'')+
+    '<p class="small muted" style="margin:8px 0 0">Rien de coché : les séances proposent des alternatives sans accessoire.</p>';
+  showSheet('Matériel de natation','Adapte tes séances à ce que tu as',b);
+  sh.scrollTop=st;
+}
+// g : matériel retenu ({} = aucun accessoire), ou null pour revenir aux séances d'origine
+function gearApply(g){
+  var p=state.ui.prof=state.ui.prof||{};
+  if(g)p.gear=g;else delete p.gear;
+  state.ui.flash=g?'Séances de natation adaptées':'Séances de natation d’origine';save();
+  document.getElementById('sheetbg').classList.remove('on');sheetKey=null;sheetDepth=0;syncUrl(false);
+  location.reload();
+}
+function gearSave(){var g={};GEAR_UI.forEach(function(x){if(gearDraft&&gearDraft[x[0]])g[x[0]]=true;});gearApply(g);}

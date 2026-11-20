@@ -111,6 +111,10 @@ document.addEventListener('click',function(e){
   else if(a==='awayedit'){var ap=awayList().filter(function(x){return x.id===d.id;})[0];if(ap){awayDraft=awayCalInit(Object.assign({},ap));renderAway();}}
   else if(a==='awaylist')openAwayList();
   else if(a==='vtopen')openVt();
+  else if(a==='gearopen')openGear();
+  else if(a==='geartog'&&gearDraft){gearDraft[d.v]=!gearDraft[d.v];renderGear();}
+  else if(a==='gearsave'&&gearDraft)gearSave();
+  else if(a==='gearclear')gearApply(null);
   else if(a==='vtdef'&&vtDraft){vtDraft.vt[d.v]=null;vtDraft.sc[d.v]=scDefault(NSESS0)[d.v];vtPrep();renderVt();}
   else if(a==='vtreset'&&vtDraft){VT_UI.forEach(function(x){vtDraft.vt[x[0]]=null;});vtDraft.sc=scDefault(NSESS0);vtPrep();renderVt();}
   else if(a==='vtsc'&&vtDraft){var sk=d.k;vtDraft.sc[sk]=Math.max(SC_MIN[sk],Math.min(SC_MAX[sk],(vtDraft.sc[sk]||0)+(+d.v)));vtPrep();renderVt();}

@@ -48,6 +48,7 @@ function openSheetByKey(k){
   else if(n==='legal')openLegal();
   else if(n==='away')openAwayList();
   else if(n==='vt')openVt();
+  else if(n==='gear')openGear();
   else if(n==='acts')openAllActs();
   else if(n==='level')openLevel();
   else if(n==='steps')openSteps();
@@ -164,7 +165,7 @@ function vMore(){
     '<button class="mhero" data-act="tab" data-tab="plan"><span class="mh-top"><span class="eyebrow">Ma course</span>'+(rd>=0?'<span class="mh-j">J-'+rd+'</span>':'')+'</span><b class="mh-n">'+esc(RNAME)+'</b>'+
       '<span class="mh-s">'+esc(fmtLong(RACE_DATE))+' · '+FMT.n+'</span>'+bar(pct(t.d,t.n))+
       '<span class="mh-f"><span>'+t.d+' / '+t.n+' séances</span><span class="mh-l">Voir mon plan de '+NW+' semaines'+ic('right',16)+'</span></span></button>'+
-    grp('Mon entraînement',mrow('race','Mes courses',stepList().length?stepList().length+' course'+(stepList().length>1?'s':'')+' intermédiaire'+(stepList().length>1?'s':''):'Ajouter une course intermédiaire','steps','','red')+mrow('week','Vacances & blessures',injNow()?esc(injNow().label+' · '+awayDesc(injNow())):aw?aw+' période'+(aw>1?'s':'')+' enregistrée'+(aw>1?'s':''):'Vacances, week-end ou blessure : le plan s’adapte','awaylist','','green')+mrow('plan','Ajuster mon entraînement',CFG.vt||CFG.sc?'Réglage personnalisé · '+NSESS+' séances par semaine':'Séances et heures, sport par sport','vtopen','','blue')+(lvOffered()?mrow('chart','Mon niveau',lvAny()?'Modifier mes temps de référence':'Estimer mes allures en 3 questions','level','','orange'):''))+
+    grp('Mon entraînement',mrow('race','Mes courses',stepList().length?stepList().length+' course'+(stepList().length>1?'s':'')+' intermédiaire'+(stepList().length>1?'s':''):'Ajouter une course intermédiaire','steps','','red')+mrow('week','Vacances & blessures',injNow()?esc(injNow().label+' · '+awayDesc(injNow())):aw?aw+' période'+(aw>1?'s':'')+' enregistrée'+(aw>1?'s':''):'Vacances, week-end ou blessure : le plan s’adapte','awaylist','','green')+mrow('plan','Ajuster mon entraînement',CFG.vt||CFG.sc?'Réglage personnalisé · '+NSESS+' séances par semaine':'Séances et heures, sport par sport','vtopen','','blue')+mrow('swim','Matériel de natation',gearSummary(),'gearopen','','blue')+(lvOffered()?mrow('chart','Mon niveau',lvAny()?'Modifier mes temps de référence':'Estimer mes allures en 3 questions','level','','orange'):''))+
     grp('L’app',mrow('gear','Réglages','Garmin, compte, sauvegarde','settings','','blue')+mrow('share','Partager l’app','Envoyer le lien à un ami','shareapp','','purple'))+
     (acct()&&acct().admin?grp('Propriétaire',mrow('chart','Suivi de l’app','Utilisateurs, courses, progression','tab','data-tab="admin"','grey')):'')+
     '<div style="text-align:center;margin:6px 0 4px"><button class="lnk" data-act="legal" style="margin:0;color:var(--t3)">Mentions légales et confidentialité</button></div>';

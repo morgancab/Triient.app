@@ -54,13 +54,13 @@ function wkBlocks(wk){
     if(!t){close();return;}
     if((m=/^(\d+)x$/.exec(t))){close();grp={n:+m[1],steps:[]};return;}
     if(t.charAt(0)!=='-'){close();if(/^warmup$/i.test(t))sec='warm';else if(/^cooldown$/i.test(t))sec='cool';else{sec='main';if(!/^main$/i.test(t))rows.push({k:'head',text:t});}return;}
-    m=/^-\s+(\d+)(m|s|mtr|km)(?:\s+(rest|\{([RBS]):(\w+)\}))?$/.exec(t);
+    m=/^-\s+(?:(\D[^{]*?)\s+)?(\d+)(m|s|mtr|km)(?:\s+(rest|\{([RBS]):(\w+)\}))?$/.exec(t);   // étiquette facultative avant la durée (matériel de natation)
     if(!m)return;
-    var st={sec:sec,dur:durTxt(+m[1],m[2]),val:+m[1],u:m[2],rest:m[3]==='rest',t:m[4],key:m[5]};
+    var st={sec:sec,dur:durTxt(+m[2],m[3]),val:+m[2],u:m[3],rest:m[4]==='rest',t:m[5],key:m[6],lab:m[1]||''};
     if(grp)grp.steps.push(st);
     else{
       var prev=rows[rows.length-1],f=prev&&prev.k==='rep'&&prev.steps[0];
-      if(f&&f.dur===st.dur&&f.t===st.t&&f.key===st.key)prev.n++;      // « (n-1) × [effort + récup] » puis un dernier effort = « n × »
+      if(f&&f.dur===st.dur&&f.t===st.t&&f.key===st.key&&f.lab===st.lab)prev.n++;      // « (n-1) × [effort + récup] » puis un dernier effort = « n × »
       else rows.push({k:'step',st:st});
     }
   });
@@ -79,16 +79,16 @@ function chipsFor(t,k){
 }
 function stepRow(st,name){
   var base=(TOKN[st.t]||{})[st.key]||'';
-  var nm=name||(st.rest?'Repos':st.sec==='warm'?'Échauffement'+(base?' · '+base.toLowerCase():''):st.sec==='cool'?'Retour au calme'+(base?' · '+base.toLowerCase():''):base||'Bloc');
+  var nm=name||(st.rest?'Repos':st.sec==='warm'&&st.lab?'Éducatif':st.sec==='warm'?'Échauffement'+(base?' · '+base.toLowerCase():''):st.sec==='cool'?'Retour au calme'+(base?' · '+base.toLowerCase():''):base||'Bloc');
   var chips=st.rest?[]:chipsFor(st.t,st.key);
-  return '<div class="st"><span class="du">'+esc(st.dur)+'</span><div class="bd"><div class="nm">'+esc(nm)+'</div>'+(chips.length?'<div class="chips">'+chips.map(function(c){return '<span class="cp '+c.c+'">'+esc(c.t)+'</span>';}).join('')+'</div>':'')+'</div></div>';
+  return '<div class="st"><span class="du">'+esc(st.dur)+'</span><div class="bd"><div class="nm">'+esc(nm)+'</div>'+(st.lab?'<div class="gr">'+esc(st.lab)+'</div>':'')+(chips.length?'<div class="chips">'+chips.map(function(c){return '<span class="cp '+c.c+'">'+esc(c.t)+'</span>';}).join('')+'</div>':'')+'</div></div>';
 }
 function stepsHtml(s){
   var out='';
   wkBlocks(s.wk).forEach(function(r){
     if(r.k==='head')out+='<div class="sub-t">'+esc(r.text)+'</div>';
     else if(r.k==='step')out+=stepRow(r.st);
-    else out+='<div class="rep"><div class="rh">'+r.n+' ×</div>'+r.steps.map(function(st,i){return stepRow(st,i>0&&!st.rest?'Récupération':null);}).join('')+'</div>';
+    else out+='<div class="rep"><div class="rh">'+r.n+' ×</div>'+r.steps.map(function(st,i){return stepRow(st,i>0&&!st.rest&&!st.lab?'Récupération':null);}).join('')+'</div>';
   });
   return out;
 }
@@ -147,8 +147,8 @@ function wkPace(t,k){
 }
 function wkText(wk){
   return wk.split('\n').filter(function(l){var t=l.trim();return !t||t.charAt(0)==='-'||/^\d+x$/.test(t)||/^(warmup|cooldown)$/i.test(t);}).map(function(l){
-    var m=/^(\s*-\s)(\d+(?:m|s|mtr|km))\s+\{([RBS]):(\w+)\}\s*$/.exec(l);
-    if(m){var pc=wkPace(m[3],m[4]),lab=wkLab(m[3],m[4]);if(pc)return m[1]+(m[3]==='S'&&lab?lab+' ':'')+m[2]+' '+pc;var tg=wkTgt(m[3],m[4]);return m[1]+(lab?lab+' ':'')+m[2]+(tg?' '+tg:'');}
+    var m=/^(\s*-\s)(?:(\D[^{]*?)\s+)?(\d+(?:m|s|mtr|km))\s+\{([RBS]):(\w+)\}\s*$/.exec(l);
+    if(m){var cue=m[2]?m[2]+' ':'',pc=wkPace(m[4],m[5]),lab=wkLab(m[4],m[5]);if(pc)return m[1]+cue+(m[4]==='S'&&lab?lab+' ':'')+m[3]+' '+pc;var tg=wkTgt(m[4],m[5]);return m[1]+cue+(lab?lab+' ':'')+m[3]+(tg?' '+tg:'');}
     return l.replace(/\{([RBS]):(\w+)\}/g,function(_,t,k){return wkTgt(t,k);}).replace(/\s+$/,'');
   }).join('\n');
 }
