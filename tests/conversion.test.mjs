@@ -14,7 +14,11 @@ test('« Ton plan est prêt » montre la vraie semaine 1 du plan en attente', ()
   assert.match(h, /Natation|Vélo|Course/);
   assert.match(h, /puis 15 semaines jusqu’au jour J|Puis 15 semaines jusqu’au jour J/);
   assert.match(h, /Crée ton compte pour voir tes 16 semaines/);
-  assert.equal((h.match(/class="ld-dr /g) || []).length <= 4, true, '4 séances au plus');
+  const n = IM.PLAN[0].days.flatMap((d) => d.sessions).filter((s) => s.sp !== 'rest' && s.sp !== 'race').length;
+  assert.equal((h.match(/<details class="lgs-d /g) || []).length, n, 'toutes les séances de la semaine 1');
+  assert.doesNotMatch(h, /<details class="lgs-d [^"]*" open>/, 'toutes fermées : le bouton de compte reste proche');
+  assert.match(h, /Touche une séance pour voir son détail/);
+  assert.match(h, /Objectif[\s\S]*Déroulé/, 'détail de la séance : objectif et déroulé');
 });
 
 test('sans plan calculé pour cette course, on garde le récapitulatif', () => {

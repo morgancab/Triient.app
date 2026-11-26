@@ -1044,6 +1044,8 @@ button:focus-visible{outline-color:var(--brand)}
 /* « Ton plan est prêt » : la première semaine du plan avant la création du compte */
 .lgs-line{margin:0 0 16px;font-size:15px;line-height:20px;color:var(--t2)}
 .lgs-wk{width:100%;max-width:380px;margin:0 0 20px}
+/* sur ordinateur, la carte « semaine » de la page d’accueil est posée sur la photo : ici, elle reste dans le flux */
+.gate .lgs-wk{position:relative;left:auto;bottom:auto;width:100%;max-width:380px;box-shadow:inset 0 0 0 1px var(--brd)}
 .lgs-more{margin:0;padding:12px 0 14px;border-top:1px solid var(--brd);font-size:13px;line-height:18px;color:var(--t2)}
 /* Bandeau compact : texte à gauche, flèche vers le menu de l’appli en haut à droite */
 .inapp{position:relative;margin:0 0 16px;padding:12px 48px 12px 16px;border-radius:14px;background:#2a2410;box-shadow:inset 0 0 0 1px rgba(255,196,0,.35);text-align:left}
@@ -1061,3 +1063,11 @@ button:focus-visible{outline-color:var(--brand)}
 .ld-legal{margin:24px auto 0;color:var(--t3)}
 /* Accueil visiteur : bloc de connexion en bas */
 @media (min-width:960px){.ld-end{justify-content:center}}
+/* Aperçu « Ton plan est prêt » : chaque séance se déroule au toucher */
+.lgs-d>summary{list-style:none;cursor:pointer}
+.lgs-d>summary::-webkit-details-marker{display:none}
+.lgs-chev{flex:none;color:var(--t3);transition:transform .2s}
+.lgs-d[open] .lgs-chev{transform:rotate(180deg)}
+.lgs-det.s-det{display:block;padding:0 0 16px;border-top:0}
+.lgs-det .goal{margin-top:0}
+.lgs-hint{margin:-4px 0 8px;font-size:13px;line-height:18px;color:var(--t3)}

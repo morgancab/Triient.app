@@ -241,16 +241,19 @@ function renderLoginStep(){
   if(cfg&&!cfg.err&&cfg.googleClientId)setTimeout(acctRenderBtn,60);
 }
 /* Aperçu de la première semaine du plan, calculé au chargement à partir de la course en attente (voir loadRaceCfg) :
-   la personne voit ce qu'elle obtient au moment où on lui demande de créer son compte. 4 séances au plus, puis le reste résumé. */
+   la personne voit ce qu'elle obtient au moment où on lui demande de créer son compte. Toutes les séances de la semaine 1 ;
+   un toucher déroule le détail (objectif, déroulé, conseils), comme dans l'app. Toutes fermées : le bouton de compte reste proche. */
 function lgsWeek(c){
   var w=PLAN&&PLAN[0];if(!w||!RCFG.pending||CFG.id!==c.id)return '';
   var all=[];w.days.forEach(function(d){d.sessions.forEach(function(s){if(s.sp!=='rest'&&s.sp!=='race')all.push([d,s]);});});
   if(!all.length)return '';
-  var rows=all.slice(0,4).map(function(x){var d=x[0],s=x[1];return '<div class="ld-dr sp-'+s.sp+'"><span class="ld-di">'+ic(s.sp,18)+'</span><span class="ld-dt"><small>'+esc(d.name+' '+fmtDay(d.date))+'</small><b>'+esc(s.title)+'</b><small>'+esc(fm(s.min)+(s.sum?' · '+s.sum:''))+'</small></span></div>';}).join('');
-  var more=all.length-4,rd=parseISO(c.date);
+  var rows=all.map(function(x){var d=x[0],s=x[1];
+    return '<details class="lgs-d sp-'+s.sp+'"><summary class="ld-dr"><span class="ld-di">'+ic(s.sp,18)+'</span><span class="ld-dt"><small>'+esc(d.name+' '+fmtDay(d.date))+'</small><b>'+esc(s.title)+'</b><small>'+esc(fm(s.min)+(s.sum?' · '+s.sum:''))+'</small></span><span class="lgs-chev">'+ic('down',18)+'</span></summary>'+
+      '<div class="s-det lgs-det">'+(s.goal?'<div class="goal"><b>Objectif</b>'+esc(s.goal)+'</div>':'')+detailBody(s)+'</div></details>';}).join('');
+  var rd=parseISO(c.date);
   return '<p class="lgs-line">'+esc(c.name)+(rd?' · '+esc(fmtLong(rd)):'')+'</p>'+
-    '<div class="ld-demo lgs-wk" aria-label="Ta première semaine"><div class="ld-dh"><b>Ta semaine 1</b><span>'+all.length+' séance'+(all.length>1?'s':'')+'</span><em>'+esc(fm(w.min))+'</em></div>'+rows+
-    '<p class="lgs-more">'+(more>0?'+ '+more+' autre'+(more>1?'s':'')+' séance'+(more>1?'s':'')+' cette semaine, puis ':'Puis ')+(c.weeks-1)+' semaines jusqu’au jour J</p></div>';
+    '<div class="ld-demo lgs-wk" aria-label="Ta première semaine"><div class="ld-dh"><b>Ta semaine 1</b><span>'+all.length+' séance'+(all.length>1?'s':'')+'</span><em>'+esc(fm(w.min))+'</em></div><p class="lgs-hint">Touche une séance pour voir son détail</p>'+rows+
+    '<p class="lgs-more">Puis '+(c.weeks-1)+' semaines jusqu’au jour J</p></div>';
 }
 function gateNeeded(){
   if(DEV||!LOGIN_REQUIRED||acct()||(state.ui.guest&&SETUP)||/^file:/.test(location.protocol))return false;
