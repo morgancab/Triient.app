@@ -43,6 +43,8 @@ function fmtClass(c){
 function loadRaceCfg(){
   var s=null;try{s=JSON.parse(localStorage.getItem(KEY));}catch(e){}
   if(s&&s.race&&s.race.date&&s.race.start)return {cfg:s.race,fresh:false};
+  // plan rempli, connexion pas encore faite : on calcule déjà ce plan pour en montrer la première semaine (state.race reste vide)
+  var p=s&&s.ui&&s.ui.pendingRace;if(p&&p.date&&p.start)return {cfg:p,fresh:true,pending:true};
   var used=s&&((s.done&&Object.keys(s.done).length)||(s.sv&&s.sv.url)||(s.ui&&(s.ui.tab||s.ui.welcomed||s.ui.dflt||s.ui.prof)));
   return {cfg:SABLES,fresh:!used,migrate:!!used};
 }

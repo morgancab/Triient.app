@@ -1048,3 +1048,7 @@ button:focus-visible{outline-color:var(--brand)}
 .wl .inst-st li{display:list-item;padding:0}
 .wl .inst-st b,.wl .inst-h b{display:inline;font-size:inherit}
 .wl .inst-h b{font-size:16px}
+/* « Ton plan est prêt » : la première semaine du plan avant la création du compte */
+.lgs-line{margin:0 0 16px;font-size:15px;line-height:20px;color:var(--t2)}
+.lgs-wk{width:100%;max-width:380px;margin:0 0 20px}
+.lgs-more{margin:0;padding:12px 0 14px;border-top:1px solid var(--brd);font-size:13px;line-height:18px;color:var(--t2)}

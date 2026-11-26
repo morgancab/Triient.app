@@ -4,6 +4,17 @@
 function statsOn(){try{return !(state.ui&&state.ui.noStats)&&navigator.doNotTrack!=='1'&&window.doNotTrack!=='1';}catch(e){return true;}}
 // Étapes de l'entonnoir d'inscription : une seule fois par appareil, pour que l'entonnoir compte des visiteurs et non des affichages
 function trackOnce(name,prop){var tk=state.ui.tk||(state.ui.tk={});if(tk[name])return;tk[name]=1;save0();track(name,prop);}
+/* Source de la personne, retenue à sa première visite : ?utm_source=… dans le lien, sinon l'appli qui a ouvert le lien (Instagram…),
+   sinon le site d'où elle vient, sinon « direct ». Ajoutée aux étapes de l'inscription pour savoir quel canal amène des comptes. */
+function srcOf(){
+  if(state.ui.src)return state.ui.src;
+  var s='';
+  try{var m=/[?&]utm_source=([^&#]+)/.exec(location.search||'');if(m)s=decodeURIComponent(m[1]);}catch(e){}
+  if(!s){var a=inAppName();if(a&&a!=='app')s=a;}
+  if(!s){try{var r=document.referrer?new URL(document.referrer).hostname.replace(/^(www|m|l|lm)\./,''):'';if(r&&r!==location.hostname)s=r;}catch(e){}}
+  s=String(s||'direct').toLowerCase().replace(/[^a-z0-9.\-_]/g,'').slice(0,40)||'direct';
+  state.ui.src=s;save0();return s;
+}
 function track(name,prop){
   if(DEV||!statsOn()||/^file:/.test(location.protocol)||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))return;   // local : tests et développement ne comptent pas
   if(state.ui.own||(acct()&&acct().admin))return;   // les appareils du propriétaire ne comptent pas non plus
@@ -158,6 +169,6 @@ function saveRace(){
     state.done={};state.links={};state.ui.missed={};state.ui.away=[];state.ui.sent={};state.ui.race={};state.ui.welcomed=undefined;
   }
   (SETUP?trackOnce:track)(SETUP?'plan_created':'plan_changed',cls+'|'+nsess+'s|l'+d.level);
-  if(SETUP&&loginOn()){state.ui.pendingRace=cfg;save();trackOnce('login_step','');window.scrollTo(0,0);render(false);return;}
+  if(SETUP&&loginOn()){state.ui.pendingRace=cfg;save();trackOnce('login_step',srcOf());window.scrollTo(0,0);location.reload();return;}   // rechargé : le plan de cette course est calculé pour l'aperçu
   state.race=cfg;save();location.reload();
 }

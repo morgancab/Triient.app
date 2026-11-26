@@ -193,7 +193,9 @@ async function authGoogle(req, env) {
   const now = Date.now();
   await env.DB.prepare('INSERT INTO users (id, email, name, created, last_login, v) VALUES (?, ?, ?, ?, ?, 0) ON CONFLICT(id) DO UPDATE SET email = excluded.email, name = excluded.name, last_login = excluded.last_login').bind(u.sub, u.email, u.name, now, now).run();
   try { await env.DB.prepare("INSERT INTO visits (user_id, t, kind) VALUES (?, ?, 'login')").bind(u.sub, now).run(); } catch (e) { /* table absente : schema5.sql pas encore appliqué */ }
-  return json({ ok: true, token: await makeSession(env, u.sub), user: { email: u.email, name: u.name } });
+  let isNew = false;   // compte créé par cette connexion : l'app le compte comme inscription (événement « signup », avec la source)
+  try { const row = await env.DB.prepare('SELECT created FROM users WHERE id = ?').bind(u.sub).first(); isNew = !!row && row.created === now; } catch (e) { /* sans gravité */ }
+  return json({ ok: true, token: await makeSession(env, u.sub), user: { email: u.email, name: u.name, isNew } });
 }
 async function accountRoutes(req, url, env) {
   if (!env.DB) return json({ ok: false, error: 'indisponible' }, 501);
@@ -404,7 +406,7 @@ async function pubSync(req, url, env) {
    Compteurs agrégés par jour dans D1 (table ev : jour, nom d'événement, propriété, total). Aucun identifiant, aucune adresse IP, aucun cookie :
    on ne peut pas retrouver une personne. Événements acceptés : liste blanche ci-dessous ; propriétés tronquées. Lecture : GET /api/admin/stats (clé propriétaire). */
 const EVENTS = new Set(['wiz_start', 'wiz_error', 'gate_view', 'guest_start', 'login_step', 'login', 'account_deleted', 'cloud_enabled', 'cloud_restore', 'open', 'install', 'setup_view', 'plan_created', 'plan_changed', 'race_pick', 'search_miss', 'garmin_connected', 'vol_adjust',
-  'inapp_view', 'inapp_action', 'install_card_view', 'install_click', 'install_accepted', 'install_dismissed', 'install_later', 'appinstalled']);
+  'inapp_view', 'inapp_action', 'install_card_view', 'install_click', 'install_accepted', 'install_dismissed', 'install_later', 'appinstalled', 'signup']);
 async function pubEvent(req, env) {
   if (!env.DB) return json({ ok: false }, 200);
   let b = null;

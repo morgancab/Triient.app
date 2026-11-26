@@ -128,6 +128,14 @@ function admAnalytics(D,E,days,now){
     var fun=steps.map(function(st,i){var prev=i?steps[i-1][1]:0;return prRow(st[0],st[1]+(i&&prev?' · '+admPct(st[1],prev)+' %':''),Math.round(st[1]/top*100));}).join('');
     fun+='<div class="adm-g" style="margin-top:6px">'+tile(admPct(newN,steps[0][1])+' %','Visiteur → compte')+tile(admPct(newN,t('plan_created'))+' %','Plan rempli → compte')+'</div>'+
       '<p class="small muted" style="margin:10px 0 0">Le pourcentage de chaque ligne est calculé par rapport à l’étape précédente. Les étapes viennent des compteurs anonymes (un visiteur qui recharge la page compte plusieurs fois), la dernière vient des comptes.</p>';
+    // Par source (depuis le 27 novembre 2026) : d'où viennent les visiteurs, et lesquelles de ces sources amènent des comptes
+    var tq0=E.top||{},srcs={};
+    ['gate_view','guest_start','login_step','signup'].forEach(function(k,i){(tq0[k]||[]).forEach(function(x){var r=srcs[x[0]]||(srcs[x[0]]=[0,0,0,0]);r[i]+=x[1];});});
+    var sl=Object.keys(srcs).sort(function(a,b){return srcs[b][3]-srcs[a][3]||srcs[b][0]-srcs[a][0];});
+    if(sl.length){var td=function(v,b){return '<td style="padding:7px 0 7px 8px;text-align:'+(b?'left':'right')+';border-top:1px solid var(--brd)">'+v+'</td>';};
+      fun+='<div class="eyebrow" style="margin:16px 0 4px">Par source</div><table style="width:100%;font-size:13.5px;border-collapse:collapse;font-variant-numeric:tabular-nums"><tr style="color:var(--t2);font-size:12px">'+td('Source',1)+td('Visites')+td('Créer')+td('Plan prêt')+td('<b>Comptes</b>')+'</tr>'+
+        sl.slice(0,10).map(function(k){var r=srcs[k];return '<tr>'+td(esc(k),1)+td(r[0])+td(r[1])+td(r[2])+td('<b>'+r[3]+'</b>')+'</tr>';}).join('')+'</table>'+
+        '<p class="small muted" style="margin:8px 0 0">Source retenue à la première visite : ?utm_source= dans ton lien, sinon l’appli qui l’a ouvert (Instagram…), sinon le site d’où vient la personne, sinon « direct ». Mesuré depuis le 27 novembre 2026.</p>';}
     h+=card('Entonnoir d’inscription',days+' jours',fun);
   }
   // 2. Activité jour par jour

@@ -1,6 +1,6 @@
 /* ---------- Installation de l'app ----------
    1. Navigateurs intégrés (Instagram, Facebook, Messenger, TikTok, WhatsApp…) : on n'y peut ni installer l'app ni se connecter avec Google
-      (Google refuse la connexion dans ces fenêtres). On le dit dès l'arrivée, avec un bouton pour ouvrir le lien dans le vrai navigateur.
+      (Google y bloque souvent la connexion). On le dit dès l'arrivée, avec un bouton pour ouvrir le lien dans le vrai navigateur.
    2. Proposition d'installation : sur la présentation qui suit la création du plan, puis en carte sur l'Accueil.
       « Plus tard » la repousse de 7 jours ; elle s'arrête après 3 refus.
    3. Parcours mesuré par les compteurs anonymes (voir le bloc « Installation de l'app » du suivi), une fois par jour et par appareil
@@ -31,7 +31,7 @@ function inAppHtml(where){
   var how=ios?'Si Safari ne s’ouvre pas : copie le lien et colle-le dans Safari, ou touche <b>•••</b> (ou l’icône boussole), puis « Ouvrir dans Safari ».'
              :'Si Chrome ne s’ouvre pas : copie le lien et colle-le dans Chrome, ou touche <b>⋮</b> en haut à droite, puis « Ouvrir dans Chrome ».';
   return '<section class="inapp" role="note"><div class="inapp-h">'+ic('info',20)+'<b>Ouvre Triient dans '+br+'</b></div>'+
-    '<p>Ce lien s’est ouvert dans '+(app==='app'?'une autre application':'l’application '+esc(app))+'. Ici, la connexion Google et l’installation de l’app ne marchent pas.</p>'+
+    '<p>Ce lien s’est ouvert dans '+(app==='app'?'une autre application':'l’application '+esc(app))+'. Ici, l’app ne peut pas s’installer et la connexion Google peut être bloquée.</p>'+
     '<div class="btns"><button class="btn pri" data-act="inappopen">Ouvrir dans '+br+'</button><button class="btn" data-act="inappcopy">Copier le lien</button></div>'+
     '<p class="inapp-how">'+how+'</p></section>';
 }

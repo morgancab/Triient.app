@@ -386,5 +386,9 @@ window.RACE_CAT=[
 ["Ironman 70.3 Port Macquarie","Port Macquarie","AU","half",10],
 ["Ironman 70.3 Melbourne","Melbourne","AU","half",11,{"date":"2026-11-08","note":"Date relevée dans un calendrier : à confirmer sur le site officiel.","src":"Swim Bike Run (Ironman Océanie 2026)","rank":1}],
 ["Ironman 70.3 Western Australia","Busselton","AU","half",12,{"date":"2026-12-06","note":"Date relevée dans un calendrier : à confirmer sur le site officiel.","src":"Swim Bike Run (Ironman Océanie 2026)","rank":1}],
-["Ironman 70.3 Pucón","Pucón","CL","half",1]
+["Ironman 70.3 Pucón","Pucón","CL","half",1],
+["Triathlon de la Salm","Vielsalm","BE","olympic",7,{"date":"2027-07-10","note":"Date relevée dans un calendrier : à confirmer sur le site officiel."}],
+["Triathlon de la Salm · Sprint","Vielsalm","BE","sprint",7,{"date":"2027-07-10","note":"Date relevée dans un calendrier : à confirmer sur le site officiel."}],
+["Triathlon de la Salm · Longue distance","Vielsalm","BE","half",7,{"date":"2027-07-11","bk":92000,"note":"Premier format longue distance de la course (1,9 · 92 · 21 km). Date relevée dans un calendrier : à confirmer sur le site officiel."}],
+["Triathlon de Roanne Villerest","Villerest (Loire)","FR","olympic",6,{"bk":38000,"rn":11000,"note":"Distances M : 1,5 · 38 · 11 km. Date de juin 2027 pas encore annoncée."}]
 ];

@@ -234,11 +234,23 @@ function renderLoginStep(){
   var row=function(k,v){return '<div><span>'+k+'</span><b>'+esc(v)+'</b></div>';};
   vw.innerHTML='<div class="gate" style="padding-top:calc(var(--sat) + 40px)"><div class="g-body" style="margin-top:0">'+
     inAppHtml('connexion')+'<div class="g-slogan" style="margin:0">Dernière étape</div><h1 class="g-t" style="margin-top:10px">Ton plan<br>est prêt</h1>'+
-    '<div class="lgs-sum">'+row('Course',c.name)+row('Date',rd?fmtLong(rd):'')+row('Format',F.n||'')+row('Durée',c.weeks+' semaines')+row('Séances',(c.sessions||8)+' par semaine')+'</div>'+
-    '<div class="g-cta"><div class="g-ctal">Crée ton compte pour le voir</div>'+btn+'<p class="g-fine">Gratuit · sans mot de passe · sans pub<br>Ton plan te suit sur tous tes appareils</p></div>'+
+    (lgsWeek(c)||'<div class="lgs-sum">'+row('Course',c.name)+row('Date',rd?fmtLong(rd):'')+row('Format',F.n||'')+row('Durée',c.weeks+' semaines')+row('Séances',(c.sessions||8)+' par semaine')+'</div>')+
+    '<div class="g-cta"><div class="g-ctal">Crée ton compte pour voir tes '+c.weeks+' semaines</div>'+btn+'<p class="g-fine">Gratuit · sans mot de passe · sans pub<br>Ton plan te suit sur tous tes appareils</p></div>'+
     '<button class="lnk" data-act="editpending" style="margin:0 0 6px;color:var(--t2)">Modifier ma course</button>'+
     '<button class="lnk" data-act="legal" style="margin:0;color:var(--t3)">Mentions légales et confidentialité</button></div></div>';
   if(cfg&&!cfg.err&&cfg.googleClientId)setTimeout(acctRenderBtn,60);
+}
+/* Aperçu de la première semaine du plan, calculé au chargement à partir de la course en attente (voir loadRaceCfg) :
+   la personne voit ce qu'elle obtient au moment où on lui demande de créer son compte. 4 séances au plus, puis le reste résumé. */
+function lgsWeek(c){
+  var w=PLAN&&PLAN[0];if(!w||!RCFG.pending||CFG.id!==c.id)return '';
+  var all=[];w.days.forEach(function(d){d.sessions.forEach(function(s){if(s.sp!=='rest'&&s.sp!=='race')all.push([d,s]);});});
+  if(!all.length)return '';
+  var rows=all.slice(0,4).map(function(x){var d=x[0],s=x[1];return '<div class="ld-dr sp-'+s.sp+'"><span class="ld-di">'+ic(s.sp,18)+'</span><span class="ld-dt"><small>'+esc(d.name+' '+fmtDay(d.date))+'</small><b>'+esc(s.title)+'</b><small>'+esc(fm(s.min)+(s.sum?' · '+s.sum:''))+'</small></span></div>';}).join('');
+  var more=all.length-4,rd=parseISO(c.date);
+  return '<p class="lgs-line">'+esc(c.name)+(rd?' · '+esc(fmtLong(rd)):'')+'</p>'+
+    '<div class="ld-demo lgs-wk" aria-label="Ta première semaine"><div class="ld-dh"><b>Ta semaine 1</b><span>'+all.length+' séance'+(all.length>1?'s':'')+'</span><em>'+esc(fm(w.min))+'</em></div>'+rows+
+    '<p class="lgs-more">'+(more>0?'+ '+more+' autre'+(more>1?'s':'')+' séance'+(more>1?'s':'')+' cette semaine, puis ':'Puis ')+(c.weeks-1)+' semaines jusqu’au jour J</p></div>';
 }
 function gateNeeded(){
   if(DEV||!LOGIN_REQUIRED||acct()||(state.ui.guest&&SETUP)||/^file:/.test(location.protocol))return false;
@@ -248,7 +260,7 @@ function renderGate(){
   var vw=document.getElementById('view'),cfg=pubCfg,ready=cfg&&!cfg.err&&cfg.googleClientId,body;
   try{document.body.classList.add('setup','gating');}catch(e){}
   vw.className='';gateShown=true;
-  if(!gateTracked&&ready){gateTracked=true;trackOnce('gate_view','');}
+  if(!gateTracked){gateTracked=true;trackOnce('gate_view',srcOf());}   // dès l'affichage, même si le serveur n'a pas encore répondu (avant le 27/11 : après sa réponse)
   body=!cfg?'<div class="g-gbox w"><span class="g-wait">Connexion au serveur…</span></div>':cfg.err?'<p class="small muted" style="margin:0 0 8px">Connexion impossible pour l’instant.</p><button class="btn" data-act="gateretry">Réessayer</button>':'<div class="g-gbox"><div id="g-btn" data-theme="filled_black" style="display:flex;justify-content:center;width:100%"></div></div>';
   /* Page d'accueil (passe « unslop ») : chrome sobre sur le noir de la marque. Le vert ne vit que dans le bouton principal, « TRI »
      et la séance faite, que la vague du logo (la ligne d'eau) marque aussi. La police condensée italique de la charte est réservée au
@@ -345,7 +357,8 @@ function acctLogin(credential){
     .then(function(j){
       if(!j.ok)throw new Error(j.error||'Connexion refusée');
       state.ui.acct={token:j.token,email:j.user.email,name:j.user.name,v:0,t:0,sig:'',paused:false};save0();
-      track('login','');
+      track('login',j.user.isNew?'nouveau':'');
+      if(j.user.isNew)track('signup',srcOf());   // compte créé à l'instant
       return acctAfterLogin();
     }).catch(function(e){toast('Connexion impossible : '+(((e&&e.message)==='Failed to fetch')?'serveur injoignable':((e&&e.message)||e)));});
 }

@@ -88,7 +88,7 @@ document.addEventListener('click',function(e){
   else if(a==='togstats'){state.ui.noStats=statsOn();save();openSheet();toast(statsOn()?'Statistiques activées':'Statistiques désactivées');}
   else if(a==='gateretry'){pubCfg=null;render(false);loadPubCfg();}
   else if(a==='editpending'){delete state.ui.pendingRace;save();window.scrollTo(0,0);render(false);}
-  else if(a==='gateguest'){state.ui.guest=Date.now();save();trackOnce('guest_start','');window.scrollTo(0,0);render(false);}
+  else if(a==='gateguest'){state.ui.guest=Date.now();save();trackOnce('guest_start',srcOf());window.scrollTo(0,0);render(false);}
   else if(a==='gatetop'){var gc=document.getElementById('g-cta');if(gc)gc.scrollIntoView({behavior:'smooth',block:'center'});}
   else if(a==='acctsave'){var ac=acct();if(ac){if(ac.conflict&&!confirm('Écraser la version du compte avec les données de cet appareil ?'))return;ac.paused=false;ac.conflict=false;acctForce();}}
   else if(a==='acctexport')acctExport();

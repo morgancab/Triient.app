@@ -1070,6 +1070,10 @@ button:focus-visible{outline-color:var(--brand)}
 .wl .inst-st li{display:list-item;padding:0}
 .wl .inst-st b,.wl .inst-h b{display:inline;font-size:inherit}
 .wl .inst-h b{font-size:16px}
+/* « Ton plan est prêt » : la première semaine du plan avant la création du compte */
+.lgs-line{margin:0 0 16px;font-size:15px;line-height:20px;color:var(--t2)}
+.lgs-wk{width:100%;max-width:380px;margin:0 0 20px}
+.lgs-more{margin:0;padding:12px 0 14px;border-top:1px solid var(--brd);font-size:13px;line-height:18px;color:var(--t2)}
 </style>
 </head>
 <body>
@@ -1127,6 +1131,8 @@ function fmtClass(c){
 function loadRaceCfg(){
   var s=null;try{s=JSON.parse(localStorage.getItem(KEY));}catch(e){}
   if(s&&s.race&&s.race.date&&s.race.start)return {cfg:s.race,fresh:false};
+  // plan rempli, connexion pas encore faite : on calcule déjà ce plan pour en montrer la première semaine (state.race reste vide)
+  var p=s&&s.ui&&s.ui.pendingRace;if(p&&p.date&&p.start)return {cfg:p,fresh:true,pending:true};
   var used=s&&((s.done&&Object.keys(s.done).length)||(s.sv&&s.sv.url)||(s.ui&&(s.ui.tab||s.ui.welcomed||s.ui.dflt||s.ui.prof)));
   return {cfg:SABLES,fresh:!used,migrate:!!used};
 }
@@ -3000,11 +3006,23 @@ function renderLoginStep(){
   var row=function(k,v){return '<div><span>'+k+'</span><b>'+esc(v)+'</b></div>';};
   vw.innerHTML='<div class="gate" style="padding-top:calc(var(--sat) + 40px)"><div class="g-body" style="margin-top:0">'+
     inAppHtml('connexion')+'<div class="g-slogan" style="margin:0">Dernière étape</div><h1 class="g-t" style="margin-top:10px">Ton plan<br>est prêt</h1>'+
-    '<div class="lgs-sum">'+row('Course',c.name)+row('Date',rd?fmtLong(rd):'')+row('Format',F.n||'')+row('Durée',c.weeks+' semaines')+row('Séances',(c.sessions||8)+' par semaine')+'</div>'+
-    '<div class="g-cta"><div class="g-ctal">Crée ton compte pour le voir</div>'+btn+'<p class="g-fine">Gratuit · sans mot de passe · sans pub<br>Ton plan te suit sur tous tes appareils</p></div>'+
+    (lgsWeek(c)||'<div class="lgs-sum">'+row('Course',c.name)+row('Date',rd?fmtLong(rd):'')+row('Format',F.n||'')+row('Durée',c.weeks+' semaines')+row('Séances',(c.sessions||8)+' par semaine')+'</div>')+
+    '<div class="g-cta"><div class="g-ctal">Crée ton compte pour voir tes '+c.weeks+' semaines</div>'+btn+'<p class="g-fine">Gratuit · sans mot de passe · sans pub<br>Ton plan te suit sur tous tes appareils</p></div>'+
     '<button class="lnk" data-act="editpending" style="margin:0 0 6px;color:var(--t2)">Modifier ma course</button>'+
     '<button class="lnk" data-act="legal" style="margin:0;color:var(--t3)">Mentions légales et confidentialité</button></div></div>';
   if(cfg&&!cfg.err&&cfg.googleClientId)setTimeout(acctRenderBtn,60);
+}
+/* Aperçu de la première semaine du plan, calculé au chargement à partir de la course en attente (voir loadRaceCfg) :
+   la personne voit ce qu'elle obtient au moment où on lui demande de créer son compte. 4 séances au plus, puis le reste résumé. */
+function lgsWeek(c){
+  var w=PLAN&&PLAN[0];if(!w||!RCFG.pending||CFG.id!==c.id)return '';
+  var all=[];w.days.forEach(function(d){d.sessions.forEach(function(s){if(s.sp!=='rest'&&s.sp!=='race')all.push([d,s]);});});
+  if(!all.length)return '';
+  var rows=all.slice(0,4).map(function(x){var d=x[0],s=x[1];return '<div class="ld-dr sp-'+s.sp+'"><span class="ld-di">'+ic(s.sp,18)+'</span><span class="ld-dt"><small>'+esc(d.name+' '+fmtDay(d.date))+'</small><b>'+esc(s.title)+'</b><small>'+esc(fm(s.min)+(s.sum?' · '+s.sum:''))+'</small></span></div>';}).join('');
+  var more=all.length-4,rd=parseISO(c.date);
+  return '<p class="lgs-line">'+esc(c.name)+(rd?' · '+esc(fmtLong(rd)):'')+'</p>'+
+    '<div class="ld-demo lgs-wk" aria-label="Ta première semaine"><div class="ld-dh"><b>Ta semaine 1</b><span>'+all.length+' séance'+(all.length>1?'s':'')+'</span><em>'+esc(fm(w.min))+'</em></div>'+rows+
+    '<p class="lgs-more">'+(more>0?'+ '+more+' autre'+(more>1?'s':'')+' séance'+(more>1?'s':'')+' cette semaine, puis ':'Puis ')+(c.weeks-1)+' semaines jusqu’au jour J</p></div>';
 }
 function gateNeeded(){
   if(DEV||!LOGIN_REQUIRED||acct()||(state.ui.guest&&SETUP)||/^file:/.test(location.protocol))return false;
@@ -3014,7 +3032,7 @@ function renderGate(){
   var vw=document.getElementById('view'),cfg=pubCfg,ready=cfg&&!cfg.err&&cfg.googleClientId,body;
   try{document.body.classList.add('setup','gating');}catch(e){}
   vw.className='';gateShown=true;
-  if(!gateTracked&&ready){gateTracked=true;trackOnce('gate_view','');}
+  if(!gateTracked){gateTracked=true;trackOnce('gate_view',srcOf());}   // dès l'affichage, même si le serveur n'a pas encore répondu (avant le 27/11 : après sa réponse)
   body=!cfg?'<div class="g-gbox w"><span class="g-wait">Connexion au serveur…</span></div>':cfg.err?'<p class="small muted" style="margin:0 0 8px">Connexion impossible pour l’instant.</p><button class="btn" data-act="gateretry">Réessayer</button>':'<div class="g-gbox"><div id="g-btn" data-theme="filled_black" style="display:flex;justify-content:center;width:100%"></div></div>';
   /* Page d'accueil (passe « unslop ») : chrome sobre sur le noir de la marque. Le vert ne vit que dans le bouton principal, « TRI »
      et la séance faite, que la vague du logo (la ligne d'eau) marque aussi. La police condensée italique de la charte est réservée au
@@ -3111,7 +3129,8 @@ function acctLogin(credential){
     .then(function(j){
       if(!j.ok)throw new Error(j.error||'Connexion refusée');
       state.ui.acct={token:j.token,email:j.user.email,name:j.user.name,v:0,t:0,sig:'',paused:false};save0();
-      track('login','');
+      track('login',j.user.isNew?'nouveau':'');
+      if(j.user.isNew)track('signup',srcOf());   // compte créé à l'instant
       return acctAfterLogin();
     }).catch(function(e){toast('Connexion impossible : '+(((e&&e.message)==='Failed to fetch')?'serveur injoignable':((e&&e.message)||e)));});
 }
@@ -3225,6 +3244,17 @@ function openLegal(){showSheet('Mentions légales','Confidentialité, avertissem
 function statsOn(){try{return !(state.ui&&state.ui.noStats)&&navigator.doNotTrack!=='1'&&window.doNotTrack!=='1';}catch(e){return true;}}
 // Étapes de l'entonnoir d'inscription : une seule fois par appareil, pour que l'entonnoir compte des visiteurs et non des affichages
 function trackOnce(name,prop){var tk=state.ui.tk||(state.ui.tk={});if(tk[name])return;tk[name]=1;save0();track(name,prop);}
+/* Source de la personne, retenue à sa première visite : ?utm_source=… dans le lien, sinon l'appli qui a ouvert le lien (Instagram…),
+   sinon le site d'où elle vient, sinon « direct ». Ajoutée aux étapes de l'inscription pour savoir quel canal amène des comptes. */
+function srcOf(){
+  if(state.ui.src)return state.ui.src;
+  var s='';
+  try{var m=/[?&]utm_source=([^&#]+)/.exec(location.search||'');if(m)s=decodeURIComponent(m[1]);}catch(e){}
+  if(!s){var a=inAppName();if(a&&a!=='app')s=a;}
+  if(!s){try{var r=document.referrer?new URL(document.referrer).hostname.replace(/^(www|m|l|lm)\./,''):'';if(r&&r!==location.hostname)s=r;}catch(e){}}
+  s=String(s||'direct').toLowerCase().replace(/[^a-z0-9.\-_]/g,'').slice(0,40)||'direct';
+  state.ui.src=s;save0();return s;
+}
 function track(name,prop){
   if(DEV||!statsOn()||/^file:/.test(location.protocol)||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))return;   // local : tests et développement ne comptent pas
   if(state.ui.own||(acct()&&acct().admin))return;   // les appareils du propriétaire ne comptent pas non plus
@@ -3379,12 +3409,12 @@ function saveRace(){
     state.done={};state.links={};state.ui.missed={};state.ui.away=[];state.ui.sent={};state.ui.race={};state.ui.welcomed=undefined;
   }
   (SETUP?trackOnce:track)(SETUP?'plan_created':'plan_changed',cls+'|'+nsess+'s|l'+d.level);
-  if(SETUP&&loginOn()){state.ui.pendingRace=cfg;save();trackOnce('login_step','');window.scrollTo(0,0);render(false);return;}
+  if(SETUP&&loginOn()){state.ui.pendingRace=cfg;save();trackOnce('login_step',srcOf());window.scrollTo(0,0);location.reload();return;}   // rechargé : le plan de cette course est calculé pour l'aperçu
   state.race=cfg;save();location.reload();
 }
 /* ---------- Installation de l'app ----------
    1. Navigateurs intégrés (Instagram, Facebook, Messenger, TikTok, WhatsApp…) : on n'y peut ni installer l'app ni se connecter avec Google
-      (Google refuse la connexion dans ces fenêtres). On le dit dès l'arrivée, avec un bouton pour ouvrir le lien dans le vrai navigateur.
+      (Google y bloque souvent la connexion). On le dit dès l'arrivée, avec un bouton pour ouvrir le lien dans le vrai navigateur.
    2. Proposition d'installation : sur la présentation qui suit la création du plan, puis en carte sur l'Accueil.
       « Plus tard » la repousse de 7 jours ; elle s'arrête après 3 refus.
    3. Parcours mesuré par les compteurs anonymes (voir le bloc « Installation de l'app » du suivi), une fois par jour et par appareil
@@ -3415,7 +3445,7 @@ function inAppHtml(where){
   var how=ios?'Si Safari ne s’ouvre pas : copie le lien et colle-le dans Safari, ou touche <b>•••</b> (ou l’icône boussole), puis « Ouvrir dans Safari ».'
              :'Si Chrome ne s’ouvre pas : copie le lien et colle-le dans Chrome, ou touche <b>⋮</b> en haut à droite, puis « Ouvrir dans Chrome ».';
   return '<section class="inapp" role="note"><div class="inapp-h">'+ic('info',20)+'<b>Ouvre Triient dans '+br+'</b></div>'+
-    '<p>Ce lien s’est ouvert dans '+(app==='app'?'une autre application':'l’application '+esc(app))+'. Ici, la connexion Google et l’installation de l’app ne marchent pas.</p>'+
+    '<p>Ce lien s’est ouvert dans '+(app==='app'?'une autre application':'l’application '+esc(app))+'. Ici, l’app ne peut pas s’installer et la connexion Google peut être bloquée.</p>'+
     '<div class="btns"><button class="btn pri" data-act="inappopen">Ouvrir dans '+br+'</button><button class="btn" data-act="inappcopy">Copier le lien</button></div>'+
     '<p class="inapp-how">'+how+'</p></section>';
 }
@@ -4409,6 +4439,14 @@ function admAnalytics(D,E,days,now){
     var fun=steps.map(function(st,i){var prev=i?steps[i-1][1]:0;return prRow(st[0],st[1]+(i&&prev?' · '+admPct(st[1],prev)+' %':''),Math.round(st[1]/top*100));}).join('');
     fun+='<div class="adm-g" style="margin-top:6px">'+tile(admPct(newN,steps[0][1])+' %','Visiteur → compte')+tile(admPct(newN,t('plan_created'))+' %','Plan rempli → compte')+'</div>'+
       '<p class="small muted" style="margin:10px 0 0">Le pourcentage de chaque ligne est calculé par rapport à l’étape précédente. Les étapes viennent des compteurs anonymes (un visiteur qui recharge la page compte plusieurs fois), la dernière vient des comptes.</p>';
+    // Par source (depuis le 27 novembre 2026) : d'où viennent les visiteurs, et lesquelles de ces sources amènent des comptes
+    var tq0=E.top||{},srcs={};
+    ['gate_view','guest_start','login_step','signup'].forEach(function(k,i){(tq0[k]||[]).forEach(function(x){var r=srcs[x[0]]||(srcs[x[0]]=[0,0,0,0]);r[i]+=x[1];});});
+    var sl=Object.keys(srcs).sort(function(a,b){return srcs[b][3]-srcs[a][3]||srcs[b][0]-srcs[a][0];});
+    if(sl.length){var td=function(v,b){return '<td style="padding:7px 0 7px 8px;text-align:'+(b?'left':'right')+';border-top:1px solid var(--brd)">'+v+'</td>';};
+      fun+='<div class="eyebrow" style="margin:16px 0 4px">Par source</div><table style="width:100%;font-size:13.5px;border-collapse:collapse;font-variant-numeric:tabular-nums"><tr style="color:var(--t2);font-size:12px">'+td('Source',1)+td('Visites')+td('Créer')+td('Plan prêt')+td('<b>Comptes</b>')+'</tr>'+
+        sl.slice(0,10).map(function(k){var r=srcs[k];return '<tr>'+td(esc(k),1)+td(r[0])+td(r[1])+td(r[2])+td('<b>'+r[3]+'</b>')+'</tr>';}).join('')+'</table>'+
+        '<p class="small muted" style="margin:8px 0 0">Source retenue à la première visite : ?utm_source= dans ton lien, sinon l’appli qui l’a ouvert (Instagram…), sinon le site d’où vient la personne, sinon « direct ». Mesuré depuis le 27 novembre 2026.</p>';}
     h+=card('Entonnoir d’inscription',days+' jours',fun);
   }
   // 2. Activité jour par jour
@@ -4604,7 +4642,7 @@ document.addEventListener('click',function(e){
   else if(a==='togstats'){state.ui.noStats=statsOn();save();openSheet();toast(statsOn()?'Statistiques activées':'Statistiques désactivées');}
   else if(a==='gateretry'){pubCfg=null;render(false);loadPubCfg();}
   else if(a==='editpending'){delete state.ui.pendingRace;save();window.scrollTo(0,0);render(false);}
-  else if(a==='gateguest'){state.ui.guest=Date.now();save();trackOnce('guest_start','');window.scrollTo(0,0);render(false);}
+  else if(a==='gateguest'){state.ui.guest=Date.now();save();trackOnce('guest_start',srcOf());window.scrollTo(0,0);render(false);}
   else if(a==='gatetop'){var gc=document.getElementById('g-cta');if(gc)gc.scrollIntoView({behavior:'smooth',block:'center'});}
   else if(a==='acctsave'){var ac=acct();if(ac){if(ac.conflict&&!confirm('Écraser la version du compte avec les données de cet appareil ?'))return;ac.paused=false;ac.conflict=false;acctForce();}}
   else if(a==='acctexport')acctExport();
@@ -5905,11 +5943,12 @@ if(DEV){
   window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 }
 
-window.IM={fm:fm,fh:fh,hms:hms,PHASES:PHASES,BLOCKS:BLOCKS,KINDS:KINDS,T_TAPER:T_TAPER,stepOps:stepOps,VIEWS:VIEWS,missedList:missedList,missAdvice:missAdvice,missDo:missDo,missUndo:missUndo,missAll:missAll,isMissed:isMissed,openWiz:openWiz,cloudPayload:cloudPayload,cloudApply:cloudApply,devInfo:devInfo,admAnalytics:admAnalytics,admDetail:admDetail,gatePreview:function(c){pubCfg=c;renderGate();},inAppName:inAppName,inAppHtml:inAppHtml,instHtml:instHtml,instDue:instDue,instWay:instWay,instLater:instLater,openWelcome:openWelcome,gearize:gearize,GEAR:GEAR,openGear:openGear,loginPreview:function(c,r){pubCfg=c;state.ui.pendingRace=r;renderLoginStep();},gateNeeded:gateNeeded,acctLogin:acctLogin,catSearch:catSearch,wtResults:wtResults,wtFormat:wtFormat,pickRace:pickRace,NSESS:NSESS,planSpan:planSpan,newRaceDraft:newRaceDraft,raceFormHtml:raceFormHtml,saveRace:saveRace,applyAway:applyAway,VOL:VOL,VOL0:VOL0,volPlan:volPlan,scDefault:scDefault,scTotal:scTotal,vtMove:vtMove,vtScOut:vtScOut,spMin:spMin,spRange:spRange,adjVol:adjVol,openVt:openVt,vtSlide:vtSlide,vtApply:vtApply,awayDesc:awayDesc,awayTo:awayTo,injBack:injBack,injCard:injCard,newAwayDraft:newAwayDraft,adaptFields:adaptFields,estKm:estKm,detailBody:detailBody,wkBlocks:wkBlocks,pushSession:pushSession,pushPreview:pushPreview,clearPreview:clearPreview,wkText:wkText,evOf:evOf,ALLS:ALLS,tx:tx,autoProf:autoProf,estRace:estRace,estAll:estAll,raceParams:raceParams,PLAN:PLAN,stats:stats,status:status,computeLinks:computeLinks,links:function(){return LK;},state:state,actSport:actSport};
+window.IM={fm:fm,fh:fh,hms:hms,PHASES:PHASES,BLOCKS:BLOCKS,KINDS:KINDS,T_TAPER:T_TAPER,stepOps:stepOps,VIEWS:VIEWS,missedList:missedList,missAdvice:missAdvice,missDo:missDo,missUndo:missUndo,missAll:missAll,isMissed:isMissed,openWiz:openWiz,cloudPayload:cloudPayload,cloudApply:cloudApply,devInfo:devInfo,admAnalytics:admAnalytics,admDetail:admDetail,gatePreview:function(c){pubCfg=c;renderGate();},inAppName:inAppName,srcOf:srcOf,lgsWeek:lgsWeek,inAppHtml:inAppHtml,instHtml:instHtml,instDue:instDue,instWay:instWay,instLater:instLater,openWelcome:openWelcome,gearize:gearize,GEAR:GEAR,openGear:openGear,loginPreview:function(c,r){pubCfg=c;state.ui.pendingRace=r;renderLoginStep();},gateNeeded:gateNeeded,acctLogin:acctLogin,catSearch:catSearch,wtResults:wtResults,wtFormat:wtFormat,pickRace:pickRace,NSESS:NSESS,planSpan:planSpan,newRaceDraft:newRaceDraft,raceFormHtml:raceFormHtml,saveRace:saveRace,applyAway:applyAway,VOL:VOL,VOL0:VOL0,volPlan:volPlan,scDefault:scDefault,scTotal:scTotal,vtMove:vtMove,vtScOut:vtScOut,spMin:spMin,spRange:spRange,adjVol:adjVol,openVt:openVt,vtSlide:vtSlide,vtApply:vtApply,awayDesc:awayDesc,awayTo:awayTo,injBack:injBack,injCard:injCard,newAwayDraft:newAwayDraft,adaptFields:adaptFields,estKm:estKm,detailBody:detailBody,wkBlocks:wkBlocks,pushSession:pushSession,pushPreview:pushPreview,clearPreview:clearPreview,wkText:wkText,evOf:evOf,ALLS:ALLS,tx:tx,autoProf:autoProf,estRace:estRace,estAll:estAll,raceParams:raceParams,PLAN:PLAN,stats:stats,status:status,computeLinks:computeLinks,links:function(){return LK;},state:state,actSport:actSport};
 applyAway();
 try{
   if(RCFG.migrate&&!state.ui.seen){state.ui.seen=1;save();}
   if(!state.ui.seen){state.ui.seen=1;save();track('install');}
+  srcOf();   // source retenue dès la première visite (le site d'où l'on vient n'est connu qu'à l'arrivée)
   var td=isoDate(today());if(state.ui.lastOpen!==td){state.ui.lastOpen=td;save();track('open');}
   loadPubCfg();
   if(SETUP&&!gateNeeded())trackOnce('setup_view');else if(!SETUP){loadAdminStats();if(acct())acctBoot();else cloudBoot();}
