@@ -24,17 +24,17 @@ test('les navigateurs d’autres applis sont reconnus, pas les vrais navigateurs
 
 test('dans Instagram : bandeau sur l’Accueil à la place de la proposition d’installation', () => {
   const { view } = app(IPHONE + ' Instagram 350.0.0.0');
-  assert.match(view(), /Ouvre Triient dans Safari/);
-  assert.match(view(), /l’application Instagram/);
+  assert.match(view(), /ouvre Triient dans Safari/);
+  assert.match(view(), /Ouvrir dans le navigateur externe/);
   assert.match(view(), /data-act="inappcopy"/);
-  assert.match(view(), /data-act="inappopen">Ouvrir dans Safari/);
+  assert.doesNotMatch(view(), /data-act="inappopen"/, 'pas de bouton Safari : Instagram le bloque');
   assert.doesNotMatch(view(), /Installe Triient sur ton téléphone/);
 });
 
 test('Android dans une appli : bouton pour rouvrir dans Chrome', () => {
   const { IM } = app('Mozilla/5.0 (Linux; Android 14; Pixel 8; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0.0.0 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/480.0.0.0;]');
   const h = IM.inAppHtml('visiteur');
-  assert.match(h, /Ouvre Triient dans Chrome/);
+  assert.match(h, /ouvre Triient dans Chrome/);
   assert.match(h, /data-act="inappopen"/);
 });
 

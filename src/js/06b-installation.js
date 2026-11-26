@@ -24,24 +24,24 @@ function inAppName(){
 function trackDay(e,p){var k=e+'|'+p,d=isoDate(today()),m=state.ui.tkd||(state.ui.tkd={});if(m[k]===d)return;m[k]=d;save0();track(e,p);}
 function appLink(){return location.origin+location.pathname;}
 
+/* Bandeau compact en haut de page : le geste exact à faire dans l'appli (menu en haut à droite), une flèche vers ce menu,
+   et « copie le lien » en secours. iPhone : aucun lien ne peut forcer l'ouverture de Safari depuis Instagram (essayé avec
+   x-safari-https://, bloqué), donc pas de bouton. Android : « Ouvrir dans Chrome » passe par un lien intent://. */
 function inAppHtml(where){
   var app=inAppName();if(!app)return '';
   trackDay('inapp_view',app.toLowerCase()+':'+where);
-  var ios=isIOS(),br=ios?'Safari':'Chrome';
-  var how=ios?'Si Safari ne s’ouvre pas : copie le lien et colle-le dans Safari, ou touche <b>•••</b> (ou l’icône boussole), puis « Ouvrir dans Safari ».'
-             :'Si Chrome ne s’ouvre pas : copie le lien et colle-le dans Chrome, ou touche <b>⋮</b> en haut à droite, puis « Ouvrir dans Chrome ».';
-  return '<section class="inapp" role="note"><div class="inapp-h">'+ic('info',20)+'<b>Ouvre Triient dans '+br+'</b></div>'+
-    '<p>Ce lien s’est ouvert dans '+(app==='app'?'une autre application':'l’application '+esc(app))+'. Ici, l’app ne peut pas s’installer et la connexion Google peut être bloquée.</p>'+
-    '<div class="btns"><button class="btn pri" data-act="inappopen">Ouvrir dans '+br+'</button><button class="btn" data-act="inappcopy">Copier le lien</button></div>'+
-    '<p class="inapp-how">'+how+'</p></section>';
+  var ios=isIOS(),br=ios?'Safari':'Chrome',meta=app==='Instagram'||app==='Facebook'||app==='Messenger';
+  var how=ios?(meta?'Touche <b>•••</b> en haut à droite, puis «&nbsp;Ouvrir dans le navigateur externe&nbsp;»':'Touche <b>•••</b> ou le bouton de partage, puis «&nbsp;Ouvrir dans Safari&nbsp;» ou «&nbsp;Ouvrir dans le navigateur&nbsp;»')
+             :'Touche <b>⋮</b> en haut à droite, puis «&nbsp;Ouvrir dans Chrome&nbsp;» ou «&nbsp;Ouvrir dans le navigateur&nbsp;»';
+  var arrow='<svg class="inapp-ar" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>';
+  return '<section class="inapp" role="note"><div class="inapp-tx"><b>Pour installer l’app, ouvre Triient dans '+br+'</b>'+
+    '<p>'+how+'</p><div class="inapp-bt">'+(ios?'':'<button class="btn pri" data-act="inappopen">Ouvrir dans Chrome</button>')+
+    '<button class="inapp-cp" data-act="inappcopy">'+(ios?'Ou copie le lien et colle-le dans Safari':'Copier le lien')+'</button></div></div>'+arrow+'</section>';
 }
-/* Rouvre le lien dans le vrai navigateur, sur un geste de la personne (sinon les applis bloquent la redirection).
-   iPhone : adresse « x-safari-https:// », reconnue par iOS 17 et plus ; Android : lien « intent:// » vers Chrome.
-   Certaines applis bloquent ces liens : « Copier le lien » et le menu de l'appli restent proposés juste en dessous. */
 function inAppOpen(){
-  var u=appLink(),ios=isIOS();
-  track('inapp_action',ios?'safari':'chrome');
-  location.href=ios?'x-safari-'+u:'intent://'+u.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(u)+';end';
+  var u=appLink();
+  track('inapp_action','chrome');
+  location.href='intent://'+u.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(u)+';end';
 }
 function inAppCopy(){
   track('inapp_action','copy');
