@@ -1,5 +1,30 @@
 {
   "rewrites": [
-    { "source": "/installer", "destination": "/installer.html" }
+    {
+      "source": "/installer",
+      "destination": "/installer.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/insta",
+      "destination": "/?utm_source=instagram",
+      "permanent": false
+    },
+    {
+      "source": "/whatsapp",
+      "destination": "/?utm_source=whatsapp",
+      "permanent": false
+    },
+    {
+      "source": "/facebook",
+      "destination": "/?utm_source=facebook",
+      "permanent": false
+    },
+    {
+      "source": "/strava",
+      "destination": "/?utm_source=strava",
+      "permanent": false
+    }
   ]
 }

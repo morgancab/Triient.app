@@ -9,7 +9,7 @@ function trackOnce(name,prop){var tk=state.ui.tk||(state.ui.tk={});if(tk[name])r
 function srcOf(){
   if(state.ui.src)return state.ui.src;
   var s='';
-  try{var m=/[?&]utm_source=([^&#]+)/.exec(location.search||'');if(m)s=decodeURIComponent(m[1]);}catch(e){}
+  try{var m=/[?&]utm_source=([^&#]+)/.exec(location.search||'');if(m){s=decodeURIComponent(m[1]);history.replaceState(null,'',location.pathname+location.search.replace(/([?&])utm_source=[^&#]*&?/,'$1').replace(/[?&]$/,'')+location.hash);}}catch(e){}   // source lue : on la retire de l'adresse affichée
   if(!s){var a=inAppName();if(a&&a!=='app')s=a;}
   if(!s){try{var r=document.referrer?new URL(document.referrer).hostname.replace(/^(www|m|l|lm)\./,''):'';if(r&&r!==location.hostname)s=r;}catch(e){}}
   s=String(s||'direct').toLowerCase().replace(/[^a-z0-9.\-_]/g,'').slice(0,40)||'direct';
