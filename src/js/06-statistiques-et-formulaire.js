@@ -30,9 +30,14 @@ function statsHtml(){
 }
 var deferredInstall=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstall=e;try{if(document.getElementById('view'))render(true);}catch(x){}});
-window.addEventListener('appinstalled',function(){deferredInstall=null;state.ui.hideInstall=true;save();try{render(true);}catch(x){}});
+window.addEventListener('appinstalled',function(){deferredInstall=null;state.ui.instDone=true;save();track('appinstalled','');try{render(true);}catch(x){}});
 function isStandalone(){return (window.navigator.standalone===true)||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);}
-function doInstall(){if(!deferredInstall)return;deferredInstall.prompt();deferredInstall.userChoice.then(function(){deferredInstall=null;render(true);});}
+// where : écran d'où vient le geste (accueil, bienvenue), pour le suivi. Refus dans la fenêtre du navigateur = « Plus tard ».
+function doInstall(where){
+  if(!deferredInstall)return;
+  var p=deferredInstall;track('install_click',where||'');p.prompt();
+  p.userChoice.then(function(c){var ok=c&&c.outcome==='accepted';track(ok?'install_accepted':'install_dismissed',where||'');deferredInstall=null;if(ok){state.ui.instDone=true;save();render(true);}else instLater(true);},function(){});
+}
 function shareApp(){
   var url=location.href.split('#')[0].split('?')[0];
   if(navigator.share){navigator.share({title:'Triient',text:'Un plan d’entraînement triathlon sur mesure, gratuit.',url:url}).catch(function(){});return;}

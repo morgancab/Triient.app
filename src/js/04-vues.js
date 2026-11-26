@@ -134,12 +134,8 @@ function vHome(){
   var inj0=injCard();
   h+=inj0||missCard();   // blessure en cours : pas de relance sur les séances manquées
   var nxs=nextStep();if(nxs){var nxd=diffDays(parseYmd(nxs.date),today());h+='<p class="hline"><b>Prochaine course : '+esc(nxs.name)+'</b> · '+(nxd?'J-'+nxd:'aujourd’hui')+'</p>';}
-  // installation iOS
-  var ios=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
-  if(!isStandalone()&&!state.ui.hideInstall){
-    if(deferredInstall)h+='<section class="card"><div class="install">'+ic('share',22)+'<div><p><b>Installe l’app</b> sur ton téléphone : elle s’ouvre en plein écran, comme une vraie appli, et marche même sans connexion.</p><div class="btns" style="margin-top:10px"><button class="btn pri" data-act="doinstall" style="height:44px">Installer</button><button class="btn" data-act="hideinstall" style="height:44px">Plus tard</button></div></div></div></section>';
-    else if(ios)h+='<section class="card"><div class="install">'+ic('share',22)+'<div><p><b>Installe l’app</b> : touche le bouton Partager de Safari, puis « Sur l’écran d’accueil ». Elle s’ouvrira en plein écran, comme une vraie appli.</p><button class="chip" style="margin-top:10px;border:0;min-height:32px" data-act="hideinstall">Compris</button></div></div></section>';
-  }
+  // installation : dans le navigateur d'une autre appli, rien ne marche (ni installation ni connexion) : on le dit d'abord
+  h+=inAppHtml('app')||(instDue()?instHtml('accueil'):'');
   h+=todayHtml(st,cur);
   // cette semaine : un seul bloc (jours, avancement, thème)
   h+='<div class="sh"><h2>'+(st.s==='before'?'Première semaine':'Cette semaine')+'</h2><button class="lnk" data-act="gowk" data-w="'+st.w+'">Voir le détail'+ic('right',16)+'</button></div>'+

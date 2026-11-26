@@ -57,9 +57,11 @@ document.addEventListener('click',function(e){
     var r=el.getBoundingClientRect(),W=340,L=26,Rr=4,x=(e.clientX-r.left)/r.width*W,i=Math.floor((x-L)/((W-L-Rr)/NW));
     sel=Math.max(1,Math.min(NW,i+1));render(true);
   }
-  else if(a==='doinstall')doInstall();
+  else if(a==='doinstall')doInstall(d.v);
+  else if(a==='instlater')instLater(false);
+  else if(a==='inappcopy')inAppCopy();
+  else if(a==='inappopen')inAppOpen();
   else if(a==='shareapp')shareApp();
-  else if(a==='hideinstall'){state.ui.hideInstall=true;save();render(true);}
   else if(a==='pickact')openPickAct(d.sid);
   else if(a==='picksess')openPickSess(d.aid);
   else if(a==='link')setLink(d.aid,d.sid);
@@ -351,6 +353,7 @@ function openWelcome(){
     '<ul><li><span class="mi">'+ic('week',21)+'</span><div><b>Un plan précis, jour par jour</b><span>Zones, allures et conseils pour chaque séance de natation, vélo et course.</span></div></li>'+
     '<li><span class="mi">'+ic('check',21)+'</span><div><b>Coche tes séances</b><span>D’un geste sur le rond de chaque séance, ou toutes seules avec une montre Garmin (facultatif).</span></div></li>'+
     '<li><span class="mi">'+ic('chart',21)+'</span><div><b>Ton temps de course estimé</b><span>À partir de 3 questions rapides, ou de tes vraies sorties si tu connectes Garmin.</span></div></li></ul>'+
+    instHtml('bienvenue')+
     '<button class="btn pri" data-act="welcomeok">C’est parti</button>'+(linked?'':'<button class="btn" data-act="welcomegarmin">J’ai une montre Garmin</button>')+'<p class="small muted" style="margin:12px 0 0">Plans indicatifs, sans avis médical. <button class="lnk" data-act="legal" style="margin:0">Mentions légales</button></p></div>';
   sh.scrollTop=0;document.getElementById('sheetbg').classList.add('on');
 }

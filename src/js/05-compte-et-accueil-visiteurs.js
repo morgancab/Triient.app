@@ -233,7 +233,7 @@ function renderLoginStep(){
   var btn=!cfg?'<div class="g-gbox w"><span class="g-wait">Connexion au serveur…</span></div>':cfg.err?'<p class="small muted" style="margin:0 0 8px">Impossible de joindre le serveur. Vérifie ta connexion.</p><button class="btn" data-act="gateretry">Réessayer</button>':'<div class="g-gbox"><div id="g-btn" style="display:flex;justify-content:center;width:100%"></div></div>';
   var row=function(k,v){return '<div><span>'+k+'</span><b>'+esc(v)+'</b></div>';};
   vw.innerHTML='<div class="gate" style="padding-top:calc(var(--sat) + 40px)"><div class="g-body" style="margin-top:0">'+
-    '<div class="g-slogan" style="margin:0">Dernière étape</div><h1 class="g-t" style="margin-top:10px">Ton plan<br>est prêt</h1>'+
+    inAppHtml('connexion')+'<div class="g-slogan" style="margin:0">Dernière étape</div><h1 class="g-t" style="margin-top:10px">Ton plan<br>est prêt</h1>'+
     '<div class="lgs-sum">'+row('Course',c.name)+row('Date',rd?fmtLong(rd):'')+row('Format',F.n||'')+row('Durée',c.weeks+' semaines')+row('Séances',(c.sessions||8)+' par semaine')+'</div>'+
     '<div class="g-cta"><div class="g-ctal">Crée ton compte pour le voir</div>'+btn+'<p class="g-fine">Gratuit · sans mot de passe · sans pub<br>Ton plan te suit sur tous tes appareils</p></div>'+
     '<button class="lnk" data-act="editpending" style="margin:0 0 6px;color:var(--t2)">Modifier ma course</button>'+
@@ -258,7 +258,7 @@ function renderGate(){
   // Aperçu d'une semaine type : montre le produit (séances détaillées, cochées par Garmin, envoyées sur la montre)
   var demo=function(sp,icn,day,t,d,st){return '<div class="ld-dr sp-'+sp+'"><span class="ld-di">'+ic(icn,18)+'</span><span class="ld-dt"><small>'+day+'</small><b>'+t+'</b><small>'+d+'</small></span>'+st+'</div>';};
   var photo='Départ d’un triathlon : des dizaines de nageurs s’élancent dans l’eau';
-  vw.innerHTML='<div class="gate land" style="--hero:url('+HERO_IMG+')"><div class="ld-band" role="img" aria-label="'+photo+'"></div><div class="ld-in">'+
+  vw.innerHTML='<div class="gate land" style="--hero:url('+HERO_IMG+')">'+inAppHtml('visiteur')+'<div class="ld-band" role="img" aria-label="'+photo+'"></div><div class="ld-in">'+
     '<div class="ld-main"><div class="ld-copy">'+
       '<div class="ld-brand" role="img" aria-label="Triient"><span class="ld-word"><i>TRI</i>IENT</span>'+wave('ld-wave')+'</div>'+
       '<h1 class="ld-t">Ta prépa, <span class="ld-nw">séance par séance</span></h1>'+

@@ -33,7 +33,7 @@ export function raceConfig({ format = 'full', weeks = 25, date = '2027-06-27', s
 
 // state : contenu de localStorage (done, ui, links, sv, race) ; today : AAAA-MM-JJ ; hash : page à ouvrir
 // storeKey : clé de stockage où placer ces données (l'ancienne clé sert à tester la reprise des données)
-export function loadApp({ race, today = '2027-01-15', hash = '#dash', state = {}, storeKey = 'triient:v1' } = {}) {
+export function loadApp({ race, today = '2027-01-15', hash = '#dash', state = {}, storeKey = 'triient:v1', ua = '' } = {}) {
   const store = new Map(), els = new Map();
   store.set(storeKey, JSON.stringify({ done: {}, links: {}, sv: {}, ...state, ui: { welcomed: true, seen: 1, noStats: true, ...(state.ui || {}) }, race }));
   const doc = element();
@@ -41,7 +41,7 @@ export function loadApp({ race, today = '2027-01-15', hash = '#dash', state = {}
   const location = { hash, search: '?today=' + today, protocol: 'file:', hostname: '', href: 'file:///index.html?today=' + today + hash, reload() {}, replace() {} };
   const ctx = {
     document: doc, location, console,
-    navigator: {}, history: { pushState() {}, replaceState() {}, go() {} },
+    navigator: { userAgent: ua }, history: { pushState() {}, replaceState() {}, go() {} },
     localStorage: { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) },
     addEventListener() {}, removeEventListener() {}, setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
     scrollTo() {}, matchMedia: () => ({ matches: false, addEventListener() {} }), fetch: () => new Promise(() => {}), confirm: () => true, innerHeight: 900, innerWidth: 430,

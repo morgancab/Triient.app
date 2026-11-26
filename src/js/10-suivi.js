@@ -150,6 +150,27 @@ function admAnalytics(D,E,days,now){
         '<p><b>Premiers lancements</b> : premières ouvertures sur un navigateur ou un appareil. Changer de navigateur ou effacer ses données compte à nouveau : ce n’est pas un nombre de personnes.</p>'+
         '<p><b>Nouveaux comptes</b> : inscriptions réelles, sans doublon. Toutes les dates sont en heure universelle (une heure de décalage avec la France en hiver).</p></details>');
   }
+  // 2 bis. Installation de l'app : navigateurs d'autres applis (Instagram…), proposition d'installation, installations
+  if(E){
+    var tq=E.top||{},part=function(k,i,lb){var m={};(tq[k]||[]).forEach(function(x){var q=String(x[0]).split(':')[i]||'';q=lb[q]||q;if(q)m[q]=(m[q]||0)+x[1];});return Object.keys(m).map(function(q){return [q,m[q]];}).sort(function(a,b){return b[1]-a[1];});};
+    var iv=t('install_card_view'),ic_=t('install_click'),ia=t('install_accepted'),inst=n?U.filter(function(u){return u.installed===1;}).length:0;
+    var apps=part('inapp_view',0,{app:'Autre appli',instagram:'Instagram',facebook:'Facebook',messenger:'Messenger',whatsapp:'WhatsApp',tiktok:'TikTok',snapchat:'Snapchat',linkedin:'LinkedIn',x:'X',google:'Google',pinterest:'Pinterest',wechat:'WeChat',line:'Line'});
+    var wh=part('inapp_view',1,{visiteur:'Page d’accueil visiteur',connexion:'Écran de connexion',app:'Dans l’app'});
+    var ways=part('install_card_view',1,{prompt:'Bouton « Installer » (Android, ordinateur)',ios:'Guide iPhone',android:'Guide Android (menu du navigateur)'});
+    var acts=part('inapp_action',0,{copy:'Lien copié',chrome:'« Ouvrir dans Chrome »',safari:'« Ouvrir dans Safari »'});
+    var fz=[['Proposition vue',iv],['« Installer l’app » touché',ic_],['Installation acceptée',ia]],t0=Math.max(iv,1);
+    h+=card('Installation de l’app',days+' jours',
+      '<div class="adm-g" style="margin-top:0">'+tile(n?admPct(inst,n)+' %':'–','Comptes avec l’app installée',n?inst+' sur '+n:'')+tile(t('appinstalled'),'Installations signalées','Android et ordinateur : l’iPhone ne le signale pas')+
+        tile(t('inapp_view'),'Arrivées dans une autre appli','Instagram, Facebook… : ni connexion ni installation possibles')+tile(t('inapp_action'),'Lien rouvert ou copié','depuis le bandeau')+'</div>'+
+      '<div class="eyebrow" style="margin:16px 0 8px">Proposition d’installation</div>'+
+      fz.map(function(st,i){var prev=i?fz[i-1][1]:0;return prRow(st[0],st[1]+(i&&prev?' · '+admPct(st[1],prev)+' %':''),Math.round(st[1]/t0*100));}).join('')+
+      admRows([['« Plus tard »',t('install_later')],['Refusée dans la fenêtre du navigateur',t('install_dismissed')]],0)+
+      (ways.length?'<div class="eyebrow" style="margin:16px 0 8px">Proposition vue, selon l’appareil</div>'+admRows(ways,0):'')+
+      (apps.length?'<div class="eyebrow" style="margin:16px 0 8px">Ouvert depuis l’appli</div>'+admRows(apps,0):'')+
+      (wh.length?'<div class="eyebrow" style="margin:16px 0 8px">Bandeau vu sur</div>'+admRows(wh,0):'')+
+      (acts.length?'<div class="eyebrow" style="margin:16px 0 8px">Réaction au bandeau</div>'+admRows(acts,0):'')+
+      '<p class="small muted" style="margin:10px 0 0">Affichages comptés une fois par jour et par appareil. Sur iPhone, l’installation passe par le menu Partager : elle n’est connue que par « Comptes avec l’app installée », mis à jour à l’ouverture de l’app installée.</p>');
+  }
   // 3. Engagement des comptes
   if(n){
     var withPlan=U.filter(function(u){return u.race;}).length,active=U.filter(function(u){return u.done>0;}).length,back=U.filter(function(u){return (u.visits||0)>=2;}).length;
