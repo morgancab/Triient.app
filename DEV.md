@@ -106,6 +106,8 @@ Fenêtres (`s`) :
 | Adresse | Résultat |
 |---|---|
 | `http://localhost:8080/` | Ton vrai plan |
+| `http://localhost:8080/?visiteur` | La page d’accueil des visiteurs, même si tu es connecté (stockage à part, vidé à chaque nouvel onglet ; ton plan n’est pas touché) |
+| `http://localhost:8080/?visiteur&appareil=instagram-iphone` | La même page, vue sur iPhone depuis Instagram |
 | `http://localhost:8080/?profil=embrun#dash` | L'app, avec le profil de test `embrun` |
 | `http://localhost:8080/dev.html` | Le mode test complet |
 | `http://localhost:8080/installer.html?appareil=iphone-safari` | La page d'installation, vue sur iPhone |

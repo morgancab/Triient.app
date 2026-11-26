@@ -11,7 +11,11 @@ var DEV=(function(){
   var m=/[?&]profil=([\w-]{1,24})(?:&|$)/.exec(location.search||'');
   return m?m[1]:'';
 })();
-var KEY='triient:v1'+(DEV?':dev-'+DEV:'');
+/* ?visiteur (en local seulement) : la page d'accueil comme pour un nouveau visiteur, même si tu es connecté. Stockage à part,
+   vidé à la première ouverture de l'onglet (puis gardé, pour pouvoir remplir le formulaire jusqu'à « Ton plan est prêt »). Ton plan n'est pas touché. */
+var VISIT=!DEV&&/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)&&/[?&]visiteur(?:[=&]|$)/.test(location.search||'');
+var KEY='triient:v1'+(DEV?':dev-'+DEV:VISIT?':visiteur':'');
+if(VISIT)try{if(!sessionStorage.getItem('triient-visiteur')){localStorage.removeItem(KEY);sessionStorage.setItem('triient-visiteur','1');}}catch(e){}
 // Ancien nom de l'app : les données enregistrées sous l'ancienne clé sont reprises une fois, puis l'ancienne clé est effacée.
 try{(function(o){var v=localStorage.getItem(o);if(v===null)return;if(localStorage.getItem(KEY)===null)localStorage.setItem(KEY,v);localStorage.removeItem(o);})('ironman-sables-2027:v1'+(DEV?':dev-'+DEV:''));}catch(e){}
 var PUB_API='https://triient.morgancabironman.workers.dev';

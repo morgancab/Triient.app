@@ -1054,4 +1054,10 @@ button:focus-visible{outline-color:var(--brand)}
 .inapp-bt .btn{width:auto;height:40px;padding:0 16px;font-size:14px}
 .inapp-cp{min-height:32px;padding:0;border:0;background:none;font:inherit;font-size:13px;line-height:18px;color:var(--t2);text-decoration:underline;text-underline-offset:2px;text-align:left;cursor:pointer}
 .inapp-ar{position:absolute;top:10px;right:12px;width:28px;height:28px;fill:none;stroke:#ffc400;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.land .inapp{position:sticky;top:0;z-index:5;margin:0;border-radius:0;box-shadow:inset 0 -1px 0 rgba(255,196,0,.35)}
+.land .inapp{margin:0;border-radius:0;box-shadow:inset 0 -1px 0 rgba(255,196,0,.35)}
+.ld-acc{width:100%;max-width:340px;margin:40px auto 0}
+.ld-acc .ld-or{margin-top:0}
+.land .inapp+.ld-band{height:clamp(132px,18vh,168px)}
+.ld-legal{margin:24px auto 0;color:var(--t3)}
+/* Accueil visiteur : bloc de connexion en bas */
+@media (min-width:960px){.ld-end{justify-content:center}}

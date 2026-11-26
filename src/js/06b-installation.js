@@ -34,7 +34,7 @@ function inAppHtml(where){
   var how=ios?(meta?'Touche <b>•••</b> en haut à droite, puis «&nbsp;Ouvrir dans le navigateur externe&nbsp;»':'Touche <b>•••</b> ou le bouton de partage, puis «&nbsp;Ouvrir dans Safari&nbsp;» ou «&nbsp;Ouvrir dans le navigateur&nbsp;»')
              :'Touche <b>⋮</b> en haut à droite, puis «&nbsp;Ouvrir dans Chrome&nbsp;» ou «&nbsp;Ouvrir dans le navigateur&nbsp;»';
   var arrow='<svg class="inapp-ar" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>';
-  return '<section class="inapp" role="note"><div class="inapp-tx"><b>Pour installer l’app, ouvre Triient dans '+br+'</b>'+
+  return '<section class="inapp" role="note"><div class="inapp-tx"><b>Ouvre Triient dans '+br+'</b>'+
     '<p>'+how+'</p><div class="inapp-bt">'+(ios?'':'<button class="btn pri" data-act="inappopen">Ouvrir dans Chrome</button>')+
     '<button class="inapp-cp" data-act="inappcopy">'+(ios?'Ou copie le lien et colle-le dans Safari':'Copier le lien')+'</button></div></div>'+arrow+'</section>';
 }

@@ -274,22 +274,23 @@ function renderGate(){
     '<div class="ld-main"><div class="ld-copy">'+
       '<div class="ld-brand" role="img" aria-label="Triient"><span class="ld-word"><i>TRI</i>IENT</span>'+wave('ld-wave')+'</div>'+
       '<h1 class="ld-t">Ta prépa, <span class="ld-nw">séance par séance</span></h1>'+
-      '<p class="ld-s">Choisis ta course de triathlon, ton niveau et tes jours d’entraînement : Triient prépare chaque séance jusqu’au jour J, du sprint à l’Ironman</p>'+
+      // page volontairement simple : un message, un seul bouton ; la connexion des comptes existants est en bas de page
+      '<p class="ld-s">Ton plan de triathlon sur mesure, du&nbsp;sprint à&nbsp;l’Ironman</p>'+
       '<div class="ld-cta" id="g-cta"><button class="btn pri ld-go" data-act="gateguest">Créer mon plan</button>'+
-        '<p class="ld-fine">Gratuit et sans pub · ton compte se crée en un clic, une fois ta course choisie</p>'+
-        '<div class="ld-or">Déjà un compte ?</div>'+body+'</div>'+
+        '<p class="ld-fine">Gratuit · sans pub</p></div>'+
     '</div><div class="ld-show"><div class="ld-photo" role="img" aria-label="'+photo+'"></div>'+
       '<div class="ld-demo" aria-label="Exemple de semaine"><div class="ld-dh"><b>Semaine 6</b><span>Développement</span><em>Exemple</em></div>'+
         demo('swim','swim','Mardi','Natation · Technique','45 min · 2,1 km','<span class="ld-st ok">'+wave('ld-ok')+'Fait</span>')+
         demo('bike','bike','Mercredi','Vélo · Blocs allure course','1h30 · 3 × 12 min','<span class="ld-st">'+ic('watch',16)+'Sur ta montre</span>')+
         demo('run','run','Samedi','Course · Sortie longue','1h05 · facile','<span class="ld-st">À venir</span>')+
-        '<p class="ld-dn">Faite avec ta montre Garmin, la séance se coche toute seule</p></div>'+
+      '</div>'+
     '</div></div>'+
-    '<ul class="ld-feat">'+feat('race','Toutes les distances','Du sprint à l’Ironman, préparé sur 4 à 52 semaines')+
-      feat('watch','Sur ta montre Garmin','Tes séances arrivent sur ta montre avec leurs allures et se cochent une fois faites')+
-      feat('week','Au rythme de ta vie','Tu choisis tes séances par semaine ; vacances, week-ends chargés, blessures et courses de préparation sont pris en compte')+'</ul>'+
-    '<div class="ld-end"><button class="btn pri ld-go" data-act="gateguest">Créer mon plan</button>'+
-      '<button class="lnk" data-act="legal">Mentions légales et confidentialité</button></div>'+
+    '<ul class="ld-feat">'+feat('race','Toutes les distances','Du sprint à l’Ironman')+
+      feat('watch','Sur ta montre Garmin','Tes séances arrivent sur ta montre')+
+      feat('week','Au rythme de ta vie','Vacances, blessures, semaines chargées : le plan s’adapte')+'</ul>'+
+    '<div class="ld-end"><button class="btn pri ld-go" data-act="gateguest">Créer mon plan</button></div>'+
+    '<div class="ld-acc" id="g-login"><div class="ld-or">Déjà un compte ?</div>'+body+'</div>'+
+    '<button class="lnk ld-legal" data-act="legal">Mentions légales et confidentialité</button>'+
   '</div></div>';
   if(ready)setTimeout(acctRenderBtn,60);
 }

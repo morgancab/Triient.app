@@ -1076,7 +1076,13 @@ button:focus-visible{outline-color:var(--brand)}
 .inapp-bt .btn{width:auto;height:40px;padding:0 16px;font-size:14px}
 .inapp-cp{min-height:32px;padding:0;border:0;background:none;font:inherit;font-size:13px;line-height:18px;color:var(--t2);text-decoration:underline;text-underline-offset:2px;text-align:left;cursor:pointer}
 .inapp-ar{position:absolute;top:10px;right:12px;width:28px;height:28px;fill:none;stroke:#ffc400;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.land .inapp{position:sticky;top:0;z-index:5;margin:0;border-radius:0;box-shadow:inset 0 -1px 0 rgba(255,196,0,.35)}
+.land .inapp{margin:0;border-radius:0;box-shadow:inset 0 -1px 0 rgba(255,196,0,.35)}
+.ld-acc{width:100%;max-width:340px;margin:40px auto 0}
+.ld-acc .ld-or{margin-top:0}
+.land .inapp+.ld-band{height:clamp(132px,18vh,168px)}
+.ld-legal{margin:24px auto 0;color:var(--t3)}
+/* Accueil visiteur : bloc de connexion en bas */
+@media (min-width:960px){.ld-end{justify-content:center}}
 </style>
 </head>
 <body>
@@ -1102,7 +1108,11 @@ var DEV=(function(){
   var m=/[?&]profil=([\w-]{1,24})(?:&|$)/.exec(location.search||'');
   return m?m[1]:'';
 })();
-var KEY='triient:v1'+(DEV?':dev-'+DEV:'');
+/* ?visiteur (en local seulement) : la page d'accueil comme pour un nouveau visiteur, même si tu es connecté. Stockage à part,
+   vidé à la première ouverture de l'onglet (puis gardé, pour pouvoir remplir le formulaire jusqu'à « Ton plan est prêt »). Ton plan n'est pas touché. */
+var VISIT=!DEV&&/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)&&/[?&]visiteur(?:[=&]|$)/.test(location.search||'');
+var KEY='triient:v1'+(DEV?':dev-'+DEV:VISIT?':visiteur':'');
+if(VISIT)try{if(!sessionStorage.getItem('triient-visiteur')){localStorage.removeItem(KEY);sessionStorage.setItem('triient-visiteur','1');}}catch(e){}
 // Ancien nom de l'app : les données enregistrées sous l'ancienne clé sont reprises une fois, puis l'ancienne clé est effacée.
 try{(function(o){var v=localStorage.getItem(o);if(v===null)return;if(localStorage.getItem(KEY)===null)localStorage.setItem(KEY,v);localStorage.removeItem(o);})('ironman-sables-2027:v1'+(DEV?':dev-'+DEV:''));}catch(e){}
 var PUB_API='https://triient.morgancabironman.workers.dev';
@@ -3049,22 +3059,23 @@ function renderGate(){
     '<div class="ld-main"><div class="ld-copy">'+
       '<div class="ld-brand" role="img" aria-label="Triient"><span class="ld-word"><i>TRI</i>IENT</span>'+wave('ld-wave')+'</div>'+
       '<h1 class="ld-t">Ta prépa, <span class="ld-nw">séance par séance</span></h1>'+
-      '<p class="ld-s">Choisis ta course de triathlon, ton niveau et tes jours d’entraînement : Triient prépare chaque séance jusqu’au jour J, du sprint à l’Ironman</p>'+
+      // page volontairement simple : un message, un seul bouton ; la connexion des comptes existants est en bas de page
+      '<p class="ld-s">Ton plan de triathlon sur mesure, du&nbsp;sprint à&nbsp;l’Ironman</p>'+
       '<div class="ld-cta" id="g-cta"><button class="btn pri ld-go" data-act="gateguest">Créer mon plan</button>'+
-        '<p class="ld-fine">Gratuit et sans pub · ton compte se crée en un clic, une fois ta course choisie</p>'+
-        '<div class="ld-or">Déjà un compte ?</div>'+body+'</div>'+
+        '<p class="ld-fine">Gratuit · sans pub</p></div>'+
     '</div><div class="ld-show"><div class="ld-photo" role="img" aria-label="'+photo+'"></div>'+
       '<div class="ld-demo" aria-label="Exemple de semaine"><div class="ld-dh"><b>Semaine 6</b><span>Développement</span><em>Exemple</em></div>'+
         demo('swim','swim','Mardi','Natation · Technique','45 min · 2,1 km','<span class="ld-st ok">'+wave('ld-ok')+'Fait</span>')+
         demo('bike','bike','Mercredi','Vélo · Blocs allure course','1h30 · 3 × 12 min','<span class="ld-st">'+ic('watch',16)+'Sur ta montre</span>')+
         demo('run','run','Samedi','Course · Sortie longue','1h05 · facile','<span class="ld-st">À venir</span>')+
-        '<p class="ld-dn">Faite avec ta montre Garmin, la séance se coche toute seule</p></div>'+
+      '</div>'+
     '</div></div>'+
-    '<ul class="ld-feat">'+feat('race','Toutes les distances','Du sprint à l’Ironman, préparé sur 4 à 52 semaines')+
-      feat('watch','Sur ta montre Garmin','Tes séances arrivent sur ta montre avec leurs allures et se cochent une fois faites')+
-      feat('week','Au rythme de ta vie','Tu choisis tes séances par semaine ; vacances, week-ends chargés, blessures et courses de préparation sont pris en compte')+'</ul>'+
-    '<div class="ld-end"><button class="btn pri ld-go" data-act="gateguest">Créer mon plan</button>'+
-      '<button class="lnk" data-act="legal">Mentions légales et confidentialité</button></div>'+
+    '<ul class="ld-feat">'+feat('race','Toutes les distances','Du sprint à l’Ironman')+
+      feat('watch','Sur ta montre Garmin','Tes séances arrivent sur ta montre')+
+      feat('week','Au rythme de ta vie','Vacances, blessures, semaines chargées : le plan s’adapte')+'</ul>'+
+    '<div class="ld-end"><button class="btn pri ld-go" data-act="gateguest">Créer mon plan</button></div>'+
+    '<div class="ld-acc" id="g-login"><div class="ld-or">Déjà un compte ?</div>'+body+'</div>'+
+    '<button class="lnk ld-legal" data-act="legal">Mentions légales et confidentialité</button>'+
   '</div></div>';
   if(ready)setTimeout(acctRenderBtn,60);
 }
@@ -3451,7 +3462,7 @@ function inAppHtml(where){
   var how=ios?(meta?'Touche <b>•••</b> en haut à droite, puis «&nbsp;Ouvrir dans le navigateur externe&nbsp;»':'Touche <b>•••</b> ou le bouton de partage, puis «&nbsp;Ouvrir dans Safari&nbsp;» ou «&nbsp;Ouvrir dans le navigateur&nbsp;»')
              :'Touche <b>⋮</b> en haut à droite, puis «&nbsp;Ouvrir dans Chrome&nbsp;» ou «&nbsp;Ouvrir dans le navigateur&nbsp;»';
   var arrow='<svg class="inapp-ar" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>';
-  return '<section class="inapp" role="note"><div class="inapp-tx"><b>Pour installer l’app, ouvre Triient dans '+br+'</b>'+
+  return '<section class="inapp" role="note"><div class="inapp-tx"><b>Ouvre Triient dans '+br+'</b>'+
     '<p>'+how+'</p><div class="inapp-bt">'+(ios?'':'<button class="btn pri" data-act="inappopen">Ouvrir dans Chrome</button>')+
     '<button class="inapp-cp" data-act="inappcopy">'+(ios?'Ou copie le lien et colle-le dans Safari':'Copier le lien')+'</button></div></div>'+arrow+'</section>';
 }
